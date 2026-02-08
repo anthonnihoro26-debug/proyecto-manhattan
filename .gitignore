@@ -1,6 +1,19 @@
-db.sqlite3
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 .env
+.venv/
 venv/
+ENV/
+
+# Django
+db.sqlite3
 staticfiles/
+media/
+
+# VS Code / Windows
+.vscode/
+.DS_Store
+Thumbs.db

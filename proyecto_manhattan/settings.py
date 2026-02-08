@@ -12,16 +12,16 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # =========================
 # PRODUCCIÓN / RENDER
 # =========================
-# En Render configura SECRET_KEY como Variable de Entorno
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-key")
 
-# DEBUG: en Render pon DEBUG=0
+# En Render: DEBUG=0
 DEBUG = os.environ.get("DEBUG", "0") == "1"
 
 # Render te da RENDER_EXTERNAL_HOSTNAME automáticamente
@@ -31,13 +31,19 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# Si quieres permitir otros dominios:
-# ALLOWED_HOSTS += os.environ.get("ALLOWED_HOSTS", "").split(",")
+# (Opcional) si quieres agregar más hosts manualmente:
+extra_hosts = os.environ.get("ALLOWED_HOSTS", "")
+if extra_hosts:
+    ALLOWED_HOSTS += [h.strip() for h in extra_hosts.split(",") if h.strip()]
 
-# Para CSRF en Render (evita errores 403 al hacer POST)
+# CSRF en producción (para evitar 403 al hacer POST)
 CSRF_TRUSTED_ORIGINS = []
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
+
+extra_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+if extra_csrf:
+    CSRF_TRUSTED_ORIGINS += [u.strip() for u in extra_csrf.split(",") if u.strip()]
 
 # =========================
 # APPS
@@ -49,7 +55,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "asistencias",
 ]
 
@@ -58,14 +63,13 @@ INSTALLED_APPS = [
 # =========================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    # ✅ WhiteNoise (debe ir justo después de SecurityMiddleware)
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # ✅ debe ir aquí
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 ROOT_URLCONF = "proyecto_manhattan.urls"
@@ -76,7 +80,7 @@ ROOT_URLCONF = "proyecto_manhattan.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],  # ✅ tu carpeta templates
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -94,13 +98,14 @@ WSGI_APPLICATION = "proyecto_manhattan.wsgi.application"
 # =========================
 # DATABASE
 # =========================
-# ✅ Para impresionar: en Render lo ideal es PostgreSQL
-# Por ahora esto funciona con SQLite (pero en Render NO es persistente sin disco).
+# ✅ En Render: usa PostgreSQL con DATABASE_URL
+# ✅ En local: si no hay DATABASE_URL, usa SQLite
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        ssl_require=not DEBUG
+    )
 }
 
 # =========================
@@ -109,22 +114,19 @@ DATABASES = {
 LANGUAGE_CODE = "es-pe"
 TIME_ZONE = "America/Lima"
 USE_I18N = True
-USE_TZ = True  # ✅ así timezone.localtime() funciona bien
+USE_TZ = True
 
 # =========================
 # STATIC FILES
 # =========================
 STATIC_URL = "/static/"
-
-# ✅ Carpeta donde collectstatic va a copiar todo
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# ✅ Tus archivos estáticos en desarrollo (img/logo.png, css, etc.)
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-# ✅ WhiteNoise: sirve archivos comprimidos y versionados
+# ✅ WhiteNoise: compresión + versionado
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -147,7 +149,7 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
-    # Opcional pero recomendado:
-    SECURE_HSTS_SECONDS = 60  # luego puedes subir a 31536000
+    SECURE_HSTS_SECONDS = 60
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
