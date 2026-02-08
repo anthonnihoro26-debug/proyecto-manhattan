@@ -1,0 +1,232 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Proyecto Manhattan - Registro de Asistencia</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body{
+            margin:0;
+            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        .header{
+            background:#fff;
+            padding:10px 30px;
+            box-shadow:0 4px 10px rgba(0,0,0,0.1);
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            height:80px;
+        }
+
+        .header-left{
+            display:flex;
+            align-items:center;
+            gap:14px;
+            min-width: 0;
+        }
+
+        .logo{
+            height:52px;
+            width:auto;
+            display:block;
+        }
+
+        .universidad{
+            font-size:20px;
+            font-weight:bold;
+            color:#0d6efd;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 520px;
+        }
+
+        /* CONTENIDO */
+        .contenedor{
+            min-height: calc(100vh - 80px);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:30px 15px;
+        }
+
+        .card{
+            width:520px;
+            border-radius:18px;
+            box-shadow:0 12px 35px rgba(0,0,0,0.28);
+            border: 0;
+        }
+
+        .titulo{
+            text-align:center;
+            font-weight:bold;
+            color:#0d6efd;
+            letter-spacing: .5px;
+        }
+
+        /* Caja bonita de datos */
+        .box-profesor{
+            border:1px solid #dfe7f3;
+            border-radius: 12px;
+            background: #f7fbff;
+            padding: 16px;
+        }
+
+        .box-profesor h6{
+            margin:0;
+            color:#0d6efd;
+            font-weight: bold;
+        }
+
+        .fade-message{
+            transition: opacity .35s ease;
+        }
+        .fade-out{
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-left">
+        <!-- ✅ Logo opcional: si NO quieres logo, deja este bloque comentado o elimínalo -->
+        {# <img src="{% static 'img/logo.png' %}" class="logo" alt="Logo"> #}
+
+        <div class="universidad">Universidad Nacional De Ingeniería</div>
+    </div>
+
+    <div class="text-end">
+        Usuario: <strong>{{ request.user.username }}</strong><br>
+
+        <div class="d-flex gap-2 justify-content-end mt-1">
+            <!-- BOTÓN HISTORIAL -->
+            <a href="{% url 'historial_asistencias' %}" class="btn btn-sm btn-primary">
+                📋 Historial
+            </a>
+
+            <!-- ✅ CERRAR SESIÓN (Django 5.x requiere POST) -->
+            <form method="post" action="{% url 'logout' %}" class="m-0">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-danger">
+                    Cerrar sesión
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- CONTENIDO -->
+<div class="contenedor">
+    <div class="card p-4 bg-white">
+
+        <h3 class="titulo mb-3">Registro de Asistencia</h3>
+
+        <!-- ✅ MENSAJES (solo salen cuando presionas ACEPTAR). Se ocultan en 2s -->
+        {% if messages %}
+            <div id="msgBox" class="mb-3 fade-message">
+                {% for message in messages %}
+                    <div class="alert
+                        {% if message.tags == 'success' %} alert-success
+                        {% elif message.tags == 'error' %} alert-danger
+                        {% else %} alert-info {% endif %}
+                        text-center mb-2"
+                        role="alert">
+                        {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}❌{% else %}ℹ️{% endif %}
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- ✅ 1) FORMULARIO BUSCAR DNI (solo si NO hay profesor) -->
+        {% if not profesor %}
+            <form method="post" autocomplete="off">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="buscar">
+
+                <div class="mb-3">
+                    <label class="form-label">DNI</label>
+                    <input type="text"
+                           name="dni"
+                           class="form-control form-control-lg"
+                           maxlength="8"
+                           required
+                           autofocus
+                           placeholder="Ingrese DNI (8 dígitos)">
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        Buscar
+                    </button>
+                </div>
+            </form>
+        {% endif %}
+
+        <!-- ✅ 2) DATOS DEL PROFESOR + BOTÓN ACEPTAR (solo si ya buscaste) -->
+        {% if profesor %}
+            <div class="box-profesor mt-2">
+                <div class="d-flex align-items-start justify-content-between">
+                    <h6>Datos del Profesor</h6>
+
+                    <!-- ✅ ACEPTAR = recién registra -->
+                    <form method="post" class="m-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="aceptar">
+                        <input type="hidden" name="dni" value="{{ profesor.dni }}">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            Aceptar
+                        </button>
+                    </form>
+                </div>
+
+                <hr class="my-2">
+
+                <p class="mb-1"><strong>Código:</strong> {{ profesor.codigo }}</p>
+                <p class="mb-1"><strong>Apellidos:</strong> {{ profesor.apellidos }}</p>
+                <p class="mb-1"><strong>Nombres:</strong> {{ profesor.nombres }}</p>
+                <p class="mb-1"><strong>Condición:</strong> {{ profesor.condicion }}</p>
+
+                <p class="mb-0 mt-2">
+                    <strong>Fecha y hora:</strong> {{ fecha_hora_str }}
+                </p>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+    // ✅ Ocultar mensajes en 2 segundos
+    const msgBox = document.getElementById("msgBox");
+    if (msgBox) {
+        setTimeout(() => {
+            msgBox.classList.add("fade-out");
+            setTimeout(() => msgBox.remove(), 400);
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: proyecto-manhattan
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn proyecto_manhattan.wsgi:application"
