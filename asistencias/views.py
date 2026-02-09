@@ -179,21 +179,38 @@ def scan_page(request):
 def api_scan_asistencia(request):
     """
     Soporta:
-      - JSON: {"code": "..."}   (fetch application/json)
-      - FORM: code=... o dni=... (por si luego usas lector USB tipo teclado)
+      - JSON: {"code": "..."} o {"dni": "..."}
+      - FORM: code=... o dni=...
     Extrae 8 dígitos aunque venga: "DNI: 10041279"
+    Responde SIEMPRE JSON.
     """
 
-    # 1) leer "raw" desde JSON o POST
-    raw = ""
+    # ✅ Si usas login_required en otra parte y te redirige,
+    # mejor responder JSON 401 aquí para que el front no reviente.
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"ok": False, "msg": "No autenticado. Vuelve a iniciar sesión."},
+            status=401
+        )
 
+    # 1) leer raw desde JSON o POST
+    raw = ""
     ctype = (request.content_type or "").lower()
+
     if "application/json" in ctype:
         try:
-            data = json.loads(request.body.decode("utf-8"))
+            body = (request.body or b"").decode("utf-8").strip()
+            if not body:
+                return JsonResponse({"ok": False, "msg": "Body vacío (JSON)"},
+                                    status=400)
+            data = json.loads(body)
             raw = (data.get("code") or data.get("dni") or "").strip()
-        except Exception:
+        except json.JSONDecodeError:
             return JsonResponse({"ok": False, "msg": "JSON inválido"}, status=400)
+        except UnicodeDecodeError:
+            return JsonResponse({"ok": False, "msg": "Encoding inválido (UTF-8)"}, status=400)
+        except Exception:
+            return JsonResponse({"ok": False, "msg": "Error leyendo JSON"}, status=400)
     else:
         raw = (request.POST.get("code") or request.POST.get("dni") or "").strip()
 
@@ -204,14 +221,14 @@ def api_scan_asistencia(request):
     m = re.search(r"(\d{8})", raw)
     dni = m.group(1) if m else ""
 
-    if not dni or len(dni) != 8 or not dni.isdigit():
+    if not dni.isdigit() or len(dni) != 8:
         return JsonResponse({"ok": False, "msg": "DNI inválido (debe ser 8 dígitos)"}, status=400)
 
     # 3) buscar profesor
     try:
         profesor = Profesor.objects.get(dni=dni)
     except Profesor.DoesNotExist:
-        return JsonResponse({"ok": False, "msg": f"Profesor no encontrado (DNI {dni})"}, status=404)
+        return JsonResponse({"ok": False, "msg": "Profesor no encontrado"}, status=404)
 
     # 4) evitar doble registro por día
     hoy = timezone.localdate()

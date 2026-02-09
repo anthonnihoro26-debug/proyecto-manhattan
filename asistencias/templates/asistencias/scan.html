@@ -3,7 +3,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Escaneo de Asistencia</title>
 
   <style>
@@ -18,102 +18,176 @@
       --green: rgba(34,197,94,.22);
       --yellow: rgba(245,158,11,.22);
       --red: rgba(239,68,68,.22);
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
     }
 
+    html,body{height:100%;}
     body{
-      margin:0; font-family: Arial, sans-serif; color:var(--txt);
-      min-height:100vh;
-      background: radial-gradient(1200px 600px at 20% 20%, rgba(79,124,255,.25), transparent 55%),
-                  radial-gradient(900px 500px at 85% 15%, rgba(168,85,247,.22), transparent 55%),
-                  linear-gradient(135deg, var(--bg1), var(--bg2));
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      color:var(--txt);
+      background:
+        radial-gradient(1200px 600px at 20% 20%, rgba(79,124,255,.25), transparent 55%),
+        radial-gradient(900px 500px at 85% 15%, rgba(168,85,247,.22), transparent 55%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .wrap{ max-width: 1100px; margin:0 auto; padding:16px 16px 26px; }
+    .wrap{ max-width:1100px; margin:0 auto; padding:16px 16px 26px; }
 
     .topbar{
       display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
-      padding:14px 16px; border-radius: 18px;
+      padding:14px 16px; border-radius:18px;
       background: rgba(255,255,255,.05);
       border:1px solid var(--line);
-      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+      box-shadow: var(--shadow);
       backdrop-filter: blur(10px);
     }
 
-    .brand{
-      display:flex; align-items:center; gap:12px;
-    }
+    .brand{ display:flex; align-items:center; gap:12px; min-width:260px; }
     .badgeCam{
-      width:42px; height:42px; border-radius: 14px;
+      width:42px; height:42px; border-radius:14px;
       display:grid; place-items:center;
       background: linear-gradient(135deg, rgba(79,124,255,.95), rgba(168,85,247,.85));
       box-shadow: 0 10px 22px rgba(79,124,255,.18);
-      font-size: 20px;
+      font-size: 20px; flex:0 0 auto;
     }
-    .titles .h1{ font-size: 20px; font-weight: 900; margin:0; letter-spacing:.2px; }
-    .titles .sub{ margin:2px 0 0; color:var(--muted); font-size: 13px; }
+    .titles .h1{ font-size:20px; font-weight:950; margin:0; letter-spacing:.2px; }
+    .titles .sub{ margin:2px 0 0; color:var(--muted); font-size:13px; }
 
-    .actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
 
     .btn{
       border:0; cursor:pointer; text-decoration:none;
-      padding:10px 14px; border-radius: 12px;
-      display:inline-flex; gap:8px; align-items:center;
-      font-weight: 900; font-size: 14px; letter-spacing:.2px;
+      padding:10px 14px; border-radius:12px;
+      display:inline-flex; gap:8px; align-items:center; justify-content:center;
+      font-weight:900; font-size:14px; letter-spacing:.2px;
       background: rgba(255,255,255,.08);
       color:var(--txt);
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.12);
+      user-select:none;
+      transition: transform .12s ease, opacity .12s ease, box-shadow .12s ease;
+      box-shadow: 0 10px 22px rgba(0,0,0,.20);
     }
-    .btn:hover{ transform: translateY(-1px); transition:.12s ease; }
+    .btn:hover{ transform: translateY(-1px); box-shadow: 0 14px 28px rgba(0,0,0,.26); }
+    .btn:active{ transform: translateY(0px); opacity:.92; }
     .btn-blue{ background: rgba(79,124,255,.22); border-color: rgba(79,124,255,.35); }
     .btn-red { background: rgba(239,68,68,.20); border-color: rgba(239,68,68,.35); }
-    .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px; border-radius:999px;
+      background: rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.12);
+      color: var(--txt);
+      font-weight:900;
+      font-size:13px;
+      letter-spacing:.2px;
+      user-select:none;
+    }
 
     .grid{
-      display:grid; grid-template-columns: 1.35fr .65fr; gap:14px; margin-top:14px;
+      display:grid;
+      grid-template-columns: 1.65fr .35fr;
+      gap:14px;
+      margin-top:14px;
     }
-    @media (max-width: 980px){
-      .grid{ grid-template-columns: 1fr; }
-    }
+    @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
 
     .card{
-      border-radius: 18px;
+      border-radius:18px;
       background: var(--card);
       border:1px solid var(--line);
-      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+      box-shadow: var(--shadow);
       overflow:hidden;
       backdrop-filter: blur(10px);
     }
 
     .videoWrap{ position:relative; padding:14px; }
-    video{
-      width:100%;
-      border-radius: 16px;
+    .videoShell{
+      position:relative;
+      border-radius:16px;
+      overflow:hidden;
       background:#000;
-      display:block;
-      min-height: 240px;
+      box-shadow: 0 12px 32px rgba(0,0,0,.35);
     }
 
-    /* Overlay bonito (no “cuadrado feo”) */
+    .videoShell::before{ content:""; display:block; padding-top:56.25%; } /* 16:9 */
+    video{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit: cover;
+      display:block;
+      background:#000;
+    }
+
     .overlay{
-      position:absolute; inset:14px;
+      position:absolute; inset:0;
       pointer-events:none;
       display:flex; align-items:center; justify-content:center;
     }
-    .window{
-      width: 72%;
-      max-width: 520px;
-      aspect-ratio: 1/1;
-      border-radius: 26px;
-      border: 2px solid rgba(79,124,255,.75);
-      box-shadow:
-        0 0 0 9999px rgba(0,0,0,.40),
-        0 0 28px rgba(79,124,255,.22);
-      position:relative;
+
+    .overlayGrid{
+      width:100%;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap:14px;
+      padding: 12px;
     }
-    .window:before, .window:after{
-      content:""; position:absolute; inset:10px;
-      border-radius: 18px;
-      border:1px dashed rgba(255,255,255,.18);
+
+    .winQR{
+      width: 58%;
+      max-width: 480px;
+      aspect-ratio: 1/1;
+      border-radius: 22px;
+      border: 2px solid rgba(79,124,255,.85);
+      box-shadow: 0 0 0 9999px rgba(0,0,0,.36), 0 0 24px rgba(79,124,255,.18);
+      position:relative;
+      background: linear-gradient(to bottom, rgba(79,124,255,.00), rgba(79,124,255,.10), rgba(79,124,255,.00));
+    }
+    .winQR:before{
+      content:"";
+      position:absolute; inset:12px;
+      border-radius: 16px;
+      border:1px dashed rgba(255,255,255,.16);
+    }
+
+    .winBar{
+      width: 84%;
+      max-width: 820px;
+      height: 20%;
+      max-height: 150px;
+      border-radius: 20px;
+      border: 2px solid rgba(79,124,255,.90);
+      box-shadow: 0 0 24px rgba(79,124,255,.18);
+      position:relative;
+      background: linear-gradient(to right, rgba(79,124,255,.00), rgba(79,124,255,.12), rgba(79,124,255,.00));
+    }
+    .winBar:before{
+      content:"";
+      position:absolute; inset:10px;
+      border-radius: 14px;
+      border:1px dashed rgba(255,255,255,.16);
+    }
+    .winBar:after{
+      content:"";
+      position:absolute;
+      left: 8%;
+      right: 8%;
+      top: 50%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(34,197,94,.95), transparent);
+      box-shadow: 0 0 18px rgba(34,197,94,.24);
+      animation: scan 1.1s ease-in-out infinite;
+    }
+    @keyframes scan{
+      0% { transform: translateY(-26px); opacity:.45; }
+      50%{ transform: translateY(26px); opacity:1; }
+      100%{ transform: translateY(-26px); opacity:.45; }
     }
 
     .status{
@@ -122,42 +196,64 @@
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.06);
-      font-weight: 900;
+      font-weight: 950;
       letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      min-height: 22px;
     }
-    .ok   { background: var(--green);  border-color: rgba(34,197,94,.38); }
-    .warn { background: var(--yellow); border-color: rgba(245,158,11,.40); }
-    .bad  { background: var(--red);    border-color: rgba(239,68,68,.40); }
 
-    .side{
-      padding:14px;
-    }
-    .side h3{
-      margin: 6px 0 8px; font-size: 16px; font-weight: 900;
-    }
-    .side ul{
-      margin:0; padding-left: 16px; color:var(--muted); line-height: 1.45;
-      font-size: 13px;
-    }
-    .pill{
+    .chip{
       display:inline-flex; align-items:center; gap:8px;
-      padding: 8px 12px; border-radius: 999px;
-      background: rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.10);
-      margin-top: 10px;
-      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      font-weight: 950;
       font-size: 12px;
-      font-weight: 800;
+      letter-spacing:.2px;
+      user-select:none;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background: rgba(255,255,255,.35);
+      box-shadow: 0 0 12px rgba(255,255,255,.10);
+    }
+    .chip-run .dot{
+      background: rgba(79,124,255,.95);
+      box-shadow: 0 0 20px rgba(79,124,255,.24);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .chip-ok .dot{ background: rgba(34,197,94,.9); box-shadow: 0 0 18px rgba(34,197,94,.22); }
+    .chip-warn .dot{ background: rgba(245,158,11,.95); box-shadow: 0 0 18px rgba(245,158,11,.22); }
+    .chip-bad .dot{ background: rgba(239,68,68,.95); box-shadow: 0 0 18px rgba(239,68,68,.22); }
+    @keyframes pulse{
+      0%{ transform: scale(0.9); opacity: .65; }
+      50%{ transform: scale(1.1); opacity: 1; }
+      100%{ transform: scale(0.9); opacity: .65; }
     }
 
-    .rowUser{
-      margin-top: 10px;
-      font-size: 12px;
-      color: var(--muted);
+    .side{ padding:14px; }
+    .sideBox{
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
     }
+    .sideTitle{ margin:0 0 10px; font-size:14px; font-weight:950; letter-spacing:.2px; }
+    .kv{ display:flex; flex-direction:column; gap:10px; font-size:13px; color: var(--muted); line-height:1.25; }
+    .kv b{ color: rgba(255,255,255,.92); }
+
+    .rangeRow{ display:flex; align-items:center; gap:10px; margin-top: 12px; }
+    .rangeRow input[type="range"]{ width:100%; accent-color: rgba(79,124,255,.95); }
+    .rangeVal{ min-width:42px; text-align:right; font-weight:950; color:rgba(255,255,255,.92); font-size:12px; }
+
+    .hidden{ display:none !important; }
   </style>
 
-  <!-- ✅ ZXing local (fallback) -->
   <script src="{% static 'asistencias/js/zxing-browser.min.js' %}"></script>
 </head>
 
@@ -169,15 +265,17 @@
         <div class="badgeCam">📷</div>
         <div class="titles">
           <p class="h1">Escaneo de Asistencia (DNI)</p>
-          <p class="sub">Escanea QR o código de barras con el DNI. Se registra automáticamente (1 vez por día).</p>
+          <p class="sub">QR + Barras • Auto-scan • Mensaje y espera 4s</p>
         </div>
       </div>
 
       <div class="actions">
         <a class="btn btn-blue" href="{% url 'historial_asistencias' %}">📋 Historial</a>
+        <span class="pill">👤 <b>{{ request.user.username }}</b></span>
 
-        <button id="btnStart" class="btn btn-blue">▶ Activar cámara</button>
-        <button id="btnStop" class="btn btn-red" disabled>■ Detener</button>
+        <button id="btnFlip" class="btn btn-blue" type="button">🔄 Cámara</button>
+        <button id="btnTorch" class="btn btn-blue hidden" type="button">🔦 Linterna</button>
+        <button id="btnStop" class="btn btn-red" disabled type="button">■ Detener</button>
 
         <form method="post" action="{% url 'logout' %}" style="margin:0">
           {% csrf_token %}
@@ -189,25 +287,45 @@
     <div class="grid">
       <div class="card">
         <div class="videoWrap">
-          <video id="video" autoplay playsinline muted></video>
-          <div class="overlay"><div class="window"></div></div>
+          <div class="videoShell">
+            <video id="video" autoplay playsinline muted></video>
+
+            <div class="overlay" id="overlay" style="display:none">
+              <div class="overlayGrid">
+                <div class="winQR" id="winQR"></div>
+                <div class="winBar" id="winBar"></div>
+              </div>
+            </div>
+
+          </div>
         </div>
 
-        <div id="status" class="status">Toca “Activar cámara” para comenzar…</div>
+        <div id="status" class="status">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <span id="chip" class="chip chip-run"><span class="dot"></span> Iniciando…</span>
+            <span id="msg">Abriendo cámara…</span>
+          </div>
+          <div style="color:rgba(255,255,255,.72); font-weight:800; font-size:12px;">
+            Último: <b id="lastText">—</b>
+          </div>
+        </div>
       </div>
 
       <div class="card side">
-        <h3>Consejos de escaneo</h3>
-        <ul>
-          <li>Mejor luz = mejor lectura.</li>
-          <li>Para <b>código de barras (1D)</b>, acerca un poco y evita sombras.</li>
-          <li>Para <b>QR</b>, mantén el código dentro del recuadro 1–2 segundos.</li>
-          <li>Si el código trae texto: <b>“DNI: 10041279”</b>, igual extraemos los 8 dígitos.</li>
-          <li>En celular usa la URL de Render (HTTPS), no 127.0.0.1.</li>
-        </ul>
+        <div class="sideBox">
+          <p class="sideTitle">Pro</p>
+          <div class="kv">
+            <div>⚡ Estado: <b id="stateText">Iniciando</b></div>
+            <div>📷 Cámara: <b id="camText">—</b></div>
+            <div style="margin-top:4px;">Tip: Barras horizontal dentro del recuadro.</div>
+          </div>
 
-        <div class="pill">Ruta: <b>/asistencia/scan/</b></div>
-        <div class="rowUser">Usuario: <b>{{ request.user.username }}</b></div>
+          <div id="zoomBox" class="rangeRow hidden">
+            <span style="font-weight:950; color:rgba(255,255,255,.92); font-size:12px;">🔍</span>
+            <input id="zoomRange" type="range" min="1" max="3" step="0.1" value="1" />
+            <span id="zoomVal" class="rangeVal">1.0x</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -222,232 +340,490 @@
     }
     const csrftoken = getCookie('csrftoken');
 
-    const statusEl = document.getElementById("status");
-    const videoEl  = document.getElementById("video");
-    const btnStart = document.getElementById("btnStart");
-    const btnStop  = document.getElementById("btnStop");
+    const videoEl   = document.getElementById("video");
+    const overlayEl = document.getElementById("overlay");
+    const btnStop   = document.getElementById("btnStop");
+    const btnFlip   = document.getElementById("btnFlip");
+    const btnTorch  = document.getElementById("btnTorch");
 
+    const chipEl    = document.getElementById("chip");
+    const msgEl     = document.getElementById("msg");
+    const lastText  = document.getElementById("lastText");
+    const stateText = document.getElementById("stateText");
+    const camText   = document.getElementById("camText");
+
+    const zoomBox   = document.getElementById("zoomBox");
+    const zoomRange = document.getElementById("zoomRange");
+    const zoomVal   = document.getElementById("zoomVal");
+
+    // ========= Config =========
+    const COOLDOWN_MS = 4000;
+    const MESSAGE_MS  = 4000;
+    const LOOP_MS     = 85;
+
+    // ========= Estado =========
     let stream = null;
+    let track = null;
     let running = false;
+
     let busy = false;
-    let lastDni = null;
+    let cooldownUntil = 0;
+    let loopTimer = null;
+
+    let lastKey = null;
     let lastTs = 0;
 
-    // detector principal (rápido)
     let detector = null;
-
-    // fallback ZXing
     let zxingReader = null;
 
-    function setStatus(msg, type=null) {
-      statusEl.textContent = msg;
-      statusEl.className = "status" + (type ? (" " + type) : "");
+    let useFront = false;
+    let torchOn = false;
+
+    // Canvas ROI
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+    // ===========================
+    // ✅ AUDIO "FULL POWER" + UNLOCK
+    // ===========================
+    let audioCtx = null;
+    let master = null;
+    let audioUnlocked = false;
+
+    function ensureAudioCtx(){
+      if (!audioCtx){
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        master = audioCtx.createGain();
+        master.gain.value = 1.0;          // 🔥 master al máximo (dependiendo del móvil)
+        master.connect(audioCtx.destination);
+      }
+      return audioCtx;
     }
 
+    async function unlockAudioOnce(){
+      try{
+        const ctx = ensureAudioCtx();
+        if (ctx.state === "suspended") await ctx.resume();
+
+        // "silent tick" para iOS: reproduce 1 frame y para
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        g.gain.value = 0.0001;
+        o.connect(g); g.connect(master);
+        o.start();
+        o.stop(ctx.currentTime + 0.02);
+
+        audioUnlocked = true;
+      }catch(e){}
+    }
+
+    // Hook: cualquier toque desbloquea audio
+    window.addEventListener("pointerdown", unlockAudioOnce, { once:false, passive:true });
+    window.addEventListener("touchstart", unlockAudioOnce, { once:false, passive:true });
+
+    // Tono fuerte (sin saturar tanto)
+    function tone(freq, durMs, vol){
+      try{
+        if (!audioCtx || audioCtx.state !== "running") return;
+
+        const t0 = audioCtx.currentTime;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+
+        o.type = "square"; // fuerte
+        o.frequency.setValueAtTime(freq, t0);
+
+        const v = Math.min(Math.max(vol, 0.05), 1.0); // 0.05..1.0
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(v, t0 + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + durMs/1000);
+
+        o.connect(g); g.connect(master);
+        o.start(t0);
+        o.stop(t0 + durMs/1000 + 0.02);
+      }catch(e){}
+    }
+
+    // ✅ Sonidos distintos (más fuertes)
+    function beepOk(){
+      tone(1400, 120, 0.9);
+      setTimeout(()=>tone(980, 170, 0.9), 140);
+    }
+    function beepWarn(){
+      tone(740, 220, 0.85);
+      setTimeout(()=>tone(620, 220, 0.85), 260);
+    }
+    function beepBad(){
+      tone(280, 260, 1.0);
+      setTimeout(()=>tone(220, 260, 1.0), 280);
+    }
+
+    // ✅ Vibraciones distintas (si soporta)
+    function vibOk(){ try{ navigator.vibrate?.([80]); }catch(e){} }
+    function vibWarn(){ try{ navigator.vibrate?.([80,40,80]); }catch(e){} }
+    function vibBad(){ try{ navigator.vibrate?.([120,60,120,60,120]); }catch(e){} }
+
+    // ========= UI =========
+    function setChip(kind, text){
+      chipEl.className = "chip " + (kind ? ("chip-" + kind) : "");
+      chipEl.innerHTML = '<span class="dot"></span> ' + text;
+      stateText.textContent = text.replace("…","").trim();
+    }
+    function setMsg(t){ msgEl.textContent = t; }
+
+    // ========= DNI =========
     function extractDni(text){
       const s = (text || "").toString();
       const m = s.match(/(\d{8})/);
-      return m ? m[1] : "";
+      if (m) return m[1];
+      const digits = s.replace(/\D/g,"");
+      if (digits.length === 7) return digits.padStart(8,"0");
+      if (digits.length === 8) return digits;
+      if (digits.length > 8) return digits.slice(-8);
+      return "";
     }
 
-    async function registrarDni(dni) {
+    // ========= Cámara =========
+    async function pickDeviceId(){
+      try{
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cams = devices.filter(d => d.kind === "videoinput");
+        if (!cams.length) return null;
+
+        const prefer = useFront
+          ? cams.find(d => /front|user/i.test(d.label))
+          : cams.find(d => /back|rear|environment/i.test(d.label));
+
+        return (prefer || cams[0]).deviceId;
+      }catch(e){
+        return null;
+      }
+    }
+
+    function setupDetector(){
+      if ("BarcodeDetector" in window){
+        detector = new BarcodeDetector({
+          formats: [
+            "qr_code",
+            "code_128","code_39",
+            "ean_13","ean_8",
+            "itf",
+            "upc_a","upc_e"
+          ]
+        });
+      } else detector = null;
+
+      if (!zxingReader && typeof ZXingBrowser !== "undefined"){
+        zxingReader = new ZXingBrowser.BrowserMultiFormatReader();
+      }
+    }
+
+    async function setupZoom(track){
+      try{
+        const caps = track.getCapabilities ? track.getCapabilities() : null;
+        if (!caps || !caps.zoom){ zoomBox.classList.add("hidden"); return; }
+
+        const min = caps.zoom.min ?? 1;
+        const max = caps.zoom.max ?? 3;
+        const step = caps.zoom.step ?? 0.1;
+
+        zoomRange.min = min;
+        zoomRange.max = max;
+        zoomRange.step = step;
+        zoomRange.value = Math.min(Math.max(1, min), max);
+        zoomVal.textContent = parseFloat(zoomRange.value).toFixed(1) + "x";
+        zoomBox.classList.remove("hidden");
+
+        zoomRange.oninput = async () => {
+          const z = parseFloat(zoomRange.value);
+          zoomVal.textContent = z.toFixed(1) + "x";
+          try{ await track.applyConstraints({ advanced: [{ zoom: z }] }); }catch(e){}
+        };
+      }catch(e){
+        zoomBox.classList.add("hidden");
+      }
+    }
+
+    async function setupTorch(track){
+      try{
+        const caps = track.getCapabilities ? track.getCapabilities() : null;
+        if (!caps || !caps.torch){
+          btnTorch.classList.add("hidden");
+          return;
+        }
+        btnTorch.classList.remove("hidden");
+      }catch(e){
+        btnTorch.classList.add("hidden");
+      }
+    }
+
+    async function toggleTorch(){
+      if (!track) return;
+      try{
+        torchOn = !torchOn;
+        await track.applyConstraints({ advanced: [{ torch: torchOn }] });
+        btnTorch.textContent = torchOn ? "🔦 Linterna ON" : "🔦 Linterna";
+      }catch(e){
+        btnTorch.classList.add("hidden");
+      }
+    }
+
+    // ========= ROI =========
+    function roiQR(){
+      const vw = videoEl.videoWidth || 1280;
+      const vh = videoEl.videoHeight || 720;
+      const size = Math.floor(Math.min(vw, vh) * 0.52);
+      return { sx: Math.floor((vw - size)/2), sy: Math.floor((vh - size)/2), sw: size, sh: size };
+    }
+    function roiBAR(){
+      const vw = videoEl.videoWidth || 1280;
+      const vh = videoEl.videoHeight || 720;
+      const sw = Math.floor(vw * 0.84);
+      const sh = Math.floor(vh * 0.22);
+      return { sx: Math.floor((vw - sw)/2), sy: Math.floor((vh - sh)/2), sw, sh };
+    }
+
+    // ========= Registrar =========
+    async function registrarDni(dni){
       if (busy) return;
       busy = true;
 
-      try {
+      setChip("run","Registrando…");
+      setMsg("Enviando…");
+
+      try{
         const res = await fetch("{% url 'api_scan_asistencia' %}", {
           method: "POST",
+          credentials: "same-origin",
           headers: {
             "Content-Type": "application/json",
-            "X-CSRFToken": csrftoken
+            "X-CSRFToken": csrftoken,
+            "X-Requested-With": "XMLHttpRequest"
           },
           body: JSON.stringify({ code: dni })
         });
 
-        const data = await res.json().catch(() => ({ ok:false, msg:"Respuesta inválida" }));
-
-        if (res.ok && data.ok) {
-          if (data.duplicado) setStatus(data.msg || "⚠️ Ya registró hoy.", "warn");
-          else setStatus(data.msg || "✅ Asistencia registrada.", "ok");
-          beep();
-        } else {
-          setStatus(data.msg || "❌ No se pudo registrar.", "bad");
+        const ct = res.headers.get("content-type") || "";
+        if (!ct.includes("application/json")){
+          const text = await res.text();
+          console.log("RESPUESTA NO JSON:", text);
+          setChip("bad","Error");
+          setMsg("Servidor no devolvió JSON (CSRF/login/500). Revisa consola.");
+          beepBad(); vibBad();
+          return;
         }
 
-      } catch (e) {
-        setStatus("❌ Error de red.", "bad");
-      } finally {
-        setTimeout(() => {
-  busy = false;
-  if (running) setStatus("Listo. Escanea el siguiente código…", null);
-}, 5000);
+        const data = await res.json();
+        lastText.textContent = `${dni} • ${new Date().toLocaleTimeString()}`;
 
+        if (res.ok && data.ok){
+          if (data.duplicado){
+            setChip("warn","Duplicado");
+            setMsg(data.msg || "Ya registró hoy.");
+            beepWarn(); vibWarn();
+          } else {
+            setChip("ok","OK");
+            setMsg(data.msg || "Registrado.");
+            beepOk(); vibOk();
+          }
+        } else {
+          setChip("bad","Falló");
+          setMsg(data.msg || "No se pudo registrar.");
+          beepBad(); vibBad();
+        }
+
+      }catch(e){
+        setChip("bad","Sin red");
+        setMsg("Error de red.");
+        beepBad(); vibBad();
+      }finally{
+        cooldownUntil = Date.now() + COOLDOWN_MS;
+
+        setTimeout(()=>{
+          busy = false;
+          if (running){
+            setChip("run","Escaneando…");
+            setMsg("Listo. Escanea el siguiente…");
+          }
+        }, MESSAGE_MS);
       }
     }
 
-    function beep(){
-  try{
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-    // 2 beeps cortos (más notorio)
-    const play = (freq, durMs, gainVal) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-
-      o.type = "square";            // más “duro” que sine
-      o.frequency.value = freq;
-
-      // volumen fuerte (sin reventar)
-      g.gain.setValueAtTime(0.0001, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(gainVal, ctx.currentTime + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + durMs/1000);
-
-      o.start();
-      o.stop(ctx.currentTime + durMs/1000);
-    };
-
-    play(1100, 140, 0.12);          // primer beep
-    setTimeout(() => play(900, 160, 0.12), 170); // segundo beep
-
-    // cerrar contexto después
-    setTimeout(() => { try{ ctx.close(); }catch(e){} }, 450);
-  } catch(e){}
-}
-
-    async function startCamera(){
-      if (!window.isSecureContext) {
-        setStatus("❌ La cámara requiere HTTPS (o localhost).", "bad");
-        return;
-      }
-
-      btnStart.disabled = true;
+    // ========= Detectar en ROI =========
+    async function detectInROI(roi){
+      canvas.width = roi.sw;
+      canvas.height = roi.sh;
 
       try{
-        // Alta resolución (mejor para 1D)
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: "environment" },
-            width:  { ideal: 1920 },
-            height: { ideal: 1080 }
-          },
-          audio: false
-        });
-        videoEl.srcObject = stream;
-
-        await new Promise(r => (videoEl.onloadedmetadata = () => r()));
-
-        // BarcodeDetector (Chrome/Edge moderno) - MUY rápido
-        if ("BarcodeDetector" in window) {
-          detector = new BarcodeDetector({
-            formats: [
-              "qr_code",
-              "code_128", "code_39",
-              "ean_13", "ean_8",
-              "itf",
-              "upc_a", "upc_e"
-            ]
-          });
-        }
-
-        running = true;
-        btnStop.disabled = false;
-        setStatus("✅ Cámara lista. Escanea el QR o código de barras…");
-
-        // Loop de detección
-        scanLoop();
-
-      } catch(e){
-        const name = e?.name || "Error";
-        const msg  = e?.message || "Sin detalle";
-
-        if (name === "NotAllowedError") setStatus("❌ Permiso denegado. Activa la cámara en permisos del navegador.", "bad");
-        else if (name === "NotFoundError") setStatus("❌ No se encontró cámara.", "bad");
-        else if (name === "NotReadableError") setStatus("❌ La cámara está ocupada por otra app/pestaña. Cierra otras apps y reintenta.", "bad");
-        else setStatus(`❌ No se pudo abrir la cámara (${name}): ${msg}`, "bad");
-
-        btnStart.disabled = false;
-        btnStop.disabled = true;
-        stopCamera();
+        ctx.drawImage(videoEl, roi.sx, roi.sy, roi.sw, roi.sh, 0, 0, roi.sw, roi.sh);
+      }catch(e){
+        return null;
       }
+
+      if (detector){
+        try{
+          const bitmap = await createImageBitmap(canvas);
+          const codes = await detector.detect(bitmap);
+          bitmap.close?.();
+          if (codes && codes.length) return codes[0].rawValue || "";
+        }catch(e){}
+      }
+
+      if (!detector && zxingReader && zxingReader.decodeOnceFromVideoElement){
+        try{
+          const result = await zxingReader.decodeOnceFromVideoElement(videoEl);
+          return result?.getText ? result.getText() : null;
+        }catch(e){}
+      }
+
+      return null;
     }
 
+    // ========= Loop =========
     async function scanLoop(){
       if (!running) return;
 
-      // anti spam
-      if (!busy) {
-        // 1) Intento rápido con BarcodeDetector
-        if (detector) {
-          try{
-            const barcodes = await detector.detect(videoEl);
-            if (barcodes && barcodes.length) {
-              const raw = barcodes[0].rawValue || "";
-              const dni = extractDni(raw);
-              const now = Date.now();
+      const now = Date.now();
+      if (now < cooldownUntil){
+        loopTimer = setTimeout(scanLoop, LOOP_MS);
+        return;
+      }
 
-              if (dni && (dni !== lastDni || (now - lastTs) > 1600)) {
-                lastDni = dni; lastTs = now;
-                registrarDni(dni);
-              }
-            }
-          }catch(e){
-            // ignore
-          }
-        } else {
-          // 2) Fallback: ZXing (más lento)
-          try{
-            if (!zxingReader) {
-              // Algunas builds exponen ZXingBrowser, otras ZXing
-              const Z = (typeof ZXingBrowser !== "undefined") ? ZXingBrowser :
-                        (typeof ZXing !== "undefined") ? ZXing : null;
+      if (!busy){
+        let raw = await detectInROI(roiQR());
+        if (!raw) raw = await detectInROI(roiBAR());
 
-              if (Z && Z.BrowserMultiFormatReader) {
-                zxingReader = new Z.BrowserMultiFormatReader();
-              }
-            }
+        if (raw){
+          const dni = extractDni(raw);
+          const t = Date.now();
+          const key = (dni || raw).slice(0, 40);
 
-            if (zxingReader && zxingReader.decodeOnceFromVideoElement) {
-              const result = await zxingReader.decodeOnceFromVideoElement(videoEl);
-              const raw = result?.getText ? result.getText() : "";
-              const dni = extractDni(raw);
-              const now = Date.now();
-
-              if (dni && (dni !== lastDni || (now - lastTs) > 1600)) {
-                lastDni = dni; lastTs = now;
-                registrarDni(dni);
-              }
-            }
-          }catch(e){
-            // normal: cuando no detecta, falla. ignorar.
+          if (dni && dni.length === 8 && (key !== lastKey || (t - lastTs) > 1400)){
+            lastKey = key; lastTs = t;
+            registrarDni(dni);
           }
         }
       }
 
-      // FPS estable
-      setTimeout(scanLoop, 90);
+      loopTimer = setTimeout(scanLoop, LOOP_MS);
     }
 
-    function stopCamera(){
-      running = false;
+    // ========= Start/Stop =========
+    async function startCamera(){
+      stopCamera(true);
 
-      try { zxingReader?.reset?.(); } catch(e){}
+      // ✅ Intentar desbloquear audio al iniciar (por si ya hubo tap)
+      ensureAudioCtx();
+      try{ if (audioCtx.state === "suspended") await audioCtx.resume(); }catch(e){}
+
+      if (!window.isSecureContext){
+        setChip("bad","HTTPS");
+        setMsg("Cámara requiere HTTPS (o localhost).");
+        return;
+      }
+
+      try{
+        setChip("run","Iniciando…");
+        setMsg("Abriendo cámara…");
+
+        const deviceId = await pickDeviceId();
+        const constraints = {
+          video: deviceId
+            ? { deviceId: { exact: deviceId }, width:{ ideal: 1920 }, height:{ ideal: 1080 } }
+            : { facingMode: { ideal: useFront ? "user" : "environment" }, width:{ ideal: 1920 }, height:{ ideal: 1080 } },
+          audio: false
+        };
+
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoEl.srcObject = stream;
+
+        await new Promise(r => (videoEl.onloadedmetadata = () => r()));
+        overlayEl.style.display = "flex";
+
+        track = stream.getVideoTracks()[0];
+        camText.textContent = useFront ? "Frontal" : "Trasera";
+
+        setupDetector();
+        await setupZoom(track);
+        await setupTorch(track);
+
+        running = true;
+        btnStop.disabled = false;
+
+        setChip("run","Escaneando…");
+        setMsg("QR o Barras: pon el código en su recuadro.");
+        cooldownUntil = 0;
+        busy = false;
+
+        scanLoop();
+
+      }catch(e){
+        const name = e?.name || "Error";
+        running = false;
+        btnStop.disabled = true;
+
+        if (name === "NotAllowedError"){ setChip("bad","Permiso"); setMsg("Permiso denegado. Habilita la cámara."); }
+        else if (name === "NotFoundError"){ setChip("bad","Sin cámara"); setMsg("No se encontró cámara."); }
+        else if (name === "NotReadableError"){ setChip("bad","Ocupada"); setMsg("Cámara ocupada por otra app."); }
+        else { setChip("bad","Error"); setMsg(`No se pudo abrir: ${name}`); }
+
+        // error fuerte
+        beepBad(); vibBad();
+      }
+    }
+
+    function stopCamera(silent=false){
+      running = false;
+      busy = false;
+      cooldownUntil = 0;
+
+      if (loopTimer) clearTimeout(loopTimer);
+      loopTimer = null;
+
+      try{ zxingReader?.reset?.(); }catch(e){}
       zxingReader = null;
+      detector = null;
+
+      torchOn = false;
+      btnTorch.textContent = "🔦 Linterna";
+      btnTorch.classList.add("hidden");
+
+      zoomBox.classList.add("hidden");
+      zoomRange.oninput = null;
 
       if (stream){
         stream.getTracks().forEach(t => t.stop());
-        stream = null;
       }
-      videoEl.srcObject = null;
+      stream = null;
+      track = null;
 
-      btnStart.disabled = false;
+      videoEl.srcObject = null;
+      overlayEl.style.display = "none";
+
       btnStop.disabled = true;
+
+      if (!silent){
+        setChip("", "Detenido");
+        setMsg("Cámara detenida.");
+      }
     }
 
-    btnStart.addEventListener("click", startCamera);
-    btnStop.addEventListener("click", () => {
-      stopCamera();
-      setStatus("Cámara detenida. Toca “Activar cámara” para comenzar…", null);
+    // ========= Eventos =========
+    btnStop.addEventListener("click", () => stopCamera(false));
+
+    btnFlip.addEventListener("click", async () => {
+      useFront = !useFront;
+      setChip("run","Cambiando…");
+      setMsg("Reiniciando cámara…");
+      await startCamera();
+    });
+
+    btnTorch.addEventListener("click", toggleTorch);
+
+    // ✅ auto-inicio al entrar
+    window.addEventListener("load", () => {
+      ensureAudioCtx();           // prepara audio
+      startCamera();
     });
   </script>
 </body>
