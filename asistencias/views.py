@@ -1,8 +1,9 @@
+import json
 import re
+
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q, Min
 from django.utils.dateparse import parse_date
@@ -18,85 +19,7 @@ from .models import Profesor, Asistencia
 
 
 # =========================================================
-# REGISTRO DE ASISTENCIA (BUSCAR -> ACEPTAR) (tu código)
-# =========================================================
-@login_required
-def registrar_asistencia(request):
-    profesor = None
-    fecha_hora_str = ""
-
-    if request.method == "POST":
-        dni = request.POST.get("dni", "").strip()
-        accion = request.POST.get("accion", "buscar").strip().lower()
-
-        ahora = timezone.localtime(timezone.now())
-        fecha_hora_str = ahora.strftime("%d/%m/%Y %H:%M")
-
-        if accion == "buscar":
-            try:
-                profesor = Profesor.objects.get(dni=dni)
-            except Profesor.DoesNotExist:
-                messages.error(request, "❌ Profesor no encontrado")
-                return redirect("registrar_asistencia")
-
-            return render(request, "asistencias/registro.html", {
-                "profesor": profesor,
-                "fecha_hora_str": fecha_hora_str,
-            })
-
-        elif accion == "aceptar":
-            try:
-                profesor = Profesor.objects.get(dni=dni)
-            except Profesor.DoesNotExist:
-                messages.error(request, "❌ Profesor no encontrado")
-                return redirect("registrar_asistencia")
-
-            hoy = timezone.localdate()
-
-            ya_existe = Asistencia.objects.filter(
-                profesor=profesor,
-                fecha_hora__date=hoy
-            ).exists()
-
-            if ya_existe:
-                messages.warning(request, "⚠️ Ya registraste tu asistencia hoy.")
-                return redirect("registrar_asistencia")
-
-            Asistencia.objects.create(profesor=profesor)
-
-            messages.success(request, "✅ Asistencia registrada correctamente")
-            return redirect("registrar_asistencia")
-
-    return render(request, "asistencias/registro.html", {
-        "profesor": None,
-        "fecha_hora_str": "",
-    })
-
-
-# =========================================================
-# AJAX (opcional) (tu código)
-# =========================================================
-@login_required
-def buscar_profesor(request):
-    dni = request.GET.get("dni", "").strip()
-
-    try:
-        profesor = Profesor.objects.get(dni=dni)
-        data = {
-            "existe": True,
-            "codigo": profesor.codigo,
-            "nombres": profesor.nombres,
-            "apellidos": profesor.apellidos,
-            "condicion": profesor.condicion,
-        }
-    except Profesor.DoesNotExist:
-        data = {"existe": False}
-
-    return JsonResponse(data)
-
-
-# =========================================================
-# HISTORIAL (tu código)
+# HISTORIAL
 # =========================================================
 @login_required
 def historial_asistencias(request):
@@ -133,7 +56,7 @@ def historial_asistencias(request):
 
 
 # =========================================================
-# EXCEL (tu código)
+# EXCEL
 # =========================================================
 @login_required
 def exportar_reporte_excel(request):
@@ -240,60 +163,57 @@ def exportar_reporte_excel(request):
 
 
 # =========================================================
-# ✅ ESCÁNER CON CÁMARA - CÓDIGO DE BARRAS = DNI
+# ✅ SCAN PAGE
 # =========================================================
 @ensure_csrf_cookie
 @login_required
 def scan_page(request):
-    # Página que abre la cámara (no se escribe nada)
     return render(request, "asistencias/scan.html")
 
 
+# =========================================================
+# ✅ API SCAN (acepta JSON o form) + 1 vez por día
+# =========================================================
 @require_POST
 @login_required
 def api_scan_asistencia(request):
     """
-    Recibe JSON {"code": "..."} del lector.
-    Extrae DNI (ideal 8 dígitos). Si viene con 7 por perder el 0 inicial, lo rellena.
-    Registra asistencia solo 1 vez por día.
+    Soporta:
+      - JSON: {"code": "..."}   (fetch application/json)
+      - FORM: code=... o dni=... (por si luego usas lector USB tipo teclado)
+    Extrae 8 dígitos aunque venga: "DNI: 10041279"
     """
-    try:
-        data = json.loads(request.body.decode("utf-8"))
-    except Exception:
-        return JsonResponse({"ok": False, "msg": "JSON inválido"}, status=400)
 
-    raw = (data.get("code") or "").strip()
+    # 1) leer "raw" desde JSON o POST
+    raw = ""
 
-    # 1) buscar un bloque exacto de 8 dígitos en cualquier parte
-    m = re.search(r"(\d{8})", raw)
-    if m:
-        dni = m.group(1)
+    ctype = (request.content_type or "").lower()
+    if "application/json" in ctype:
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            raw = (data.get("code") or data.get("dni") or "").strip()
+        except Exception:
+            return JsonResponse({"ok": False, "msg": "JSON inválido"}, status=400)
     else:
-        # 2) si no hay 8, nos quedamos con TODOS los dígitos
-        digits = re.sub(r"\D", "", raw)
+        raw = (request.POST.get("code") or request.POST.get("dni") or "").strip()
 
-        # si viene 7 dígitos (pierde el 0 inicial), lo arreglamos
-        if len(digits) == 7:
-            dni = digits.zfill(8)
-        elif len(digits) == 8:
-            dni = digits
-        elif len(digits) > 8:
-            # si trae mucha basura, tomamos los últimos 8
-            dni = digits[-8:]
-        else:
-            return JsonResponse({"ok": False, "msg": "DNI inválido"}, status=400)
+    if not raw:
+        return JsonResponse({"ok": False, "msg": "No llegó ningún código/DNI"}, status=400)
 
-    # Validación final
-    if not dni.isdigit() or len(dni) != 8:
-        return JsonResponse({"ok": False, "msg": "DNI inválido"}, status=400)
+    # 2) extraer DNI (8 dígitos) desde cualquier texto
+    m = re.search(r"(\d{8})", raw)
+    dni = m.group(1) if m else ""
 
-    # Buscar profesor
+    if not dni or len(dni) != 8 or not dni.isdigit():
+        return JsonResponse({"ok": False, "msg": "DNI inválido (debe ser 8 dígitos)"}, status=400)
+
+    # 3) buscar profesor
     try:
         profesor = Profesor.objects.get(dni=dni)
     except Profesor.DoesNotExist:
         return JsonResponse({"ok": False, "msg": f"Profesor no encontrado (DNI {dni})"}, status=404)
 
-    # 1 vez por día
+    # 4) evitar doble registro por día
     hoy = timezone.localdate()
     ya_existe = Asistencia.objects.filter(
         profesor=profesor,
@@ -304,7 +224,8 @@ def api_scan_asistencia(request):
         return JsonResponse({
             "ok": True,
             "duplicado": True,
-            "msg": f"⚠️ {profesor.apellidos} {profesor.nombres} ya registró hoy."
+            "msg": f"⚠️ Ya registró hoy: {profesor.apellidos} {profesor.nombres}",
+            "dni": dni
         })
 
     Asistencia.objects.create(profesor=profesor)
@@ -315,10 +236,6 @@ def api_scan_asistencia(request):
         "msg": f"✅ Asistencia registrada: {profesor.apellidos} {profesor.nombres}",
         "dni": dni
     })
-def logout_view(request):
-    logout(request)
-    return redirect("login")  # o a donde quieras
-
 
 
 
