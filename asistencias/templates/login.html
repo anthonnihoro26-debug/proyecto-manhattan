@@ -1,32 +1,374 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Login - Proyecto Manhattan</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login - Proyecto Manhattan</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#2563eb;
+      --primary2:#4f46e5;
+      --ok:#22c55e;
+      --danger:#ef4444;
+      --glass: rgba(255,255,255,.12);
+      --stroke: rgba(255,255,255,.18);
+      --text: rgba(255,255,255,.95);
+      --muted: rgba(255,255,255,.72);
+      --shadow: 0 18px 50px rgba(0,0,0,.30);
+      --shadow2: 0 16px 36px rgba(37,99,235,.24);
+      --radius: 22px;
+    }
+
+    body{
+      min-height:100vh;
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 650px at 15% 15%, rgba(79,70,229,.65), transparent 55%),
+        radial-gradient(1000px 700px at 85% 25%, rgba(37,99,235,.60), transparent 60%),
+        radial-gradient(700px 500px at 50% 95%, rgba(168,85,247,.35), transparent 55%),
+        linear-gradient(135deg, #0b1020, #2b1fff);
+      overflow-x:hidden;
+    }
+
+    /* textura suave */
+    .noise{
+      position: fixed;
+      inset: 0;
+      pointer-events:none;
+      opacity: .10;
+      background-image: radial-gradient(rgba(255,255,255,.22) 1px, transparent 1px);
+      background-size: 22px 22px;
+      mix-blend-mode: overlay;
+    }
+
+    .wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px 14px;
+    }
+
+    /* Tarjeta mobile-first */
+    .cardx{
+      width: min(520px, 96vw);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      overflow:hidden;
+    }
+
+    /* Header compacto con marca */
+    .header{
+      padding: 18px 18px 10px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .logo{
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display:grid;
+      place-items:center;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      box-shadow: var(--shadow2);
+      flex: 0 0 auto;
+    }
+
+    .brand{
+      line-height: 1.1;
+    }
+    .brand h1{
+      margin:0;
+      font-weight: 950;
+      letter-spacing: -0.4px;
+      font-size: 16px;
+    }
+    .brand p{
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .divider{
+      height: 1px;
+      background: rgba(255,255,255,.14);
+      margin: 6px 18px 0;
+    }
+
+    .content{
+      padding: 16px 18px 18px;
+    }
+
+    .title{
+      margin: 8px 0 2px;
+      font-weight: 950;
+      font-size: 22px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle{
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-weight: 750;
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .pillrow{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin: 10px 0 16px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.14);
+      color: rgba(255,255,255,.90);
+      font-weight: 850;
+      font-size: 12px;
+    }
+
+    /* Inputs grandes para dedo */
+    .label{
+      font-weight: 900;
+      font-size: 13px;
+      margin-bottom: 7px;
+      color: rgba(255,255,255,.92);
+    }
+
+    .input-group-text{
+      border-radius: 16px 0 0 16px !important;
+      border: 1px solid rgba(255,255,255,.18);
+      border-right: 0;
+      background: rgba(255,255,255,.10);
+      color: rgba(255,255,255,.92);
+      padding: 0 12px;
+    }
+
+    .form-control{
+      border-radius: 0 16px 16px 0 !important;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      color: #fff;
+      font-weight: 850;
+      padding: 14px 12px; /* más alto = mejor en celular */
+      font-size: 15px;
+    }
+    .form-control:focus{
+      box-shadow: 0 0 0 .25rem rgba(37,99,235,.25);
+      border-color: rgba(255,255,255,.24);
+      background: rgba(255,255,255,.12);
+      color:#fff;
+    }
+    .form-control::placeholder{ color: rgba(255,255,255,.60); font-weight:750; }
+
+    .toggle-pass{
+      border-radius: 0 16px 16px 0 !important;
+      border: 1px solid rgba(255,255,255,.18);
+      border-left: 0;
+      background: rgba(255,255,255,.10);
+      color: rgba(255,255,255,.92);
+      font-weight: 950;
+      padding: 0 12px;
+    }
+
+    /* Botón grande (thumb-friendly) */
+    .btnx{
+      width:100%;
+      border:0;
+      border-radius: 18px;
+      padding: 14px 14px;
+      font-weight: 950;
+      font-size: 16px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      user-select:none;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+    .btnx-primary{
+      color:#fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      box-shadow: 0 18px 40px rgba(37,99,235,.28);
+    }
+    .btnx-primary:active{ transform: translateY(1px); opacity:.95; }
+
+    .helper{
+      margin-top: 12px;
+      color: rgba(255,255,255,.72);
+      font-weight: 750;
+      font-size: 12px;
+      line-height: 1.35;
+      text-align:center;
+    }
+
+    /* Alert de mensajes */
+    .alert{
+      border-radius: 16px;
+      font-weight: 850;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(239,68,68,.16);
+      color: rgba(255,255,255,.95);
+    }
+
+    /* Desktop: agrega panel de info a la izquierda (sin romper móvil) */
+    @media (min-width: 992px){
+      .cardx{
+        width: min(980px, 94vw);
+      }
+      .shell{
+        display:grid;
+        grid-template-columns: 1.05fr 1fr;
+      }
+      .info{
+        padding: 28px 28px;
+        border-right: 1px solid rgba(255,255,255,.14);
+        background:
+          radial-gradient(700px 450px at 20% 10%, rgba(255,255,255,.16), transparent 55%),
+          linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      }
+      .info h2{
+        margin: 0;
+        font-weight: 950;
+        font-size: 28px;
+        letter-spacing: -0.6px;
+      }
+      .info p{
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-weight: 800;
+        line-height: 1.45;
+      }
+      .content{
+        padding: 26px 28px 28px;
+      }
+      .header{ display:none; } /* en desktop usa el panel info */
+      .divider{ display:none; }
+    }
+  </style>
 </head>
-<body style="background: linear-gradient(135deg, #0d6efd, #6610f2); height:100vh; display:flex; justify-content:center; align-items:center;">
 
-<div class="card p-4" style="width:350px;">
-    <h4 class="text-center mb-3">Iniciar Sesión</h4>
+<body>
+  <div class="noise"></div>
 
-    <form method="post">
-        {% csrf_token %}
+  <div class="wrap">
+    <div class="cardx">
+      <div class="shell">
+        <!-- Panel info solo en desktop -->
+        <div class="info d-none d-lg-block">
+          <div class="logo mb-3" style="width:58px;height:58px;border-radius:20px;">
+            <i class="bi bi-mortarboard-fill" style="font-size:26px;"></i>
+          </div>
+          <h2>Universidad Nacional de Ingeniería</h2>
+          <p>
+            Sistema de Control de Asistencia — <b>Proyecto Manhattan</b>.<br>
+            Inicia sesión para escanear QR y generar reportes.
+          </p>
 
-        <div class="mb-3">
-            <label>Usuario</label>
-            <input type="text" name="username" class="form-control">
+          <div class="pillrow mt-3">
+            <span class="pill"><i class="bi bi-shield-lock-fill"></i> Acceso seguro</span>
+            <span class="pill"><i class="bi bi-qr-code-scan"></i> Escaneo QR</span>
+            <span class="pill"><i class="bi bi-file-earmark-excel-fill"></i> Excel</span>
+          </div>
         </div>
 
-        <div class="mb-3">
-            <label>Contraseña</label>
-            <input type="password" name="password" class="form-control">
+        <!-- Header mobile -->
+        <div class="d-lg-none">
+          <div class="header">
+            <div class="logo">
+              <i class="bi bi-mortarboard-fill" style="font-size:22px;"></i>
+            </div>
+            <div class="brand">
+              <h1>Universidad Nacional de Ingeniería</h1>
+              <p>Proyecto Manhattan • Asistencia</p>
+            </div>
+          </div>
+          <div class="divider"></div>
         </div>
 
-        <button class="btn btn-primary w-100">Ingresar</button>
-    </form>
-</div>
+        <!-- Form -->
+        <div class="content">
+          <div class="title">Iniciar sesión</div>
+          <div class="subtitle">Ingresa tus credenciales para continuar.</div>
 
+          <div class="pillrow d-lg-none">
+            <span class="pill"><i class="bi bi-qr-code-scan"></i> QR rápido</span>
+            <span class="pill"><i class="bi bi-file-earmark-excel-fill"></i> Reportes</span>
+          </div>
+
+          <form method="post" autocomplete="on">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <div class="label">Usuario</div>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                <input type="text" name="username" class="form-control" placeholder="Tu usuario" required>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <div class="label">Contraseña</div>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                <input id="password" type="password" name="password" class="form-control" placeholder="••••••••" required>
+                <button class="toggle-pass" type="button" id="togglePass" aria-label="Mostrar contraseña">
+                  <i class="bi bi-eye-fill"></i>
+                </button>
+              </div>
+            </div>
+
+            {% if messages %}
+              <div class="alert mt-3">
+                {% for message in messages %}{{ message }}{% endfor %}
+              </div>
+            {% endif %}
+
+            <button class="btnx btnx-primary mt-3" type="submit">
+              <i class="bi bi-box-arrow-in-right"></i> Ingresar
+            </button>
+
+            <div class="helper">
+              Consejo: en producción usa <b>HTTPS</b> (Render) para cámara y seguridad.
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const toggle = document.getElementById("togglePass");
+    const pass = document.getElementById("password");
+    toggle?.addEventListener("click", () => {
+      const isPass = pass.type === "password";
+      pass.type = isPass ? "text" : "password";
+      toggle.innerHTML = isPass ? '<i class="bi bi-eye-slash-fill"></i>' : '<i class="bi bi-eye-fill"></i>';
+    });
+  </script>
 </body>
 </html>
+
+
 

@@ -7,54 +7,328 @@
   <title>Escanear Asistencia</title>
 
   <style>
-    body { margin:0; font-family: Arial, sans-serif; background:#0b1020; color:#fff; }
-    .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
-    .top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .title { font-size: 22px; font-weight: 700; margin: 8px 0 16px; }
-    #video { width: 100%; border-radius: 16px; background:#000; min-height: 220px; }
-    .status {
-      margin-top: 12px; padding: 14px; border-radius: 12px;
-      background: rgba(255,255,255,0.08);
-      font-size: 18px; font-weight: 700;
+    :root{
+      --bg1:#070A12;
+      --bg2:#0B1020;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.08);
+      --border: rgba(255,255,255,.12);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,.75);
+      --blue: #3b82f6;
+      --green:#22c55e;
+      --amber:#f59e0b;
+      --red:#ef4444;
     }
-    .ok { background: rgba(34,197,94,0.18); border: 1px solid rgba(34,197,94,0.35); }
-    .bad { background: rgba(239,68,68,0.18); border: 1px solid rgba(239,68,68,0.35); }
-    .hint { opacity: .8; margin-top: 10px; font-size: 14px; line-height: 1.35; }
-    .btn {
-      padding: 10px 14px; border-radius: 10px; border:0; cursor:pointer;
-      font-weight: 800; font-size: 15px;
+
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 0%, #111a3a 0%, transparent 60%),
+                  radial-gradient(900px 500px at 80% 20%, #2a0f45 0%, transparent 55%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      min-height: 100vh;
     }
-    .btn-primary { background:#2563eb; color:#fff; }
-    .btn-danger { background:#b91c1c; color:#fff; }
-    .btn-primary:disabled { opacity:.6; cursor:not-allowed; }
+
+    .wrap{
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 18px 16px 28px;
+    }
+
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 0;
+    }
+
+    .badge{
+      width:44px; height:44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(59,130,246,.95), rgba(147,51,234,.85));
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+      flex: 0 0 auto;
+    }
+    .badge span{ font-size: 22px; }
+
+    .titleblock{ min-width: 0; }
+    .title{
+      font-size: 20px;
+      font-weight: 900;
+      margin:0;
+      letter-spacing: .2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 720px;
+    }
+    .subtitle{
+      margin-top:4px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.3;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      cursor:pointer;
+      font-weight: 900;
+      font-size: 14px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; }
+
+    .btn-ghost{
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.12);
+      color:#fff;
+      backdrop-filter: blur(10px);
+    }
+    .btn-primary{
+      background: linear-gradient(135deg, rgba(59,130,246,1), rgba(99,102,241,1));
+      color:#fff;
+      box-shadow: 0 10px 24px rgba(59,130,246,.18);
+    }
+    .btn-danger{
+      background: rgba(239,68,68,.15);
+      border-color: rgba(239,68,68,.35);
+      color:#fff;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.45fr .55fr;
+      gap: 14px;
+      align-items:start;
+    }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      overflow:hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .camWrap{
+      position: relative;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+    }
+
+    /* Video con aspecto fijo y mejor look */
+    .videoBox{
+      position: relative;
+      border-radius: 16px;
+      overflow:hidden;
+      background: #000;
+      border: 1px solid rgba(255,255,255,.14);
+      aspect-ratio: 16/9;
+      min-height: 260px;
+    }
+    video{
+      width:100%;
+      height:100%;
+      object-fit: cover; /* ✅ mejor para llenar y ver bien */
+      display:block;
+    }
+
+    /* Marco de escaneo: esquinas + línea */
+    .overlay{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+    .scanArea{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      width: min(520px, 75%);
+      aspect-ratio: 1 / 1;
+      border-radius: 18px;
+    }
+
+    /* esquinas */
+    .corner{
+      position:absolute;
+      width: 30px;
+      height: 30px;
+      border: 4px solid rgba(59,130,246,.95);
+      border-radius: 10px;
+      box-shadow: 0 0 18px rgba(59,130,246,.22);
+    }
+    .c1{ left:0; top:0; border-right:0; border-bottom:0; }
+    .c2{ right:0; top:0; border-left:0; border-bottom:0; }
+    .c3{ left:0; bottom:0; border-right:0; border-top:0; }
+    .c4{ right:0; bottom:0; border-left:0; border-top:0; }
+
+    /* sombreado alrededor (suave) */
+    .shade{
+      position:absolute;
+      inset:0;
+      background: radial-gradient(circle at center,
+        transparent 0%,
+        transparent 35%,
+        rgba(0,0,0,.35) 70%,
+        rgba(0,0,0,.55) 100%);
+    }
+
+    /* línea animada */
+    .scanLine{
+      position:absolute;
+      left: 6%;
+      right: 6%;
+      top: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(34,197,94,.9), transparent);
+      box-shadow: 0 0 20px rgba(34,197,94,.35);
+      animation: scan 1.6s ease-in-out infinite;
+    }
+    @keyframes scan{
+      0% { transform: translateY(0); opacity:.4; }
+      50%{ transform: translateY(80%); opacity:1; }
+      100%{ transform: translateY(0); opacity:.4; }
+    }
+
+    .status{
+      margin: 12px 14px 14px;
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--card2);
+      border: 1px solid rgba(255,255,255,.10);
+      font-size: 16px;
+      font-weight: 900;
+    }
+    .ok    { background: rgba(34,197,94,0.16);  border-color: rgba(34,197,94,0.34); }
+    .warn  { background: rgba(245,158,11,0.16); border-color: rgba(245,158,11,0.34); }
+    .bad   { background: rgba(239,68,68,0.16);  border-color: rgba(239,68,68,0.34); }
+
+    .side{
+      padding: 14px;
+    }
+    .side h4{
+      margin: 6px 0 8px;
+      font-size: 16px;
+      font-weight: 900;
+    }
+    .tips{
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .pill{
+      display:inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      font-size: 12px;
+      font-weight: 900;
+      margin-top: 10px;
+    }
+
+    code{ background: rgba(255,255,255,.08); padding: 2px 6px; border-radius: 8px; }
   </style>
 
-  <!-- ✅ ZXing local (YA NO CDN) -->
+  <!-- ✅ ZXing local -->
   <script src="{% static 'asistencias/js/zxing-browser.min.js' %}"></script>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="top">
-      <div class="title">📷 Escaneo de Asistencia (DNI)</div>
-      <div style="display:flex; gap:10px;">
+
+    <div class="header">
+      <div class="brand">
+        <div class="badge"><span>📷</span></div>
+        <div class="titleblock">
+          <p class="title">Escaneo de Asistencia (DNI)</p>
+          <div class="subtitle">Escanea el QR/código con el DNI. Se registra automáticamente (solo 1 vez por día).</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <!-- ✅ Solo historial (sin exportar excel aquí) -->
+        <a class="btn btn-ghost" href="{% url 'historial_asistencias' %}">📋 Historial</a>
+
         <button id="btnStart" class="btn btn-primary">Activar cámara</button>
         <button id="btnStop" class="btn btn-danger" disabled>Detener</button>
       </div>
     </div>
 
-    <video id="video" autoplay playsinline></video>
+    <div class="grid">
+      <!-- Cámara -->
+      <div class="card">
+        <div class="camWrap">
+          <div class="videoBox">
+            <video id="video" autoplay playsinline muted></video>
 
-    <div id="status" class="status">Toca “Activar cámara” para comenzar…</div>
+            <div class="overlay">
+              <div class="shade"></div>
 
-    <div class="hint">
-      ✅ Requisito: abrir esta página en <b>HTTPS</b> (Render) o en <b>localhost</b> en la misma máquina.<br>
-      En celular entra por <b>https://TU-APP.onrender.com/asistencia/scan/</b> (no 127.0.0.1).<br>
-      Si tu código es barras (1D), usa buena luz y acerca el celular.
+              <div class="scanArea">
+                <div class="corner c1"></div>
+                <div class="corner c2"></div>
+                <div class="corner c3"></div>
+                <div class="corner c4"></div>
+                <div class="scanLine"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="status" class="status">Toca “Activar cámara” para comenzar…</div>
+      </div>
+
+      <!-- Panel de ayuda -->
+      <div class="card">
+        <div class="side">
+          <h4>Consejos de escaneo</h4>
+          <div class="tips">
+            • Abre esta página en <b>HTTPS</b> (Render) o en <b>localhost</b>.<br>
+            • Buena luz = mejor lectura.<br>
+            • Si es código 1D (barras), acerca más el celular y evita sombras.<br>
+            • Si el lector devuelve texto extra, igual se extraen los <b>8 dígitos</b>.
+          </div>
+
+          <div class="pill">Ruta: <code>/asistencia/scan/</code></div>
+        </div>
+      </div>
     </div>
+
   </div>
 
   <script>
+    // ---- CSRF ----
     function getCookie(name) {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
@@ -63,24 +337,27 @@
     const csrftoken = getCookie('csrftoken');
 
     const statusEl = document.getElementById("status");
-    const videoEl = document.getElementById("video");
+    const videoEl  = document.getElementById("video");
     const btnStart = document.getElementById("btnStart");
     const btnStop  = document.getElementById("btnStop");
 
+    let codeReader = null;
+    let isRunning = false;
+    let busy = false;
     let lastDni = null;
     let lastTs = 0;
-    let busy = false;
-    let codeReader = null;
-    let stream = null;
 
-    function setStatus(msg, ok=null) {
+    function setStatus(msg, type=null) {
       statusEl.textContent = msg;
-      statusEl.className = "status" + (ok === true ? " ok" : ok === false ? " bad" : "");
+      statusEl.className = "status" + (type ? (" " + type) : "");
     }
 
     function normalizeDni(text) {
-      const digits = (text || "").replace(/\D/g, "");
-      if (digits.length >= 8) return digits.slice(-8);
+      const s = (text || "").toString();
+      const m = s.match(/(\d{8})/);
+      if (m) return m[1];
+      const digits = s.replace(/\D/g, "");
+      if (digits.length >= 8) return digits.slice(0, 8);
       return digits;
     }
 
@@ -100,50 +377,68 @@
 
         const data = await res.json().catch(() => ({ ok:false, msg:"Respuesta inválida" }));
 
-        if (res.ok && data.ok) setStatus(data.msg, true);
-        else setStatus(data.msg || "No se pudo registrar.", false);
+        if (res.ok && data.ok) {
+          if (data.duplicado) {
+            setStatus(data.msg || "⚠️ Ya registró hoy.", "warn");
+          } else {
+            setStatus(data.msg || "✅ Asistencia registrada.", "ok");
+          }
+        } else {
+          setStatus(data.msg || "❌ No se pudo registrar.", "bad");
+        }
 
       } catch (e) {
-        setStatus("Error de red.", false);
+        setStatus("❌ Error de red.", "bad");
       } finally {
         setTimeout(() => {
           busy = false;
-          setStatus("Listo. Escanea el siguiente código…", null);
-        }, 1200);
+          if (isRunning) setStatus("Listo. Escanea el siguiente código…", null);
+        }, 900);
       }
     }
 
     async function startScanner() {
       if (!window.isSecureContext) {
-        setStatus("❌ La cámara requiere HTTPS (o localhost).", false);
+        setStatus("❌ La cámara requiere HTTPS (o localhost).", "bad");
+        return;
+      }
+
+      if (typeof ZXingBrowser === "undefined") {
+        setStatus("❌ No cargó ZXing. Revisa el path del script en /static/…", "bad");
         return;
       }
 
       btnStart.disabled = true;
 
       try {
-        // 1) pedir cámara y guardar stream para poder detenerla luego
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        videoEl.srcObject = stream;
+        // ✅ Pedimos mejor resolución (ideal para QR y barras)
+        // 1280x720 o 1920x1080 según soporte de tu cámara
+        await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: "environment" },
+            width:  { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        });
 
-        // 2) iniciar ZXing
         codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+        isRunning = true;
 
         const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
         const backCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[0];
         const deviceId = backCam ? backCam.deviceId : undefined;
 
         btnStop.disabled = false;
-        setStatus("✅ Cámara lista. Escanea el código…");
+        setStatus("✅ Cámara lista. Escanea el QR/código dentro del marco…");
 
-        await codeReader.decodeFromVideoDevice(deviceId, videoEl, (result) => {
+        await codeReader.decodeFromVideoDevice(deviceId, videoEl, (result, err) => {
           if (!result) return;
 
           const raw = result.getText();
           const dni = normalizeDni(raw);
           const now = Date.now();
 
-          if (dni && dni.length === 8 && (dni !== lastDni || (now - lastTs) > 2000)) {
+          if (dni && dni.length === 8 && (dni !== lastDni || (now - lastTs) > 1600)) {
             lastDni = dni;
             lastTs = now;
             registrarDni(dni);
@@ -155,25 +450,28 @@
         const msg  = e?.message || "Sin detalle";
 
         if (name === "NotAllowedError") {
-          setStatus("❌ Permiso denegado. Activa la cámara en permisos del navegador.", false);
+          setStatus("❌ Permiso denegado. Activa la cámara en permisos del navegador.", "bad");
         } else if (name === "NotFoundError") {
-          setStatus("❌ No se encontró cámara.", false);
+          setStatus("❌ No se encontró cámara.", "bad");
         } else if (name === "NotReadableError") {
-          setStatus("❌ La cámara está ocupada por otra app/pestaña. Cierra Zoom/Teams/WhatsApp/OMEN y reintenta.", false);
+          setStatus("❌ La cámara está ocupada por otra app/pestaña. Cierra otras apps y reintenta.", "bad");
         } else {
-          setStatus(`❌ No se pudo abrir la cámara (${name}): ${msg}`, false);
+          setStatus(`❌ No se pudo abrir la cámara (${name}): ${msg}`, "bad");
         }
 
         btnStart.disabled = false;
+        btnStop.disabled = true;
+        isRunning = false;
       }
     }
 
     function stopScanner() {
       try { codeReader?.reset(); } catch(e) {}
-      if (stream) {
-        stream.getTracks().forEach(t => t.stop());
-        stream = null;
-      }
+      codeReader = null;
+      isRunning = false;
+
+      const stream = videoEl.srcObject;
+      if (stream) stream.getTracks().forEach(t => t.stop());
       videoEl.srcObject = null;
 
       btnStart.disabled = false;
@@ -186,6 +484,5 @@
   </script>
 </body>
 </html>
-
 
 
