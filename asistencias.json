@@ -1,0 +1,505 @@
+[
+{
+  "model": "asistencias.profesor",
+  "pk": 1,
+  "fields": {
+    "codigo": "19848005H",
+    "dni": "08510227",
+    "apellidos": "ALTAMIRANO MEDINA",
+    "nombres": "ROSA VICTORIA",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 2,
+  "fields": {
+    "codigo": "20248003H",
+    "dni": "10041279",
+    "apellidos": "ACEVEDO SAAVEDRA",
+    "nombres": "VICTOR",
+    "condicion": "C"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 3,
+  "fields": {
+    "codigo": "19968003B",
+    "dni": "22418879",
+    "apellidos": "APOLINARIO MORALES",
+    "nombres": "EDWIN WILDER",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 4,
+  "fields": {
+    "codigo": "19958001G",
+    "dni": "07096899",
+    "apellidos": "ASTETE CHUQUICHAICO",
+    "nombres": "ROLANDO GANDHI",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 5,
+  "fields": {
+    "codigo": "19978061E",
+    "dni": "08135639",
+    "apellidos": "BARRAZA BERNAOLA",
+    "nombres": "JULIO CESAR",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 6,
+  "fields": {
+    "codigo": "19978066G",
+    "dni": "08793347",
+    "apellidos": "BASURTO PINAO",
+    "nombres": "LADISLAO JES┌S",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 7,
+  "fields": {
+    "codigo": "19976121J",
+    "dni": "25550925",
+    "apellidos": "CERMEÐO RODR═GUEZ",
+    "nombres": "GABRIEL",
+    "condicion": "C"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 8,
+  "fields": {
+    "codigo": null,
+    "dni": "06120646",
+    "apellidos": "CARRILLO CARRASCAL",
+    "nombres": "FELIX CESAR",
+    "condicion": "O/S"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 9,
+  "fields": {
+    "codigo": "20168111I",
+    "dni": "42646253",
+    "apellidos": "CARHUAPOMA LOPEZ",
+    "nombres": "EDITH MILAGROS",
+    "condicion": "C"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 10,
+  "fields": {
+    "codigo": "20038123G",
+    "dni": "09875556",
+    "apellidos": "CACHI EUGENIO",
+    "nombres": "DANE BRUCE",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 11,
+  "fields": {
+    "codigo": "19938134A",
+    "dni": "09578117",
+    "apellidos": "CUPE ROMAN",
+    "nombres": "WILFREDO",
+    "condicion": "C"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 12,
+  "fields": {
+    "codigo": "2028212G",
+    "dni": "06873136",
+    "apellidos": "DE LA CRUZ VALDIVIANO",
+    "nombres": "CARLOS BACILIO",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 13,
+  "fields": {
+    "codigo": "20248145G",
+    "dni": "10279068",
+    "apellidos": "DULANTO CARBAJAL",
+    "nombres": "JORGE ALEJANDRO",
+    "condicion": "C"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 14,
+  "fields": {
+    "codigo": "19968271G",
+    "dni": "09857807",
+    "apellidos": "FLORES GONZALEZ",
+    "nombres": "LEONARDO",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 15,
+  "fields": {
+    "codigo": "19988444I",
+    "dni": "09202921",
+    "apellidos": "LOAYZA CORDERO",
+    "nombres": "FREDY MIGUEL",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 16,
+  "fields": {
+    "codigo": "20008502J",
+    "dni": "09357668",
+    "apellidos": "MELCHOR VIVANCO",
+    "nombres": "MIGUEL MARTIN",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 17,
+  "fields": {
+    "codigo": "200685041I",
+    "dni": "07497048",
+    "apellidos": "MONTORO CAVERO",
+    "nombres": "NORMA BEATRIZ",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 18,
+  "fields": {
+    "codigo": "19958608A",
+    "dni": "08575212",
+    "apellidos": "MOSQUERA LEIVA",
+    "nombres": "LUIS ALBERTO",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 19,
+  "fields": {
+    "codigo": "19858512J",
+    "dni": "08582021",
+    "apellidos": "MOSQUERA MAGUIÐA",
+    "nombres": "DUANI EDITH",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 20,
+  "fields": {
+    "codigo": "20018561I",
+    "dni": "10086152",
+    "apellidos": "NAVARRO FLORES",
+    "nombres": "CRISTINA",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 21,
+  "fields": {
+    "codigo": "19848644K",
+    "dni": "08015350",
+    "apellidos": "QUINTANA ALFARO",
+    "nombres": "NOEM═ LEOPOLDINA",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 22,
+  "fields": {
+    "codigo": "20008841J",
+    "dni": "09477118",
+    "apellidos": "QUIÐONEZ CUYUBAMBA",
+    "nombres": "FLOR NORMA",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 23,
+  "fields": {
+    "codigo": "20248675F",
+    "dni": "41246178",
+    "apellidos": "RAU VARGAS",
+    "nombres": "CARLOS ALBERTO",
+    "condicion": "C"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 24,
+  "fields": {
+    "codigo": "20048661A",
+    "dni": "08097883",
+    "apellidos": "REYES CUBAS",
+    "nombres": "CARMEN MARTHA",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 25,
+  "fields": {
+    "codigo": "19899669G",
+    "dni": "08268863",
+    "apellidos": "RIOS VARA",
+    "nombres": "JOSE FRANCISCO",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 26,
+  "fields": {
+    "codigo": "19988668J",
+    "dni": "07418894",
+    "apellidos": "RIVERA Z┌ÐIGA",
+    "nombres": "EDUARDO JORGE",
+    "condicion": "C"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 27,
+  "fields": {
+    "codigo": "19908669D",
+    "dni": "10495445",
+    "apellidos": "ROJAS YUPANQUI",
+    "nombres": "VICTOR POOL",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 28,
+  "fields": {
+    "codigo": "19978663E",
+    "dni": "08339002",
+    "apellidos": "ROMERO CENTENO",
+    "nombres": "ROMULO",
+    "condicion": "CONVENIO"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 29,
+  "fields": {
+    "codigo": "20228645D",
+    "dni": "07565051",
+    "apellidos": "SERRATO SANCHEZ",
+    "nombres": "SEGUNDO",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 30,
+  "fields": {
+    "codigo": "20198696E",
+    "dni": "17864324",
+    "apellidos": "SICCHE GORDILLO",
+    "nombres": "ANGELITA MERY",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 31,
+  "fields": {
+    "codigo": null,
+    "dni": "06807379",
+    "apellidos": "TAPIA ZAVALA",
+    "nombres": "ISAID FERNANDO",
+    "condicion": "C"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 32,
+  "fields": {
+    "codigo": "19988764C",
+    "dni": "08557063",
+    "apellidos": "TERREROS LAZO",
+    "nombres": "RICARDO",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 33,
+  "fields": {
+    "codigo": "20168764G",
+    "dni": "43747752",
+    "apellidos": "TORRES ESTRELLA",
+    "nombres": "FELIPE ANTONY",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 34,
+  "fields": {
+    "codigo": "20088821J",
+    "dni": "40437423",
+    "apellidos": "VASQUEZ MAZOTTI",
+    "nombres": "DIANA GABRIELA",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 35,
+  "fields": {
+    "codigo": "20038824E",
+    "dni": "07208684",
+    "apellidos": "VALDERRAMA SOTO",
+    "nombres": "ERICKA ISABEL",
+    "condicion": "C"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 36,
+  "fields": {
+    "codigo": "19948823D",
+    "dni": "08331572",
+    "apellidos": "VEL┴SQUEZ ROMERO",
+    "nombres": "ARMANDO GREGORIO",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.profesor",
+  "pk": 37,
+  "fields": {
+    "codigo": "19898967H",
+    "dni": "08001883",
+    "apellidos": "ZAPATA SAMATA",
+    "nombres": "JOS╔ MANUEL",
+    "condicion": "N"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 32,
+  "fields": {
+    "profesor": 27,
+    "fecha_hora": "2026-02-08T18:34:34.066Z"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 33,
+  "fields": {
+    "profesor": 5,
+    "fecha_hora": "2026-02-08T20:42:16.957Z"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 34,
+  "fields": {
+    "profesor": 13,
+    "fecha_hora": "2026-02-08T20:57:47.694Z"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 35,
+  "fields": {
+    "profesor": 16,
+    "fecha_hora": "2026-02-08T21:08:35.631Z"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 36,
+  "fields": {
+    "profesor": 18,
+    "fecha_hora": "2026-02-09T04:47:00.409Z"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 37,
+  "fields": {
+    "profesor": 18,
+    "fecha_hora": "2026-02-09T05:00:24.161Z"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 38,
+  "fields": {
+    "profesor": 27,
+    "fecha_hora": "2026-02-09T05:02:07.872Z"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 39,
+  "fields": {
+    "profesor": 10,
+    "fecha_hora": "2026-02-09T06:56:13.056Z"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 40,
+  "fields": {
+    "profesor": 8,
+    "fecha_hora": "2026-02-09T06:59:51.809Z"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 41,
+  "fields": {
+    "profesor": 37,
+    "fecha_hora": "2026-02-09T10:37:47.050Z"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 42,
+  "fields": {
+    "profesor": 31,
+    "fecha_hora": "2026-02-09T11:32:45.153Z"
+  }
+},
+{
+  "model": "asistencias.asistencia",
+  "pk": 43,
+  "fields": {
+    "profesor": 30,
+    "fecha_hora": "2026-02-09T11:57:20.871Z"
+  }
+}
+]

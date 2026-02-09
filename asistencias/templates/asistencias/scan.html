@@ -1,0 +1,147 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Escanear Asistencia</title>
+
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#0b1020; color:#fff; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .title { font-size: 22px; font-weight: 700; margin: 8px 0 16px; }
+    .btn {
+      display:inline-block; background:#ef4444; color:#fff; text-decoration:none;
+      padding:10px 14px; border-radius:12px; font-weight:800;
+    }
+    #video { width: 100%; border-radius: 16px; background:#000; }
+    .status {
+      margin-top: 12px; padding: 14px; border-radius: 12px;
+      background: rgba(255,255,255,0.08);
+      font-size: 18px; font-weight: 700;
+    }
+    .ok { background: rgba(34,197,94,0.18); border: 1px solid rgba(34,197,94,0.35); }
+    .bad { background: rgba(239,68,68,0.18); border: 1px solid rgba(239,68,68,0.35); }
+    .hint { opacity: .8; margin-top: 10px; font-size: 14px; }
+  </style>
+
+  <!-- ✅ ZXing: QR + varios códigos de barras -->
+  <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">📷 Escaneo de Asistencia (DNI)</div>
+      <a class="btn" href="{% url 'logout' %}">Cerrar sesión</a>
+    </div>
+
+    <video id="video" autoplay playsinline></video>
+
+    <div id="status" class="status">Apunta la cámara al código…</div>
+    <div class="hint">
+      Mejor luz = mejor lectura. Si el código es 1D (barras), acerca un poco el celular.
+    </div>
+  </div>
+
+  <script>
+    // --- CSRF helper (Django) ---
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return "";
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    const statusEl = document.getElementById("status");
+    const videoEl = document.getElementById("video");
+
+    let lastDni = null;
+    let lastTs = 0;
+    let busy = false;
+
+    function setStatus(msg, ok=null) {
+      statusEl.textContent = msg;
+      statusEl.className = "status" + (ok === true ? " ok" : ok === false ? " bad" : "");
+    }
+
+    function normalizeDni(text) {
+      // Extrae solo dígitos
+      const digits = (text || "").replace(/\D/g, "");
+      // Si viene con más dígitos, toma los últimos 8
+      if (digits.length >= 8) return digits.slice(-8);
+      return digits;
+    }
+
+    async function registrarDni(dni) {
+      if (busy) return;
+      busy = true;
+
+      try {
+        const form = new FormData();
+        form.append("dni", dni);
+
+        const res = await fetch("{% url 'api_scan_asistencia' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": csrftoken },
+          body: form
+        });
+
+        const data = await res.json().catch(() => ({ ok:false, msg:"Respuesta inválida" }));
+
+        if (res.ok && data.ok) {
+          // ok incluso si duplicado (tu API devuelve ok:true duplicado:true)
+          setStatus(data.msg || "Registrado ✅", true);
+        } else {
+          setStatus(data.msg || "No se pudo registrar.", false);
+        }
+      } catch (e) {
+        setStatus("Error de red o cámara.", false);
+      } finally {
+        // Pausa para que no registre repetido
+        setTimeout(() => {
+          busy = false;
+          setStatus("Listo. Escanea el siguiente código…", null);
+        }, 1200);
+      }
+    }
+
+    async function startScanner() {
+      try {
+        const codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+
+        // cámara trasera si existe
+        const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
+        const backCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[0];
+        const deviceId = backCam ? backCam.deviceId : undefined;
+
+        setStatus("Cámara lista. Escanea el código…");
+
+        await codeReader.decodeFromVideoDevice(deviceId, videoEl, (result, err) => {
+          if (!result) return;
+
+          const raw = result.getText();
+          const dni = normalizeDni(raw);
+          const now = Date.now();
+
+          // Anti-repetición 2s
+          if (dni && dni.length === 8 && (dni !== lastDni || (now - lastTs) > 2000)) {
+            lastDni = dni;
+            lastTs = now;
+            registrarDni(dni);
+          }
+        });
+
+      } catch (e) {
+        setStatus("No se pudo abrir la cámara. Revisa permisos del navegador.", false);
+      }
+    }
+
+    startScanner();
+  </script>
+</body>
+</html>
+
+

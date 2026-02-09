@@ -137,8 +137,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # =========================
 # LOGIN / LOGOUT
 # =========================
-LOGIN_URL = "/"
-LOGIN_REDIRECT_URL = "registrar_asistencia"
+LOGIN_REDIRECT_URL = "/asistencia/scan/"
 LOGOUT_REDIRECT_URL = "/"
 
 # =========================
@@ -155,4 +154,9 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
+# Mantener sesión aunque se cierre el navegador
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# Duración de sesión (ej: 30 días)
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 días
 

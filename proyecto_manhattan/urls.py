@@ -26,8 +26,8 @@ urlpatterns = [
     # Login
     path('', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
 
-    # Logout
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    # Logout (te regresa al login)
+    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 
     # App
     path('asistencia/', include('asistencias.urls')),
