@@ -286,7 +286,9 @@ def api_scan_asistencia(request):
         "dni": dni,
         "msg": f"✅ Asistencia registrada: {profesor.apellidos} {profesor.nombres}"
     })
-
+def logout_view(request):
+    logout(request)
+    return redirect("login")  # o a donde quieras
 
 
 
