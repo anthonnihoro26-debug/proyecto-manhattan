@@ -14,36 +14,28 @@ from pathlib import Path
 import os
 import dj_database_url
 
+# =========================
+# BASE
+# =========================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # =========================
-# PRODUCCIÓN / RENDER
+# SECURITY
 # =========================
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-key")
 
-# En Render: DEBUG=0
-DEBUG = os.environ.get("DEBUG", "0") == "1"
+DEBUG = os.environ.get("DEBUG", "1") == "1"
 
-# Render te da RENDER_EXTERNAL_HOSTNAME automáticamente
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# (Opcional) si quieres agregar más hosts manualmente:
-extra_hosts = os.environ.get("ALLOWED_HOSTS", "")
-if extra_hosts:
-    ALLOWED_HOSTS += [h.strip() for h in extra_hosts.split(",") if h.strip()]
-
-# CSRF en producción (para evitar 403 al hacer POST)
+# CSRF (Render)
 CSRF_TRUSTED_ORIGINS = []
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
-
-extra_csrf = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
-if extra_csrf:
-    CSRF_TRUSTED_ORIGINS += [u.strip() for u in extra_csrf.split(",") if u.strip()]
 
 # =========================
 # APPS
@@ -55,6 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "asistencias",
 ]
 
@@ -63,7 +56,8 @@ INSTALLED_APPS = [
 # =========================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # ✅ debe ir aquí
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -98,18 +92,28 @@ WSGI_APPLICATION = "proyecto_manhattan.wsgi.application"
 # =========================
 # DATABASE
 # =========================
-# ✅ En Render: usa PostgreSQL con DATABASE_URL
-# ✅ En local: si no hay DATABASE_URL, usa SQLite
-DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-        ssl_require=not DEBUG
-    )
-}
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    # ✅ PRODUCCIÓN (Render / PostgreSQL)
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
+    }
+else:
+    # ✅ LOCAL (SQLite)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # =========================
-# IDIOMA / ZONA HORARIA
+# INTERNATIONALIZATION
 # =========================
 LANGUAGE_CODE = "es-pe"
 TIME_ZONE = "America/Lima"
@@ -123,10 +127,9 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / "static",  # esta carpeta debe existir
 ]
 
-# ✅ WhiteNoise: compresión + versionado
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -139,10 +142,9 @@ LOGIN_REDIRECT_URL = "registrar_asistencia"
 LOGOUT_REDIRECT_URL = "/"
 
 # =========================
-# SEGURIDAD (solo cuando DEBUG=False)
+# SECURITY (PRODUCCIÓN)
 # =========================
 if not DEBUG:
-    # Render está detrás de proxy HTTPS
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
 
@@ -152,4 +154,5 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 60
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
 
