@@ -278,25 +278,42 @@
         setStatus("❌ Error de red.", "bad");
       } finally {
         setTimeout(() => {
-          busy = false;
-          if (running) setStatus("Listo. Escanea el siguiente código…", null);
-        }, 700);
+  busy = false;
+  if (running) setStatus("Listo. Escanea el siguiente código…", null);
+}, 5000);
+
       }
     }
 
     function beep(){
-      try{
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.connect(g); g.connect(ctx.destination);
-        o.type = "sine";
-        o.frequency.value = 880;
-        g.gain.value = 0.03;
-        o.start();
-        setTimeout(()=>{ o.stop(); ctx.close(); }, 120);
-      }catch(e){}
-    }
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // 2 beeps cortos (más notorio)
+    const play = (freq, durMs, gainVal) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+
+      o.type = "square";            // más “duro” que sine
+      o.frequency.value = freq;
+
+      // volumen fuerte (sin reventar)
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(gainVal, ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + durMs/1000);
+
+      o.start();
+      o.stop(ctx.currentTime + durMs/1000);
+    };
+
+    play(1100, 140, 0.12);          // primer beep
+    setTimeout(() => play(900, 160, 0.12), 170); // segundo beep
+
+    // cerrar contexto después
+    setTimeout(() => { try{ ctx.close(); }catch(e){} }, 450);
+  } catch(e){}
+}
 
     async function startCamera(){
       if (!window.isSecureContext) {
