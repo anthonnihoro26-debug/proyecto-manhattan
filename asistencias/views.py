@@ -253,25 +253,54 @@ def scan_page(request):
 @login_required
 def api_scan_asistencia(request):
     """
-    Recibe POST (FormData) con dni=...
-    Registra asistencia del profesor según DNI (8 dígitos)
+    Recibe JSON {"code": "..."} del lector.
+    Extrae DNI (ideal 8 dígitos). Si viene con 7 por perder el 0 inicial, lo rellena.
+    Registra asistencia solo 1 vez por día.
     """
-    raw = (request.POST.get("dni") or "").strip()
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except Exception:
+        return JsonResponse({"ok": False, "msg": "JSON inválido"}, status=400)
 
-    # extraer dni de 8 digitos aunque venga con ruido
-    m = re.search(r"\b(\d{8})\b", raw)
-    dni = m.group(1) if m else re.sub(r"\D", "", raw)
+    raw = (data.get("code") or "").strip()
 
+    # 1) buscar un bloque exacto de 8 dígitos en cualquier parte
+    m = re.search(r"(\d{8})", raw)
+    if m:
+        dni = m.group(1)
+    else:
+        # 2) si no hay 8, nos quedamos con TODOS los dígitos
+        digits = re.sub(r"\D", "", raw)
+
+        # si viene 7 dígitos (pierde el 0 inicial), lo arreglamos
+        if len(digits) == 7:
+            dni = digits.zfill(8)
+        elif len(digits) == 8:
+            dni = digits
+        elif len(digits) > 8:
+            # si trae mucha basura, tomamos los últimos 8
+            dni = digits[-8:]
+        else:
+            return JsonResponse({"ok": False, "msg": "DNI inválido"}, status=400)
+
+    # Validación final
     if not dni.isdigit() or len(dni) != 8:
-        return JsonResponse({"ok": False, "msg": "DNI inválido (8 dígitos)."}, status=400)
+        return JsonResponse({"ok": False, "msg": "DNI inválido"}, status=400)
 
+    # Buscar profesor
     try:
         profesor = Profesor.objects.get(dni=dni)
     except Profesor.DoesNotExist:
-        return JsonResponse({"ok": False, "msg": "Profesor no encontrado."}, status=404)
+        return JsonResponse({"ok": False, "msg": f"Profesor no encontrado (DNI {dni})"}, status=404)
 
+    # 1 vez por día
     hoy = timezone.localdate()
-    if Asistencia.objects.filter(profesor=profesor, fecha_hora__date=hoy).exists():
+    ya_existe = Asistencia.objects.filter(
+        profesor=profesor,
+        fecha_hora__date=hoy
+    ).exists()
+
+    if ya_existe:
         return JsonResponse({
             "ok": True,
             "duplicado": True,
@@ -283,8 +312,8 @@ def api_scan_asistencia(request):
     return JsonResponse({
         "ok": True,
         "duplicado": False,
-        "dni": dni,
-        "msg": f"✅ Asistencia registrada: {profesor.apellidos} {profesor.nombres}"
+        "msg": f"✅ Asistencia registrada: {profesor.apellidos} {profesor.nombres}",
+        "dni": dni
     })
 def logout_view(request):
     logout(request)

@@ -86,6 +86,7 @@
       gap:10px;
       flex-wrap:wrap;
       justify-content:flex-end;
+      align-items:center;
     }
 
     .btn{
@@ -120,6 +121,17 @@
       color:#fff;
     }
 
+    .select{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-weight: 900;
+      outline: none;
+    }
+    .select option{ color:#111; }
+
     .grid{
       display:grid;
       grid-template-columns: 1.45fr .55fr;
@@ -145,7 +157,6 @@
       background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
     }
 
-    /* Video con aspecto fijo y mejor look */
     .videoBox{
       position: relative;
       border-radius: 16px;
@@ -158,11 +169,10 @@
     video{
       width:100%;
       height:100%;
-      object-fit: cover; /* ✅ mejor para llenar y ver bien */
+      object-fit: cover;
       display:block;
     }
 
-    /* Marco de escaneo: esquinas + línea */
     .overlay{
       position:absolute;
       inset:0;
@@ -178,7 +188,6 @@
       border-radius: 18px;
     }
 
-    /* esquinas */
     .corner{
       position:absolute;
       width: 30px;
@@ -192,7 +201,6 @@
     .c3{ left:0; bottom:0; border-right:0; border-top:0; }
     .c4{ right:0; bottom:0; border-left:0; border-top:0; }
 
-    /* sombreado alrededor (suave) */
     .shade{
       position:absolute;
       inset:0;
@@ -203,7 +211,6 @@
         rgba(0,0,0,.55) 100%);
     }
 
-    /* línea animada */
     .scanLine{
       position:absolute;
       left: 6%;
@@ -272,13 +279,19 @@
         <div class="badge"><span>📷</span></div>
         <div class="titleblock">
           <p class="title">Escaneo de Asistencia (DNI)</p>
-          <div class="subtitle">Escanea el QR/código con el DNI. Se registra automáticamente (solo 1 vez por día).</div>
+          <div class="subtitle">Escanea el QR con el DNI. Se registra automáticamente (solo 1 vez por día).</div>
         </div>
       </div>
 
       <div class="actions">
-        <!-- ✅ Solo historial (sin exportar excel aquí) -->
         <a class="btn btn-ghost" href="{% url 'historial_asistencias' %}">📋 Historial</a>
+
+        <!-- ✅ Selector de cámara -->
+        <select id="camMode" class="select" title="Selecciona cámara">
+          <option value="auto" selected>📷 Automático</option>
+          <option value="back">📸 Trasera</option>
+          <option value="front">🤳 Delantera</option>
+        </select>
 
         <button id="btnStart" class="btn btn-primary">Activar cámara</button>
         <button id="btnStop" class="btn btn-danger" disabled>Detener</button>
@@ -316,8 +329,8 @@
           <div class="tips">
             • Abre esta página en <b>HTTPS</b> (Render) o en <b>localhost</b>.<br>
             • Buena luz = mejor lectura.<br>
-            • Si es código 1D (barras), acerca más el celular y evita sombras.<br>
-            • Si el lector devuelve texto extra, igual se extraen los <b>8 dígitos</b>.
+            • QR grande y centrado en el marco = más rápido.<br>
+            • Si el QR tiene texto extra, igual se extraen los <b>8 dígitos</b>.
           </div>
 
           <div class="pill">Ruta: <code>/asistencia/scan/</code></div>
@@ -340,12 +353,16 @@
     const videoEl  = document.getElementById("video");
     const btnStart = document.getElementById("btnStart");
     const btnStop  = document.getElementById("btnStop");
+    const camMode  = document.getElementById("camMode");
 
-    let codeReader = null;
+    let stream = null;
     let isRunning = false;
     let busy = false;
     let lastDni = null;
     let lastTs = 0;
+
+    // ✅ QR reader (más rápido que MultiFormat)
+    let qrReader = null;
 
     function setStatus(msg, type=null) {
       statusEl.textContent = msg;
@@ -356,8 +373,11 @@
       const s = (text || "").toString();
       const m = s.match(/(\d{8})/);
       if (m) return m[1];
+
       const digits = s.replace(/\D/g, "");
-      if (digits.length >= 8) return digits.slice(0, 8);
+      if (digits.length === 7) return digits.padStart(8, "0");
+      if (digits.length === 8) return digits;
+      if (digits.length > 8) return digits.slice(-8);
       return digits;
     }
 
@@ -378,11 +398,8 @@
         const data = await res.json().catch(() => ({ ok:false, msg:"Respuesta inválida" }));
 
         if (res.ok && data.ok) {
-          if (data.duplicado) {
-            setStatus(data.msg || "⚠️ Ya registró hoy.", "warn");
-          } else {
-            setStatus(data.msg || "✅ Asistencia registrada.", "ok");
-          }
+          if (data.duplicado) setStatus(data.msg || "⚠️ Ya registró hoy.", "warn");
+          else setStatus(data.msg || "✅ Asistencia registrada.", "ok");
         } else {
           setStatus(data.msg || "❌ No se pudo registrar.", "bad");
         }
@@ -392,9 +409,25 @@
       } finally {
         setTimeout(() => {
           busy = false;
-          if (isRunning) setStatus("Listo. Escanea el siguiente código…", null);
-        }, 900);
+          if (isRunning) setStatus("Listo. Escanea el siguiente QR…", null);
+        }, 700);
       }
+    }
+
+    function stopScanner() {
+      isRunning = false;
+      try { qrReader?.reset?.(); } catch(e) {}
+      qrReader = null;
+
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      videoEl.srcObject = null;
+
+      btnStart.disabled = false;
+      btnStop.disabled = true;
+      setStatus("Cámara detenida. Toca “Activar cámara” para comenzar…", null);
     }
 
     async function startScanner() {
@@ -402,48 +435,81 @@
         setStatus("❌ La cámara requiere HTTPS (o localhost).", "bad");
         return;
       }
-
       if (typeof ZXingBrowser === "undefined") {
         setStatus("❌ No cargó ZXing. Revisa el path del script en /static/…", "bad");
         return;
       }
 
+      // Reinicia si ya estaba corriendo
+      stopScanner();
+
       btnStart.disabled = true;
 
       try {
-        // ✅ Pedimos mejor resolución (ideal para QR y barras)
-        // 1280x720 o 1920x1080 según soporte de tu cámara
-        await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: "environment" },
-            width:  { ideal: 1920 },
-            height: { ideal: 1080 }
-          }
-        });
+        // ✅ constraints según selección
+        const mode = camMode.value;
+        const constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 } } };
 
-        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+        if (mode === "back") {
+          constraints.video.facingMode = { ideal: "environment" };
+        } else if (mode === "front") {
+          constraints.video.facingMode = { ideal: "user" };
+        } else {
+          // auto: deja ideal environment (mejor para QR normalmente)
+          constraints.video.facingMode = { ideal: "environment" };
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoEl.srcObject = stream;
+
+        // esperar meta para saber dimensiones reales
+        await new Promise(r => (videoEl.onloadedmetadata = () => r()));
+
+        // ✅ Iniciar lector SOLO QR
+        qrReader = new ZXingBrowser.BrowserQRCodeReader();
         isRunning = true;
-
-        const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
-        const backCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[0];
-        const deviceId = backCam ? backCam.deviceId : undefined;
-
         btnStop.disabled = false;
-        setStatus("✅ Cámara lista. Escanea el QR/código dentro del marco…");
+        setStatus("✅ Cámara lista. Escanea el QR dentro del marco…");
 
-        await codeReader.decodeFromVideoDevice(deviceId, videoEl, (result, err) => {
-          if (!result) return;
+        // ✅ Recorte central (ROI) para acelerar
+        const vw = videoEl.videoWidth;
+        const vh = videoEl.videoHeight;
+        const size = Math.floor(Math.min(vw, vh) * 0.68); // 68% centro
+        const left = Math.floor((vw - size) / 2);
+        const top  = Math.floor((vh - size) / 2);
 
-          const raw = result.getText();
-          const dni = normalizeDni(raw);
-          const now = Date.now();
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-          if (dni && dni.length === 8 && (dni !== lastDni || (now - lastTs) > 1600)) {
-            lastDni = dni;
-            lastTs = now;
-            registrarDni(dni);
+        async function tick() {
+          if (!isRunning || !stream) return;
+
+          canvas.width = size;
+          canvas.height = size;
+          ctx.drawImage(videoEl, left, top, size, size, 0, 0, size, size);
+
+          try {
+            const result = await qrReader.decodeFromCanvas(canvas);
+            if (result) {
+              const raw = result.getText();
+              const dni = normalizeDni(raw);
+              const now = Date.now();
+
+              if (dni && dni.length === 8 && (dni !== lastDni || (now - lastTs) > 1500)) {
+                lastDni = dni;
+                lastTs = now;
+                registrarDni(dni);
+              }
+            }
+          } catch (e) {
+            // normal cuando no hay QR
           }
-        });
+
+          // ✅ loop rápido
+          setTimeout(tick, 60);
+        }
+
+        tick();
 
       } catch (e) {
         const name = e?.name || "Error";
@@ -465,24 +531,16 @@
       }
     }
 
-    function stopScanner() {
-      try { codeReader?.reset(); } catch(e) {}
-      codeReader = null;
-      isRunning = false;
-
-      const stream = videoEl.srcObject;
-      if (stream) stream.getTracks().forEach(t => t.stop());
-      videoEl.srcObject = null;
-
-      btnStart.disabled = false;
-      btnStop.disabled = true;
-      setStatus("Cámara detenida. Toca “Activar cámara” para comenzar…", null);
-    }
-
     btnStart.addEventListener("click", startScanner);
     btnStop.addEventListener("click", stopScanner);
+
+    // ✅ si cambias cámara mientras corre: reinicia
+    camMode.addEventListener("change", () => {
+      if (isRunning) startScanner();
+    });
   </script>
 </body>
 </html>
+
 
 
