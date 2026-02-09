@@ -2,5 +2,6 @@ services:
   - type: web
     name: proyecto-manhattan
     env: python
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn proyecto_manhattan.wsgi:application"
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: gunicorn proyecto_manhattan.wsgi:application
+    releaseCommand: python manage.py migrate --noinput && python manage.py ensure_admin
