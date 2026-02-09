@@ -9,54 +9,48 @@
   <style>
     body { margin:0; font-family: Arial, sans-serif; background:#0b1020; color:#fff; }
     .wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
-    .top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-    .title { font-size: 22px; font-weight: 800; margin: 8px 0 10px; }
-    #video { width: 100%; border-radius: 16px; background:#000; min-height: 260px; object-fit: cover; }
-    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin: 8px 0; }
-    select {
-      padding: 10px 12px; border-radius: 10px; border:1px solid rgba(255,255,255,.15);
-      background: rgba(255,255,255,.06); color:#fff; outline:none;
-      min-width: 260px;
-    }
-    option { color:#000; }
+    .top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .title { font-size: 22px; font-weight: 700; margin: 8px 0 16px; }
+    #video { width: 100%; border-radius: 16px; background:#000; min-height: 220px; }
     .status {
       margin-top: 12px; padding: 14px; border-radius: 12px;
       background: rgba(255,255,255,0.08);
-      font-size: 16px; font-weight: 800;
+      font-size: 18px; font-weight: 700;
     }
     .ok { background: rgba(34,197,94,0.18); border: 1px solid rgba(34,197,94,0.35); }
     .bad { background: rgba(239,68,68,0.18); border: 1px solid rgba(239,68,68,0.35); }
-    .hint { opacity: .85; margin-top: 10px; font-size: 14px; line-height: 1.35; }
+    .hint { opacity: .8; margin-top: 10px; font-size: 14px; line-height: 1.35; }
     .btn {
       padding: 10px 14px; border-radius: 10px; border:0; cursor:pointer;
-      font-weight: 900; font-size: 15px;
+      font-weight: 800; font-size: 15px;
     }
     .btn-primary { background:#2563eb; color:#fff; }
     .btn-danger { background:#b91c1c; color:#fff; }
-    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    .btn-primary:disabled { opacity:.6; cursor:not-allowed; }
   </style>
 
-  <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
+  <!-- ✅ ZXing local (YA NO CDN) -->
+  <script src="{% static 'asistencias/js/zxing-browser.min.js' %}"></script>
 </head>
 
 <body>
   <div class="wrap">
     <div class="top">
       <div class="title">📷 Escaneo de Asistencia (DNI)</div>
-      <div class="row">
-        <select id="cameraSelect"></select>
+      <div style="display:flex; gap:10px;">
         <button id="btnStart" class="btn btn-primary">Activar cámara</button>
         <button id="btnStop" class="btn btn-danger" disabled>Detener</button>
       </div>
     </div>
 
-    <video id="video" autoplay playsinline muted></video>
+    <video id="video" autoplay playsinline></video>
 
-    <div id="status" class="status">Elige cámara y pulsa “Activar cámara”…</div>
+    <div id="status" class="status">Toca “Activar cámara” para comenzar…</div>
 
     <div class="hint">
-      ✅ Tip: evita cámaras “IR / Windows Hello / Virtual”.<br>
-      Si tu lector es de barras (1D), usa buena luz y acerca el código.
+      ✅ Requisito: abrir esta página en <b>HTTPS</b> (Render) o en <b>localhost</b> en la misma máquina.<br>
+      En celular entra por <b>https://TU-APP.onrender.com/asistencia/scan/</b> (no 127.0.0.1).<br>
+      Si tu código es barras (1D), usa buena luz y acerca el celular.
     </div>
   </div>
 
@@ -72,15 +66,12 @@
     const videoEl = document.getElementById("video");
     const btnStart = document.getElementById("btnStart");
     const btnStop  = document.getElementById("btnStop");
-    const cameraSelect = document.getElementById("cameraSelect");
-
-    let stream = null;
-    let reader = null;
-    let scanning = false;
 
     let lastDni = null;
     let lastTs = 0;
     let busy = false;
+    let codeReader = null;
+    let stream = null;
 
     function setStatus(msg, ok=null) {
       statusEl.textContent = msg;
@@ -89,7 +80,8 @@
 
     function normalizeDni(text) {
       const digits = (text || "").replace(/\D/g, "");
-      return digits.length >= 8 ? digits.slice(-8) : digits;
+      if (digits.length >= 8) return digits.slice(-8);
+      return digits;
     }
 
     async function registrarDni(dni) {
@@ -108,11 +100,9 @@
 
         const data = await res.json().catch(() => ({ ok:false, msg:"Respuesta inválida" }));
 
-        if (res.ok && data.ok) {
-          setStatus(data.msg, true);
-        } else {
-          setStatus(data.msg || "No se pudo registrar.", false);
-        }
+        if (res.ok && data.ok) setStatus(data.msg, true);
+        else setStatus(data.msg || "No se pudo registrar.", false);
+
       } catch (e) {
         setStatus("Error de red.", false);
       } finally {
@@ -123,96 +113,30 @@
       }
     }
 
-    async function loadCameras() {
-      cameraSelect.innerHTML = "";
-
-      // Pedimos permiso una vez para que salgan los labels reales
-      try {
-        const tmp = await navigator.mediaDevices.getUserMedia({ video: true });
-        tmp.getTracks().forEach(t => t.stop());
-      } catch (_) {}
-
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const cams = devices.filter(d => d.kind === "videoinput");
-
-      // Filtrar cámaras malas típicas
-      const good = cams.filter(c => !/ir|infrared|hello|virtual|obs|snap|manycam/i.test(c.label || ""));
-      const list = good.length ? good : cams;
-
-      list.forEach((c, idx) => {
-        const opt = document.createElement("option");
-        opt.value = c.deviceId;
-        opt.textContent = c.label || `Cámara ${idx+1}`;
-        cameraSelect.appendChild(opt);
-      });
-
-      if (!list.length) {
-        const opt = document.createElement("option");
-        opt.textContent = "No se detectó cámara";
-        opt.value = "";
-        cameraSelect.appendChild(opt);
-      }
-    }
-
-    function stopAll() {
-      scanning = false;
-
-      if (reader) {
-        try { reader.reset(); } catch (_) {}
-        reader = null;
-      }
-
-      if (stream) {
-        stream.getTracks().forEach(t => t.stop());
-        stream = null;
-      }
-
-      videoEl.srcObject = null;
-      btnStop.disabled = true;
-      btnStart.disabled = false;
-      setStatus("Detenido. Pulsa “Activar cámara” para comenzar…", null);
-    }
-
-    async function start() {
-      if (scanning) return;
-
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setStatus("❌ Tu navegador no soporta cámara.", false);
-        return;
-      }
-
-      const deviceId = cameraSelect.value;
-      if (!deviceId) {
-        setStatus("❌ Selecciona una cámara válida.", false);
+    async function startScanner() {
+      if (!window.isSecureContext) {
+        setStatus("❌ La cámara requiere HTTPS (o localhost).", false);
         return;
       }
 
       btnStart.disabled = true;
 
       try {
-        // 1) Abrir stream y mostrar preview
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            deviceId: { exact: deviceId },
-            facingMode: "environment",
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          },
-          audio: false
-        });
-
+        // 1) pedir cámara y guardar stream para poder detenerla luego
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         videoEl.srcObject = stream;
-        await videoEl.play();  // IMPORTANTE para que se vea el video
 
-        // 2) Iniciar lector
-        reader = new ZXingBrowser.BrowserMultiFormatReader();
-        scanning = true;
+        // 2) iniciar ZXing
+        codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+
+        const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
+        const backCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[0];
+        const deviceId = backCam ? backCam.deviceId : undefined;
+
         btnStop.disabled = false;
+        setStatus("✅ Cámara lista. Escanea el código…");
 
-        setStatus("✅ Cámara activa. Escanea el código…");
-
-        // Usamos el stream ya abierto
-        await reader.decodeFromStream(stream, videoEl, (result, err) => {
+        await codeReader.decodeFromVideoDevice(deviceId, videoEl, (result) => {
           if (!result) return;
 
           const raw = result.getText();
@@ -227,33 +151,41 @@
         });
 
       } catch (e) {
-        stopAll();
         const name = e?.name || "Error";
-        const msg = e?.message || "Sin detalle";
+        const msg  = e?.message || "Sin detalle";
 
         if (name === "NotAllowedError") {
-          setStatus("❌ Permiso denegado. Permite la cámara en Edge (icono de cámara en la barra).", false);
+          setStatus("❌ Permiso denegado. Activa la cámara en permisos del navegador.", false);
         } else if (name === "NotFoundError") {
           setStatus("❌ No se encontró cámara.", false);
         } else if (name === "NotReadableError") {
-          setStatus("❌ La cámara abrió pero no entrega imagen. Cambia de cámara (evita IR) o reinicia Edge.", false);
+          setStatus("❌ La cámara está ocupada por otra app/pestaña. Cierra Zoom/Teams/WhatsApp/OMEN y reintenta.", false);
         } else {
-          setStatus(`❌ Error abriendo cámara (${name}): ${msg}`, false);
+          setStatus(`❌ No se pudo abrir la cámara (${name}): ${msg}`, false);
         }
-      } finally {
-        if (!scanning) btnStart.disabled = false;
+
+        btnStart.disabled = false;
       }
     }
 
-    btnStart.addEventListener("click", start);
-    btnStop.addEventListener("click", stopAll);
+    function stopScanner() {
+      try { codeReader?.reset(); } catch(e) {}
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      videoEl.srcObject = null;
 
-    // cargar cámaras al abrir
-    (async () => {
-      await loadCameras();
-      setStatus("Elige una cámara (no IR) y pulsa “Activar cámara”…", null);
-    })();
+      btnStart.disabled = false;
+      btnStop.disabled = true;
+      setStatus("Cámara detenida. Toca “Activar cámara” para comenzar…", null);
+    }
+
+    btnStart.addEventListener("click", startScanner);
+    btnStop.addEventListener("click", stopScanner);
   </script>
 </body>
 </html>
+
+
 
