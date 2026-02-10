@@ -17,8 +17,12 @@ from datetime import timedelta
 import dj_database_url
 from dotenv import load_dotenv
 
-# ✅ Cargar .env desde la misma carpeta de settings.py
-load_dotenv(Path(__file__).resolve().parent / ".env")
+# Cargar .env SOLO en local (si existe)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
 # =========================
 # BASE
