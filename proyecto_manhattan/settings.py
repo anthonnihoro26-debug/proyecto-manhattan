@@ -15,9 +15,10 @@ import os
 from datetime import timedelta
 
 import dj_database_url
-from dotenv import load_dotenv
 
-# Cargar .env SOLO en local (si existe)
+# =========================
+# ✅ Cargar .env SOLO en local (si existe)
+# =========================
 try:
     from dotenv import load_dotenv
     load_dotenv()
