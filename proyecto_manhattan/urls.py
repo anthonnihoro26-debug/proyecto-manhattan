@@ -20,16 +20,21 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 
+from asistencias import views as asist_views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Login
-    path('', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    # ✅ Login
+    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
 
-    # Logout (te regresa al login)
+    # ✅ Logout (te regresa al login)
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 
-    # App
+    # ✅ Post-login redirect por grupo (GEORGE o JORGE)
+    path('', asist_views.post_login_redirect, name='post_login'),
+
+    # ✅ App
     path('asistencia/', include('asistencias.urls')),
 ]
 

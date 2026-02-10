@@ -9,4 +9,3 @@ urlpatterns = [
     path("excel/", views.exportar_reporte_excel, name="exportar_reporte_excel"),
 ]
 
-

@@ -39,7 +39,6 @@
       overflow-x:hidden;
     }
 
-    /* textura suave */
     .noise{
       position: fixed;
       inset: 0;
@@ -58,7 +57,6 @@
       padding: 18px 14px;
     }
 
-    /* Tarjeta mobile-first */
     .cardx{
       width: min(520px, 96vw);
       border-radius: var(--radius);
@@ -69,7 +67,6 @@
       overflow:hidden;
     }
 
-    /* Header compacto con marca */
     .header{
       padding: 18px 18px 10px;
       display:flex;
@@ -148,7 +145,6 @@
       font-size: 12px;
     }
 
-    /* Inputs grandes para dedo */
     .label{
       font-weight: 900;
       font-size: 13px;
@@ -171,7 +167,7 @@
       background: rgba(255,255,255,.10);
       color: #fff;
       font-weight: 850;
-      padding: 14px 12px; /* más alto = mejor en celular */
+      padding: 14px 12px;
       font-size: 15px;
     }
     .form-control:focus{
@@ -192,7 +188,6 @@
       padding: 0 12px;
     }
 
-    /* Botón grande (thumb-friendly) */
     .btnx{
       width:100%;
       border:0;
@@ -223,24 +218,23 @@
       text-align:center;
     }
 
-    /* Alert de mensajes */
+    /* ✅ Alert */
     .alert{
       border-radius: 16px;
       font-weight: 850;
       border: 1px solid rgba(255,255,255,.18);
-      background: rgba(239,68,68,.16);
       color: rgba(255,255,255,.95);
     }
+    .alert-danger{
+      background: rgba(239,68,68,.16);
+    }
+    .alert-warning{
+      background: rgba(245,158,11,.18);
+    }
 
-    /* Desktop: agrega panel de info a la izquierda (sin romper móvil) */
     @media (min-width: 992px){
-      .cardx{
-        width: min(980px, 94vw);
-      }
-      .shell{
-        display:grid;
-        grid-template-columns: 1.05fr 1fr;
-      }
+      .cardx{ width: min(980px, 94vw); }
+      .shell{ display:grid; grid-template-columns: 1.05fr 1fr; }
       .info{
         padding: 28px 28px;
         border-right: 1px solid rgba(255,255,255,.14);
@@ -248,22 +242,10 @@
           radial-gradient(700px 450px at 20% 10%, rgba(255,255,255,.16), transparent 55%),
           linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
       }
-      .info h2{
-        margin: 0;
-        font-weight: 950;
-        font-size: 28px;
-        letter-spacing: -0.6px;
-      }
-      .info p{
-        margin: 10px 0 0;
-        color: var(--muted);
-        font-weight: 800;
-        line-height: 1.45;
-      }
-      .content{
-        padding: 26px 28px 28px;
-      }
-      .header{ display:none; } /* en desktop usa el panel info */
+      .info h2{ margin: 0; font-weight: 950; font-size: 28px; letter-spacing: -0.6px; }
+      .info p{ margin: 10px 0 0; color: var(--muted); font-weight: 800; line-height: 1.45; }
+      .content{ padding: 26px 28px 28px; }
+      .header{ display:none; }
       .divider{ display:none; }
     }
   </style>
@@ -275,6 +257,7 @@
   <div class="wrap">
     <div class="cardx">
       <div class="shell">
+
         <!-- Panel info solo en desktop -->
         <div class="info d-none d-lg-block">
           <div class="logo mb-3" style="width:58px;height:58px;border-radius:20px;">
@@ -320,7 +303,23 @@
           <form method="post" autocomplete="on">
             {% csrf_token %}
 
-            <div class="mb-3">
+            <!-- ✅ respeta redirección -->
+            <input type="hidden" name="next" value="{{ next }}">
+
+            <!-- ✅ muestra error real de login -->
+            {% if form.errors %}
+              <div class="alert alert-danger mt-2">
+                Usuario o contraseña incorrectos.
+              </div>
+            {% endif %}
+
+            {% if messages %}
+              <div class="alert alert-warning mt-2">
+                {% for message in messages %}{{ message }}{% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="mb-3 mt-3">
               <div class="label">Usuario</div>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
@@ -339,12 +338,6 @@
               </div>
             </div>
 
-            {% if messages %}
-              <div class="alert mt-3">
-                {% for message in messages %}{{ message }}{% endfor %}
-              </div>
-            {% endif %}
-
             <button class="btnx btnx-primary mt-3" type="submit">
               <i class="bi bi-box-arrow-in-right"></i> Ingresar
             </button>
@@ -354,6 +347,7 @@
             </div>
           </form>
         </div>
+
       </div>
     </div>
   </div>

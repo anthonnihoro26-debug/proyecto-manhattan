@@ -39,7 +39,6 @@
       color:#111827;
     }
 
-    /* TOP BAR */
     .topbar{
       position: sticky;
       top: 0;
@@ -127,11 +126,9 @@
     }
     .btnx:hover{ transform: translateY(-1px); box-shadow: 0 16px 34px rgba(0,0,0,.14); }
     .btnx:active{ transform: translateY(0px); opacity:.92; }
-    .btnx-primary{ background: linear-gradient(135deg, var(--primary), var(--primary2)); color:#fff; }
     .btnx-success{ background: linear-gradient(135deg, #16a34a, #22c55e); color:#fff; }
     .btnx-danger{ background: linear-gradient(135deg, #dc2626, #ef4444); color:#fff; }
 
-    /* PAGE */
     .page{
       max-width: 1180px;
       margin: 0 auto;
@@ -172,10 +169,7 @@
       font-weight: 800;
     }
 
-    /* FILTER BAR */
-    .filters{
-      padding: 0 22px 20px;
-    }
+    .filters{ padding: 0 22px 20px; }
 
     .filter-card{
       background: rgba(15, 23, 42, 0.03);
@@ -227,7 +221,39 @@
       gap:8px;
     }
 
-    /* TABLE */
+    /* ✅ KPIs */
+    .kpi-grid{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:12px;
+      padding: 0 22px 18px;
+    }
+    @media (max-width: 980px){ .kpi-grid{ grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 520px){ .kpi-grid{ grid-template-columns: 1fr; } }
+
+    .kpi{
+      border-radius: 18px;
+      background: rgba(255,255,255,0.88);
+      border: 1px solid rgba(15,23,42,0.10);
+      padding: 14px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.08);
+    }
+    .kpi .k-title{
+      font-size: 12px;
+      color: rgba(15,23,42,.62);
+      font-weight: 900;
+      margin-bottom: 6px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .kpi .k-val{
+      font-size: 22px;
+      font-weight: 950;
+      color:#0f172a;
+      letter-spacing: -0.3px;
+    }
+
     .table-wrap{
       margin: 0 22px 16px;
       border-radius: 18px;
@@ -274,7 +300,6 @@
     .cond-c{ background: linear-gradient(135deg,#2563eb,#4f46e5); }
     .cond-otro{ background: linear-gradient(135deg,#64748b,#475569); }
 
-    /* footer */
     .footer-row{
       padding: 0 22px 22px;
       display:flex;
@@ -296,18 +321,6 @@
       gap:8px;
     }
 
-    /* responsive */
-    @media (max-width: 576px){
-      .title{ font-size: 24px; }
-      .cardx-head{ padding: 18px 16px 10px; }
-      .filters{ padding: 0 16px 16px; }
-      .table-wrap{ margin: 0 16px 14px; }
-      .footer-row{ padding: 0 16px 18px; }
-      .brand h1{ font-size: 15px; }
-      .userpill{ display:none; } /* en móvil oculta user pill para que no se amontone */
-    }
-
-    /* ✅ aviso privacidad */
     .privacy-note{
       margin-top: 10px;
       font-size: 12px;
@@ -317,11 +330,52 @@
       align-items:center;
       gap:8px;
     }
+
+    /* ✅ paginación */
+    .pager{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .pbtn{
+      padding: 9px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(15,23,42,0.12);
+      background: rgba(255,255,255,0.90);
+      font-weight: 950;
+      color:#0f172a;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
+    }
+    .pbtn.disabled{
+      opacity: .55;
+      pointer-events: none;
+    }
+    .pinfo{
+      font-weight: 900;
+      color: rgba(15,23,42,.72);
+      font-size: 13px;
+    }
+
+    @media (max-width: 576px){
+      .title{ font-size: 24px; }
+      .cardx-head{ padding: 18px 16px 10px; }
+      .filters{ padding: 0 16px 16px; }
+      .kpi-grid{ padding: 0 16px 16px; }
+      .table-wrap{ margin: 0 16px 14px; }
+      .footer-row{ padding: 0 16px 18px; }
+      .brand h1{ font-size: 15px; }
+      .userpill{ display:none; }
+    }
   </style>
 </head>
 
 <body>
-  <!-- TOP BAR -->
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">
@@ -340,10 +394,6 @@
           Usuario: <span style="font-weight:950;">{{ request.user.username }}</span>
         </div>
 
-        <a href="{% url 'scan_page' %}" class="btnx btnx-primary">
-          <i class="bi bi-qr-code-scan"></i> Volver a Escaneo
-        </a>
-
         <form method="post" action="{% url 'logout' %}" class="m-0">
           {% csrf_token %}
           <button type="submit" class="btnx btnx-danger">
@@ -354,7 +404,6 @@
     </div>
   </div>
 
-  <!-- PAGE -->
   <div class="page">
     <div class="cardx">
       <div class="cardx-head">
@@ -365,7 +414,6 @@
           </h2>
           <p class="subtitle">Filtra por docente, condición y rango de fechas</p>
 
-          <!-- ✅ Privacidad -->
           <div class="privacy-note">
             <i class="bi bi-shield-lock"></i>
             Por privacidad, el DNI no se muestra en el historial.
@@ -374,9 +422,29 @@
 
         <div class="d-flex gap-2 flex-wrap">
           <a class="btnx btnx-success"
-             href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}">
+             href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}">
             <i class="bi bi-file-earmark-excel"></i> Exportar Excel
           </a>
+        </div>
+      </div>
+
+      <!-- ✅ KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="k-title"><i class="bi bi-list-check"></i> Total registros</div>
+          <div class="k-val">{{ total_registros }}</div>
+        </div>
+        <div class="kpi">
+          <div class="k-title"><i class="bi bi-people"></i> Docentes únicos</div>
+          <div class="k-val">{{ docentes_unicos }}</div>
+        </div>
+        <div class="kpi">
+          <div class="k-title"><i class="bi bi-person-badge"></i> Registros condición N</div>
+          <div class="k-val">{{ registros_n }}</div>
+        </div>
+        <div class="kpi">
+          <div class="k-title"><i class="bi bi-person-badge-fill"></i> Registros condición C</div>
+          <div class="k-val">{{ registros_c }}</div>
         </div>
       </div>
 
@@ -391,7 +459,6 @@
                   <span class="input-group-text" style="border-radius:14px 0 0 14px; border:1px solid rgba(15,23,42,0.14); border-right:0; background:#fff;">
                     <i class="bi bi-search"></i>
                   </span>
-                  <!-- ✅ Cambiado placeholder: ya no dice DNI -->
                   <input type="text" name="q" class="form-control"
                          style="border-radius:0 14px 14px 0 !important;"
                          placeholder="Código / Apellidos / Nombres"
@@ -418,7 +485,16 @@
                 </select>
               </div>
 
-              <div class="col-6 col-lg-1 d-grid">
+              <div class="col-6 col-lg-1">
+                <label class="form-label">Mostrar</label>
+                <select name="ps" class="form-select">
+                  <option value="25" {% if ps == 25 %}selected{% endif %}>25</option>
+                  <option value="50" {% if ps == 50 %}selected{% endif %}>50</option>
+                  <option value="100" {% if ps == 100 %}selected{% endif %}>100</option>
+                </select>
+              </div>
+
+              <div class="col-12 col-lg-2 d-grid">
                 <button class="btn-apply" type="submit">
                   <i class="bi bi-funnel-fill"></i> Aplicar
                 </button>
@@ -441,7 +517,6 @@
             <thead>
               <tr>
                 <th style="width:60px;">#</th>
-                <!-- ✅ DNI eliminado -->
                 <th>Código</th>
                 <th>Apellidos</th>
                 <th>Nombres</th>
@@ -453,7 +528,7 @@
             <tbody>
               {% for a in asistencias %}
                 <tr>
-                  <td>{{ forloop.counter }}</td>
+                  <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
                   <td>{{ a.profesor.codigo }}</td>
                   <td>{{ a.profesor.apellidos }}</td>
                   <td>{{ a.profesor.nombres }}</td>
@@ -489,12 +564,46 @@
       <div class="footer-row">
         <div class="d-flex gap-2 flex-wrap">
           <span class="total">
-            <i class="bi bi-list-check"></i> Total: {{ asistencias|length }} registros
+            <i class="bi bi-list-check"></i> Total: {{ total_registros }} registros
+          </span>
+
+          <span class="pinfo">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
           </span>
         </div>
 
-        <div style="color:rgba(15,23,42,.75); font-weight:900; font-size:13px;">
-          <i class="bi bi-shield-lock"></i> Acceso seguro • Registro de asistencia
+        <div class="pager">
+          <!-- Inicio -->
+          <a class="pbtn {% if not page_obj.has_previous %}disabled{% endif %}"
+             href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page=1">
+            <i class="bi bi-skip-backward-fill"></i> Inicio
+          </a>
+
+          <!-- Anterior (SOLO si existe) -->
+          {% if page_obj.has_previous %}
+            <a class="pbtn"
+               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.previous_page_number }}">
+              <i class="bi bi-chevron-left"></i> Anterior
+            </a>
+          {% else %}
+            <span class="pbtn disabled"><i class="bi bi-chevron-left"></i> Anterior</span>
+          {% endif %}
+
+          <!-- Siguiente (SOLO si existe) -->
+          {% if page_obj.has_next %}
+            <a class="pbtn"
+               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.next_page_number }}">
+              Siguiente <i class="bi bi-chevron-right"></i>
+            </a>
+          {% else %}
+            <span class="pbtn disabled">Siguiente <i class="bi bi-chevron-right"></i></span>
+          {% endif %}
+
+          <!-- Fin -->
+          <a class="pbtn {% if not page_obj.has_next %}disabled{% endif %}"
+             href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.paginator.num_pages }}">
+            Fin <i class="bi bi-skip-forward-fill"></i>
+          </a>
         </div>
       </div>
 

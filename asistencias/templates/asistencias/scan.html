@@ -252,6 +252,88 @@
     .rangeVal{ min-width:42px; text-align:right; font-weight:950; color:rgba(255,255,255,.92); font-size:12px; }
 
     .hidden{ display:none !important; }
+
+    /* =======================================================
+       ✅ MEJORA #1: Tarjeta confirmación + últimos 5
+    ======================================================= */
+    .toastCard{
+      margin-top: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.16);
+      padding: 12px;
+      box-shadow: 0 16px 30px rgba(0,0,0,.22);
+      animation: pop .14s ease-out;
+    }
+    @keyframes pop{
+      from{ transform: translateY(4px); opacity:.65; }
+      to{ transform: translateY(0px); opacity:1; }
+    }
+    .toastHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 8px;
+    }
+    .toastTag{
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 950;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+    }
+    .tag-ok{ background: rgba(34,197,94,.20); border-color: rgba(34,197,94,.35); }
+    .tag-warn{ background: rgba(245,158,11,.20); border-color: rgba(245,158,11,.35); }
+    .tag-bad{ background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.35); }
+
+    .toastName{
+      font-weight: 950;
+      font-size: 14px;
+      color: rgba(255,255,255,.95);
+      line-height: 1.2;
+    }
+    .toastMeta{
+      margin-top: 6px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px;
+      font-size:12px;
+      color: rgba(255,255,255,.72);
+      font-weight: 850;
+    }
+    .toastMeta b{ color: rgba(255,255,255,.92); }
+
+    .miniList{
+      margin-top: 12px;
+      border-top: 1px solid rgba(255,255,255,.10);
+      padding-top: 10px;
+    }
+    .miniTitle{
+      font-weight: 950;
+      font-size: 12px;
+      color: rgba(255,255,255,.78);
+      letter-spacing: .2px;
+      margin: 0 0 8px;
+    }
+    .miniItem{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 850;
+      color: rgba(255,255,255,.82);
+    }
+    .miniLeft{ display:flex; flex-direction:column; gap:2px; }
+    .miniName{ color: rgba(255,255,255,.92); font-weight: 950; }
+    .miniSub{ color: rgba(255,255,255,.70); }
+    .miniRight{ text-align:right; color: rgba(255,255,255,.72); white-space:nowrap; }
   </style>
 
   <script src="{% static 'asistencias/js/zxing-browser.min.js' %}"></script>
@@ -270,7 +352,6 @@
       </div>
 
       <div class="actions">
-        <a class="btn btn-blue" href="{% url 'historial_asistencias' %}">📋 Historial</a>
         <span class="pill">👤 <b>{{ request.user.username }}</b></span>
 
         <button id="btnFlip" class="btn btn-blue" type="button">🔄 Cámara</button>
@@ -314,6 +395,7 @@
       <div class="card side">
         <div class="sideBox">
           <p class="sideTitle">Pro</p>
+
           <div class="kv">
             <div>⚡ Estado: <b id="stateText">Iniciando</b></div>
             <div>📷 Cámara: <b id="camText">—</b></div>
@@ -324,6 +406,31 @@
             <span style="font-weight:950; color:rgba(255,255,255,.92); font-size:12px;">🔍</span>
             <input id="zoomRange" type="range" min="1" max="3" step="0.1" value="1" />
             <span id="zoomVal" class="rangeVal">1.0x</span>
+          </div>
+
+          <!-- ✅ Tarjeta confirmación (se muestra al escanear) -->
+          <div id="toastCard" class="toastCard hidden">
+            <div class="toastHead">
+              <div id="toastTag" class="toastTag tag-ok">✅ OK</div>
+              <div style="font-size:12px; color:rgba(255,255,255,.70); font-weight:900;">
+                <span id="toastTime">—</span>
+              </div>
+            </div>
+
+            <div class="toastName" id="toastName">—</div>
+
+            <div class="toastMeta">
+              <div>Código: <b id="toastCod">—</b></div>
+              <div>Cond.: <b id="toastCond">—</b></div>
+              <div>DNI: <b id="toastDni">—</b></div>
+              <div>Estado: <b id="toastState">—</b></div>
+            </div>
+          </div>
+
+          <!-- ✅ Últimos 5 -->
+          <div class="miniList">
+            <p class="miniTitle">Últimos 5 escaneos</p>
+            <div id="lastList"></div>
           </div>
         </div>
       </div>
@@ -355,6 +462,17 @@
     const zoomBox   = document.getElementById("zoomBox");
     const zoomRange = document.getElementById("zoomRange");
     const zoomVal   = document.getElementById("zoomVal");
+
+    // ✅ UI: tarjeta + lista
+    const toastCard = document.getElementById("toastCard");
+    const toastTag  = document.getElementById("toastTag");
+    const toastTime = document.getElementById("toastTime");
+    const toastName = document.getElementById("toastName");
+    const toastCod  = document.getElementById("toastCod");
+    const toastCond = document.getElementById("toastCond");
+    const toastDni  = document.getElementById("toastDni");
+    const toastState= document.getElementById("toastState");
+    const lastList  = document.getElementById("lastList");
 
     // ========= Config =========
     const COOLDOWN_MS = 4000;
@@ -407,7 +525,6 @@
         const ctx = ensureAudioCtx();
         if (ctx.state === "suspended") await ctx.resume();
 
-        // tick iOS
         const o = ctx.createOscillator();
         const g = ctx.createGain();
         g.gain.value = 0.0001;
@@ -455,6 +572,62 @@
     }
     function setMsg(t){ msgEl.textContent = t; }
 
+    // ✅ Tarjeta confirmación + últimos 5
+    const recent = []; // {name,cod,cond,dni,status,time}
+
+    function maskDni(dni){
+      if (!dni) return "—";
+      const s = String(dni);
+      if (s.length < 4) return "—";
+      return "****" + s.slice(-4);
+    }
+
+    function showToast(kind, data){
+      // kind: "ok" | "warn" | "bad"
+      toastTag.className = "toastTag " + (kind === "ok" ? "tag-ok" : kind === "warn" ? "tag-warn" : "tag-bad");
+      toastTag.textContent = kind === "ok" ? "✅ OK" : kind === "warn" ? "⚠️ DUPLICADO" : "❌ ERROR";
+
+      const now = new Date();
+      toastTime.textContent = now.toLocaleTimeString();
+
+      toastName.textContent = data.name || "—";
+      toastCod.textContent = data.codigo || "—";
+      toastCond.textContent = data.condicion || "—";
+      toastDni.textContent = data.dni || "—";
+      toastState.textContent = data.estado || "—";
+
+      toastCard.classList.remove("hidden");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toastCard.classList.add("hidden"), 3600);
+    }
+
+    function renderRecent(){
+      lastList.innerHTML = "";
+      if (!recent.length){
+        lastList.innerHTML = `<div class="miniItem"><div class="miniLeft"><div class="miniName">—</div><div class="miniSub">Aún no hay escaneos</div></div><div class="miniRight">—</div></div>`;
+        return;
+      }
+      for (const it of recent){
+        const el = document.createElement("div");
+        el.className = "miniItem";
+        el.innerHTML = `
+          <div class="miniLeft">
+            <div class="miniName">${it.name}</div>
+            <div class="miniSub">${it.cod} • ${it.cond} • ${maskDni(it.dni)} • ${it.status}</div>
+          </div>
+          <div class="miniRight">${it.time}</div>
+        `;
+        lastList.appendChild(el);
+      }
+    }
+    renderRecent();
+
+    function pushRecent(item){
+      recent.unshift(item);
+      if (recent.length > 5) recent.pop();
+      renderRecent();
+    }
+
     // ========= DNI =========
     function extractDni(text){
       const s = (text || "").toString();
@@ -481,7 +654,6 @@
       cameras = devices.filter(d => d.kind === "videoinput");
       if (!cameras.length) throw new Error("No hay cámaras disponibles");
 
-      // intenta comenzar en trasera si existe (por label)
       const backIdx = cameras.findIndex(c => /back|rear|environment/i.test(c.label || ""));
       camIndex = backIdx >= 0 ? backIdx : 0;
     }
@@ -489,7 +661,6 @@
     function currentCameraLabel(){
       const d = cameras[camIndex];
       if (!d) return "—";
-      // si no hay label, al menos muestra índice
       return (d.label && d.label.trim()) ? d.label : `Cámara ${camIndex+1}/${cameras.length}`;
     }
 
@@ -586,6 +757,9 @@
       setChip("run","Registrando…");
       setMsg("Enviando…");
 
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString();
+
       try{
         const res = await fetch("{% url 'api_scan_asistencia' %}", {
           method: "POST",
@@ -605,32 +779,60 @@
           setChip("bad","Error");
           setMsg("Servidor no devolvió JSON (CSRF/login/500). Revisa consola.");
           beepBad(); vibBad();
+
+          showToast("bad", { name:"Error servidor", codigo:"—", condicion:"—", dni:dni, estado:"NO JSON" });
+          pushRecent({ name:"Error servidor", cod:"—", cond:"—", dni:dni, status:"ERROR", time: timeStr });
           return;
         }
 
         const data = await res.json();
-        lastText.textContent = `${dni} • ${new Date().toLocaleTimeString()}`;
+        lastText.textContent = `${dni} • ${timeStr}`;
+
+        const prof = data.profesor || {};
+        const fullName = (prof.apellidos || "") + " " + (prof.nombres || "");
+        const item = {
+          name: fullName.trim() || "—",
+          cod: prof.codigo || "—",
+          cond: prof.condicion || "—",
+          dni: prof.dni || dni,
+          time: timeStr,
+          status: "—"
+        };
 
         if (res.ok && data.ok){
           if (data.duplicado){
             setChip("warn","Duplicado");
             setMsg(data.msg || "Ya registró hoy.");
             beepWarn(); vibWarn();
+
+            item.status = "DUPLICADO";
+            showToast("warn", { ...item, codigo:item.cod, condicion:item.cond, estado:"Duplicado", dni:item.dni });
           } else {
             setChip("ok","OK");
             setMsg(data.msg || "Registrado.");
             beepOk(); vibOk();
+
+            item.status = "OK";
+            showToast("ok", { ...item, codigo:item.cod, condicion:item.cond, estado:"Registrado", dni:item.dni });
           }
+          pushRecent(item);
         } else {
           setChip("bad","Falló");
           setMsg(data.msg || "No se pudo registrar.");
           beepBad(); vibBad();
+
+          item.status = "ERROR";
+          showToast("bad", { ...item, codigo:item.cod, condicion:item.cond, estado:"Falló", dni:item.dni });
+          pushRecent(item);
         }
 
       }catch(e){
         setChip("bad","Sin red");
         setMsg("Error de red.");
         beepBad(); vibBad();
+
+        showToast("bad", { name:"Sin red", codigo:"—", condicion:"—", dni:dni, estado:"Red" });
+        pushRecent({ name:"Sin red", cod:"—", cond:"—", dni:dni, status:"ERROR", time: timeStr });
       }finally{
         cooldownUntil = Date.now() + COOLDOWN_MS;
 
@@ -664,7 +866,6 @@
         }catch(e){}
       }
 
-      // Fallback ZXing solo si NO hay detector
       if (!detector && zxingReader && zxingReader.decodeOnceFromVideoElement){
         try{
           const result = await zxingReader.decodeOnceFromVideoElement(videoEl);
@@ -723,7 +924,6 @@
 
         if (!cameras.length) await loadCameras();
 
-        // ✅ usa ideal (no exact) para que no falle en celular
         const chosenId = cameras[camIndex]?.deviceId;
 
         let constraints = {
@@ -731,7 +931,6 @@
             deviceId: chosenId ? { ideal: chosenId } : undefined,
             width:  { ideal: 1920 },
             height: { ideal: 1080 },
-            // para cuando ignore deviceId
             facingMode: { ideal: "environment" }
           },
           audio: false
@@ -740,14 +939,12 @@
         try{
           stream = await navigator.mediaDevices.getUserMedia(constraints);
         }catch(e){
-          // Fallback 1: solo facingMode environment (trasera típica)
           try{
             stream = await navigator.mediaDevices.getUserMedia({
               video: { facingMode: { ideal: "environment" }, width:{ideal:1920}, height:{ideal:1080} },
               audio: false
             });
           }catch(e2){
-            // Fallback 2: cualquier cámara
             stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
           }
         }
@@ -826,7 +1023,6 @@
     // ========= Eventos =========
     btnStop.addEventListener("click", () => stopCamera(false));
 
-    // ✅ cambio de cámara real: rota lista
     btnFlip.addEventListener("click", async () => {
       try{
         setChip("run","Cambiando…");
@@ -834,7 +1030,7 @@
 
         if (!cameras.length) await loadCameras();
 
-        camIndex = (camIndex + 1) % cameras.length; // 🔄 siguiente
+        camIndex = (camIndex + 1) % cameras.length;
         await startCamera();
       }catch(e){
         setChip("bad","Error");
@@ -845,7 +1041,6 @@
 
     btnTorch.addEventListener("click", toggleTorch);
 
-    // ✅ auto-inicio al entrar
     window.addEventListener("load", () => {
       ensureAudioCtx();
       startCamera();

@@ -137,7 +137,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # =========================
 # LOGIN / LOGOUT
 # =========================
-LOGIN_REDIRECT_URL = "/asistencia/scan/"
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "post_login"
 LOGOUT_REDIRECT_URL = "login"
 
 # =========================
