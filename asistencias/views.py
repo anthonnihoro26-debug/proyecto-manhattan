@@ -1,6 +1,11 @@
+import os
 import json
 import re
+import logging
+from io import BytesIO
+from PIL import Image as PILImage
 
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -9,15 +14,21 @@ from django.utils import timezone
 from django.db.models import Q, Min
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from django.core.paginator import Paginator
+from django.contrib.staticfiles import finders
+from django.db import transaction
 
+from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl import Workbook
-from openpyxl.utils import get_column_letter
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.worksheet.table import Table, TableStyleInfo
+from openpyxl.drawing.image import Image as XLImage
 
 from .models import Profesor, Asistencia
+
+
+logger = logging.getLogger(__name__)
 
 
 # =========================================================
@@ -29,6 +40,44 @@ def _in_group(group_name: str):
     return check
 
 
+def _get_client_ip(request):
+    xff = request.META.get("HTTP_X_FORWARDED_FOR")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR", "")
+
+
+def _extract_dni(raw: str) -> str:
+    raw = (raw or "").strip()
+
+    m = re.search(r"(\d{8})", raw)
+    if m:
+        return m.group(1)
+
+    digits = re.sub(r"\D+", "", raw)
+    if len(digits) == 7:
+        return digits.zfill(8)
+    if len(digits) >= 8:
+        return digits[-8:]
+    return ""
+
+
+def _read_code_from_request(request) -> str:
+    ctype = (request.content_type or "").lower()
+
+    if "application/json" in ctype:
+        body = (request.body or b"").decode("utf-8").strip()
+        if not body:
+            return ""
+        data = json.loads(body)
+        return (data.get("code") or data.get("dni") or "").strip()
+
+    return (request.POST.get("code") or request.POST.get("dni") or "").strip()
+
+
+# =========================================================
+# ✅ POST LOGIN REDIRECT
+# =========================================================
 @login_required
 def post_login_redirect(request):
     """
@@ -42,7 +91,6 @@ def post_login_redirect(request):
     if request.user.groups.filter(name="HISTORIAL").exists():
         return redirect("historial_asistencias")
 
-    # Si no tiene grupo, por seguridad lo deslogueamos
     logout(request)
     return redirect("login")
 
@@ -59,7 +107,6 @@ def historial_asistencias(request):
     hasta = request.GET.get("hasta", "").strip()
     condicion = request.GET.get("condicion", "").strip()
 
-    # page size
     ps = request.GET.get("ps", "25").strip()
     if ps not in ("25", "50", "100"):
         ps = "25"
@@ -77,17 +124,16 @@ def historial_asistencias(request):
         qs = qs.filter(profesor__condicion__iexact=condicion)
 
     if desde:
+        # ahora también funciona con "fecha" si existe
         qs = qs.filter(fecha_hora__date__gte=desde)
     if hasta:
         qs = qs.filter(fecha_hora__date__lte=hasta)
 
-    # ✅ KPIs (sobre el queryset filtrado)
     total_registros = qs.count()
     docentes_unicos = qs.values("profesor_id").distinct().count()
     registros_n = qs.filter(profesor__condicion__iexact="N").count()
     registros_c = qs.filter(profesor__condicion__iexact="C").count()
 
-    # ✅ PAGINACIÓN
     paginator = Paginator(qs, ps)
     page_number = request.GET.get("page", "1")
     page_obj = paginator.get_page(page_number)
@@ -103,7 +149,6 @@ def historial_asistencias(request):
         "condicion": condicion,
         "ps": ps,
 
-        # KPIs
         "total_registros": total_registros,
         "docentes_unicos": docentes_unicos,
         "registros_n": registros_n,
@@ -112,20 +157,20 @@ def historial_asistencias(request):
 
 
 # =========================================================
-# ✅ EXCEL (solo grupo HISTORIAL) ✅ RESTAURADO
+# ✅ EXCEL (solo grupo HISTORIAL) ✅ RESTAURADO (Mejorado)
 # =========================================================
 @user_passes_test(_in_group("HISTORIAL"), login_url="login")
 def exportar_reporte_excel(request):
-    # 📌 Para el Excel, vamos a usar la fecha "desde" como día evaluado (igual que tu versión anterior)
-    desde = request.GET.get("desde", "").strip()
+    q = (request.GET.get("q") or "").strip()
+    condicion = (request.GET.get("condicion") or "").strip()
+    desde = (request.GET.get("desde") or "").strip()
+    hasta = (request.GET.get("hasta") or "").strip()
+
     fecha_eval = parse_date(desde) if desde else None
     if not fecha_eval:
         fecha_eval = timezone.localdate()
 
     profesores = Profesor.objects.all().order_by("apellidos", "nombres")
-
-    q = request.GET.get("q", "").strip()
-    condicion = request.GET.get("condicion", "").strip()
 
     if q:
         profesores = profesores.filter(
@@ -138,39 +183,97 @@ def exportar_reporte_excel(request):
     if condicion:
         profesores = profesores.filter(condicion__iexact=condicion)
 
+    # ✅ Tomamos SOLO ENTRADA del día (más correcto)
     asistencias_del_dia = (
         Asistencia.objects
-        .filter(fecha_hora__date=fecha_eval)
+        .filter(fecha=fecha_eval, tipo="E")
         .values("profesor_id")
         .annotate(primera_hora=Min("fecha_hora"))
     )
     asistio_map = {x["profesor_id"]: x["primera_hora"] for x in asistencias_del_dia}
 
     wb = Workbook()
-    ws = wb.active
+    ws: Worksheet = wb.active
     ws.title = "Reporte"
 
-    titulo = f"REPORTE DE ASISTENCIA - {fecha_eval.strftime('%d/%m/%Y')}"
-    ws["A1"] = titulo
-    ws.merge_cells("A1:H1")
-    ws["A1"].font = Font(bold=True, size=14)
-    ws["A1"].alignment = Alignment(horizontal="center")
+    navy = "0B1F3B"
+    blue = "2563EB"
+    gray_bg = "F3F4F6"
+    ok_bg = "DCFCE7"
+    bad_bg = "FEE2E2"
+    text_dark = "0F172A"
 
-    headers = ["#", "DNI", "Código", "Apellidos", "Nombres", "Condición", "Estado", "Hora"]
+    thin = Side(style="thin", color="CBD5E1")
+    border_all = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    for r in (1, 2):
+        for c in range(1, 8):
+            ws.cell(row=r, column=c).fill = PatternFill("solid", fgColor=gray_bg)
+
+    ws.row_dimensions[1].height = 34
+    ws.row_dimensions[2].height = 20
+    ws.row_dimensions[3].height = 10
+    ws.column_dimensions["A"].width = 16
+
+    logo_path = finders.find("asistencias/img/uni_logo.png")
+    if logo_path:
+        with PILImage.open(logo_path) as im:
+            ow, oh = im.size
+
+        target_h = 95
+        target_w = int(ow * (target_h / oh))
+        img = XLImage(logo_path)
+        img.height = target_h
+        img.width = target_w
+        img.anchor = "A1"
+        ws.add_image(img)
+
+        ws.row_dimensions[1].height = 44
+        ws.row_dimensions[2].height = 18
+        ws.row_dimensions[3].height = 10
+        ws.column_dimensions["A"].width = 18
+
+    titulo = f"REPORTE DE ASISTENCIA — {fecha_eval.strftime('%d/%m/%Y')}"
+    ws["B1"] = titulo
+    ws.merge_cells("B1:G1")
+    ws["B1"].font = Font(bold=True, size=16, color=navy)
+    ws["B1"].alignment = Alignment(vertical="center")
+
+    filtros_txt = []
+    if q:
+        filtros_txt.append(f"Búsqueda: {q}")
+    if condicion:
+        filtros_txt.append(f"Condición: {condicion.upper()}")
+    if desde:
+        filtros_txt.append(f"Desde: {desde}")
+    if hasta:
+        filtros_txt.append(f"Hasta: {hasta}")
+
+    ws["B2"] = " | ".join(filtros_txt) if filtros_txt else "Filtros: (sin filtros)"
+    ws.merge_cells("B2:G2")
+    ws["B2"].font = Font(size=11, color="334155")
+    ws["B2"].alignment = Alignment(vertical="center")
+
+    headers = ["DNI", "Código", "Docente", "Condición", "Estado", "Hora"]
+    header_row = 5
+    ws.append([])
     ws.append(headers)
 
-    header_fill = PatternFill("solid", fgColor="1F6FEB")
+    header_fill = PatternFill("solid", fgColor=blue)
     header_font = Font(bold=True, color="FFFFFF")
+
     for col_idx in range(1, len(headers) + 1):
-        c = ws.cell(row=2, column=col_idx)
+        c = ws.cell(row=header_row, column=col_idx)
         c.fill = header_fill
         c.font = header_font
-        c.alignment = Alignment(horizontal="center")
+        c.alignment = Alignment(horizontal="center", vertical="center")
+        c.border = border_all
 
-    fill_ok = PatternFill("solid", fgColor="D1FAE5")
-    fill_falta = PatternFill("solid", fgColor="FEE2E2")
+    ws.row_dimensions[header_row].height = 22
 
-    for i, p in enumerate(profesores, start=1):
+    data_start = header_row + 1
+
+    for p in profesores:
         dt = asistio_map.get(p.id)
 
         if dt:
@@ -181,41 +284,55 @@ def exportar_reporte_excel(request):
             estado = "FALTÓ"
             hora = ""
 
-        ws.append([i, p.dni, p.codigo, p.apellidos, p.nombres, p.condicion, estado, hora])
+        docente = f"{(p.apellidos or '').strip()}, {(p.nombres or '').strip()}".strip().strip(",")
 
-        estado_cell = ws.cell(row=ws.max_row, column=7)
-        estado_cell.alignment = Alignment(horizontal="center")
-        estado_cell.font = Font(bold=True)
-        estado_cell.fill = fill_ok if estado == "ASISTIÓ" else fill_falta
+        row = [p.dni, p.codigo, docente, (p.condicion or "").upper(), estado, hora]
+        ws.append(row)
+        r = ws.max_row
 
-        ws.cell(row=ws.max_row, column=8).alignment = Alignment(horizontal="center")
+        for col in range(1, len(headers) + 1):
+            cell = ws.cell(row=r, column=col)
+            cell.border = border_all
+            cell.alignment = Alignment(vertical="center")
+
+        ws.cell(row=r, column=4).alignment = Alignment(horizontal="center", vertical="center")
+
+        estado_cell = ws.cell(row=r, column=5)
+        estado_cell.font = Font(bold=True, color=text_dark)
+        estado_cell.alignment = Alignment(horizontal="center", vertical="center")
+        estado_cell.fill = PatternFill("solid", fgColor=ok_bg if estado == "ASISTIÓ" else bad_bg)
+
+        ws.cell(row=r, column=6).alignment = Alignment(horizontal="center", vertical="center")
 
     last_row = ws.max_row
-    table = Table(displayName="TablaReporte", ref=f"A2:H{last_row}")
-    style = TableStyleInfo(
-        name="TableStyleMedium9",
-        showFirstColumn=False,
-        showLastColumn=False,
-        showRowStripes=True,
-        showColumnStripes=False
-    )
-    table.tableStyleInfo = style
-    ws.add_table(table)
+    if last_row >= data_start:
+        table_ref = f"A{header_row}:F{last_row}"
+        table = Table(displayName="TablaReporte", ref=table_ref)
+        table.tableStyleInfo = TableStyleInfo(
+            name="TableStyleMedium9",
+            showFirstColumn=False,
+            showLastColumn=False,
+            showRowStripes=True,
+            showColumnStripes=False
+        )
+        ws.add_table(table)
 
-    for col in range(1, len(headers) + 1):
-        max_len = 0
-        col_letter = get_column_letter(col)
-        for cell in ws[col_letter]:
-            if cell.value is not None:
-                max_len = max(max_len, len(str(cell.value)))
-        ws.column_dimensions[col_letter].width = min(max_len + 2, 40)
+    ws.freeze_panes = f"A{data_start}"
+
+    widths = {"A": 14, "B": 14, "C": 40, "D": 12, "E": 12, "F": 10}
+    for col, w in widths.items():
+        ws.column_dimensions[col].width = w
 
     filename = f"reporte_asistencia_{fecha_eval.strftime('%Y-%m-%d')}.xlsx"
+    bio = BytesIO()
+    wb.save(bio)
+    bio.seek(0)
+
     response = HttpResponse(
+        bio.getvalue(),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    wb.save(response)
     return response
 
 
@@ -229,49 +346,38 @@ def scan_page(request):
 
 
 # =========================================================
-# ✅ API SCAN (solo grupo SCANNER) ✅ DEVUELVE DATOS PROFESOR
+# ✅ API SCAN PRO (solo grupo SCANNER) ✅ ENTRADA/SALIDA + BLOQUEO
 # =========================================================
+@csrf_protect
 @require_POST
 @user_passes_test(_in_group("SCANNER"), login_url="login")
 def api_scan_asistencia(request):
-    raw = ""
-    ctype = (request.content_type or "").lower()
-
-    if "application/json" in ctype:
-        try:
-            body = (request.body or b"").decode("utf-8").strip()
-            if not body:
-                return JsonResponse({"ok": False, "msg": "Body vacío (JSON)"}, status=400)
-            data = json.loads(body)
-            raw = (data.get("code") or data.get("dni") or "").strip()
-        except json.JSONDecodeError:
-            return JsonResponse({"ok": False, "msg": "JSON inválido"}, status=400)
-        except UnicodeDecodeError:
-            return JsonResponse({"ok": False, "msg": "Encoding inválido (UTF-8)"}, status=400)
-        except Exception:
-            return JsonResponse({"ok": False, "msg": "Error leyendo JSON"}, status=400)
-    else:
-        raw = (request.POST.get("code") or request.POST.get("dni") or "").strip()
+    # 1) leer code
+    try:
+        raw = _read_code_from_request(request)
+    except UnicodeDecodeError:
+        return JsonResponse({"ok": False, "msg": "Encoding inválido (UTF-8)"}, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({"ok": False, "msg": "JSON inválido"}, status=400)
+    except Exception:
+        return JsonResponse({"ok": False, "msg": "Error leyendo el request"}, status=400)
 
     if not raw:
         return JsonResponse({"ok": False, "msg": "No llegó ningún código/DNI"}, status=400)
 
-    m = re.search(r"(\d{8})", raw)
-    dni = m.group(1) if m else ""
-
-    if not dni.isdigit() or len(dni) != 8:
+    # 2) extraer dni
+    dni = _extract_dni(raw)
+    if not (dni.isdigit() and len(dni) == 8):
         return JsonResponse({"ok": False, "msg": "DNI inválido (debe ser 8 dígitos)"}, status=400)
 
+    # 3) buscar profesor
     try:
         profesor = Profesor.objects.get(dni=dni)
     except Profesor.DoesNotExist:
         return JsonResponse({"ok": False, "msg": "Profesor no encontrado", "dni": dni}, status=404)
 
     hoy = timezone.localdate()
-    ya_existe = Asistencia.objects.filter(
-        profesor=profesor,
-        fecha_hora__date=hoy
-    ).exists()
+    now = timezone.now()
 
     payload_prof = {
         "dni": profesor.dni,
@@ -281,22 +387,58 @@ def api_scan_asistencia(request):
         "condicion": profesor.condicion,
     }
 
-    if ya_existe:
-        return JsonResponse({
-            "ok": True,
-            "duplicado": True,
-            "msg": f"⚠️ Ya registró hoy: {profesor.apellidos} {profesor.nombres}",
-            "profesor": payload_prof
-        })
+    ip = _get_client_ip(request)
+    ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
 
-    Asistencia.objects.create(profesor=profesor)
+    # 4) transacción anti doble-scan
+    with transaction.atomic():
+        # bloquea registros de ese profesor/día mientras decide
+        qs = (Asistencia.objects
+              .select_for_update()
+              .filter(profesor=profesor, fecha=hoy)
+              .order_by("fecha_hora"))
+
+        tipos_hoy = set(qs.values_list("tipo", flat=True))  # {"E","S"}
+
+        if "E" not in tipos_hoy:
+            tipo = "E"
+            accion = "entrada"
+        elif "S" not in tipos_hoy:
+            tipo = "S"
+            accion = "salida"
+        else:
+            logger.info("DUPLICADO dni=%s hoy=%s user=%s ip=%s", dni, hoy, request.user.username, ip)
+            return JsonResponse({
+                "ok": True,
+                "duplicado": True,
+                "accion": "ninguna",
+                "msg": f"⚠️ Ya registró ENTRADA y SALIDA hoy: {profesor.apellidos} {profesor.nombres}",
+                "profesor": payload_prof,
+            }, status=200)
+
+        # crea registro
+        a = Asistencia.objects.create(
+            profesor=profesor,
+            fecha=hoy,
+            fecha_hora=now,
+            tipo=tipo,
+            registrado_por=request.user,
+            ip=ip,
+            user_agent=ua,
+        )
+
+    logger.info("OK %s dni=%s hoy=%s user=%s ip=%s", accion, dni, hoy, request.user.username, ip)
 
     return JsonResponse({
         "ok": True,
         "duplicado": False,
-        "msg": f"✅ Asistencia registrada: {profesor.apellidos} {profesor.nombres}",
-        "profesor": payload_prof
-    })
-
-
-
+        "accion": accion,  # "entrada" o "salida"
+        "msg": f"✅ {accion.upper()} registrada: {profesor.apellidos} {profesor.nombres}",
+        "profesor": payload_prof,
+        "asistencia": {
+            "id": a.id,
+            "tipo": a.tipo,
+            "fecha": str(a.fecha),
+            "fecha_hora": a.fecha_hora.isoformat(),
+        }
+    }, status=201)

@@ -12,27 +12,35 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from datetime import timedelta
+
 import dj_database_url
+from dotenv import load_dotenv
+
+# ✅ Cargar .env desde la misma carpeta de settings.py
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 # =========================
 # BASE
 # =========================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # =========================
-# SECURITY
+# SECURITY / ENV
 # =========================
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-key")
-
 DEBUG = os.environ.get("DEBUG", "1") == "1"
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
+# =========================
+# HOSTS / CSRF
+# =========================
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# CSRF (Render)
 CSRF_TRUSTED_ORIGINS = []
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
@@ -49,6 +57,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     "asistencias",
+
+    # ✅ Anti fuerza bruta
+    "axes",
 ]
 
 # =========================
@@ -59,11 +70,15 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
 
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "asistencias.middleware.ClearAxesUnlockAtMiddleware",  # ✅ limpia axes_unlock_at
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
+    # ✅ Axes (después de AuthenticationMiddleware)
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "proyecto_manhattan.urls"
@@ -92,25 +107,44 @@ WSGI_APPLICATION = "proyecto_manhattan.wsgi.application"
 # =========================
 # DATABASE
 # =========================
+# ✅ Para evitar que “cambie solo” a SQLite, lo hacemos explícito:
+# - Por defecto: PostgreSQL (DATABASE_URL obligatorio)
+# - Si quieres SQLite local: exporta USE_SQLITE=1
+USE_SQLITE = os.environ.get("USE_SQLITE", "0") == "1"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-if DATABASE_URL:
-    # ✅ PRODUCCIÓN (Render / PostgreSQL)
-    DATABASES = {
-        "default": dj_database_url.parse(
-            DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True,
-        )
-    }
-else:
-    # ✅ LOCAL (SQLite)
+if USE_SQLITE:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+else:
+    if not DATABASE_URL:
+        raise RuntimeError(
+            "❌ DATABASE_URL no está definido.\n"
+            "✅ Estás por usar SQLite sin querer.\n"
+            "➡️ Solución: define DATABASE_URL (PostgreSQL) o usa USE_SQLITE=1."
+        )
+
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=not DEBUG,  # en producción True; en local normalmente False
+        )
+    }
+
+# =========================
+# PASSWORD VALIDATION
+# =========================
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 10}},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
 
 # =========================
 # INTERNATIONALIZATION
@@ -127,7 +161,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static",  # esta carpeta debe existir
+    BASE_DIR / "static",
 ]
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
@@ -142,8 +176,35 @@ LOGIN_REDIRECT_URL = "post_login"
 LOGOUT_REDIRECT_URL = "login"
 
 # =========================
-# SECURITY (PRODUCCIÓN)
+# AXES (bloqueo fuerza bruta)
 # =========================
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+AXES_FAILURE_LIMIT = 3
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_RESET_ON_SUCCESS = True
+
+AXES_LOCKOUT_CALLABLE = "asistencias.axes.lockout"
+AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
+
+# Render/proxy: toma IP real del cliente
+AXES_META_PRECEDENCE_ORDER = [
+    "HTTP_X_FORWARDED_FOR",
+    "REMOTE_ADDR",
+]
+AXES_PROXY_ORDER = "left-most"
+
+# =========================
+# COOKIES / SECURITY
+# =========================
+# Mantener sesión aunque se cierre el navegador
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+# Duración de sesión (30 días)
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
+
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
@@ -151,13 +212,37 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    CSRF_COOKIE_SAMESITE = "Lax"
+
+    X_FRAME_OPTIONS = "DENY"
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+    # HSTS: cuando estés 100% seguro, sube esto a 31536000
     SECURE_HSTS_SECONDS = 60
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# Mantener sesión aunque se cierre el navegador
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+# =========================
+# LOGGING (silenciar Axes)
+# =========================
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "null": {"class": "logging.NullHandler"},
+    },
+    "loggers": {
+        # ✅ silencia módulos de axes
+        "axes": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
+        "axes.handlers.database": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
+        "axes.middleware": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
+        "axes.signals": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
+        "axes.backends": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
 
-# Duración de sesión (ej: 30 días)
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 días
-
+        # (Opcional) quita logs GET/POST del runserver
+        # "django.server": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
+    },
+}

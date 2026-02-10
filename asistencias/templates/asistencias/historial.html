@@ -129,11 +129,48 @@
     .btnx-success{ background: linear-gradient(135deg, #16a34a, #22c55e); color:#fff; }
     .btnx-danger{ background: linear-gradient(135deg, #dc2626, #ef4444); color:#fff; }
 
+    /* ✅ Export pro: añade mini-subtítulo */
+    .btnx .subtxt{
+      display:block;
+      font-size: 11px;
+      font-weight: 900;
+      opacity: .92;
+      margin-top: -1px;
+      letter-spacing: .2px;
+    }
+
     .page{
       max-width: 1180px;
       margin: 0 auto;
       padding: 24px 16px 40px;
     }
+/* El contenedor ya no “pinta” nada */
+/* Badge del logo UNI (sin “cuadro blanco”) */
+.uni-badge{
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;     /* <-- quita el borde redondeado del cuadro */
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+}
+
+/* El logo ocupa todo */
+.uni-logo{
+  width: 44px;
+  height: 44px;
+  display: block;
+  object-fit: contain;
+  /* Opcional: para que se vea “pro” sobre fondos claros */
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.10));
+}
+
+
+
+
 
     .cardx{
       background: rgba(255,255,255,0.92);
@@ -254,6 +291,29 @@
       letter-spacing: -0.3px;
     }
 
+    /* ✅ filtros activos */
+    .active-filters{
+      padding: 0 22px 14px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.04);
+      border: 1px solid rgba(15,23,42,0.10);
+      color: #0f172a;
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .pill .muted{ color: rgba(15,23,42,.62); font-weight: 900; }
+    .pill .mono{ font-variant-numeric: tabular-nums; }
+
     .table-wrap{
       margin: 0 22px 16px;
       border-radius: 18px;
@@ -283,22 +343,67 @@
       background: rgba(37,99,235,0.04);
     }
 
+    /* ✅ Docente (una sola celda) */
+    .doc-name{ font-weight: 950; color:#0f172a; }
+    .doc-sub{
+      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 850;
+      color: rgba(15,23,42,.65);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .doc-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.04);
+      border: 1px solid rgba(15,23,42,0.10);
+      color:#0f172a;
+      font-weight: 900;
+      font-size: 12px;
+      width: fit-content;
+    }
+
+    /* ✅ badges con texto */
     .badge-cond{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-width: 44px;
-      height: 30px;
+      gap:8px;
+      min-width: auto;
+      height: 34px;
       padding: 0 12px;
       border-radius: 999px;
       color:#fff;
       font-weight: 950;
       font-size: 13px;
-      letter-spacing: .4px;
+      letter-spacing: .1px;
+      white-space: nowrap;
     }
     .cond-n{ background: linear-gradient(135deg,#16a34a,#22c55e); }
     .cond-c{ background: linear-gradient(135deg,#2563eb,#4f46e5); }
     .cond-otro{ background: linear-gradient(135deg,#64748b,#475569); }
+
+    /* ✅ fecha humana + hace X */
+    .date-main{
+      font-weight: 950;
+      color:#0f172a;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      white-space: nowrap;
+    }
+    .date-sub{
+      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 850;
+      color: rgba(15,23,42,.65);
+    }
 
     .footer-row{
       padding: 0 22px 22px;
@@ -362,11 +467,39 @@
       font-size: 13px;
     }
 
+    /* ✅ empty state pro */
+    .empty-wrap{
+      padding: 46px 14px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      text-align:center;
+    }
+    .empty-ico{
+      width:56px;height:56px;border-radius:18px;
+      background: rgba(37,99,235,.10);
+      border: 1px solid rgba(37,99,235,.18);
+      display:grid;place-items:center;
+    }
+    .empty-title{
+      font-weight: 950;
+      color:#0f172a;
+      font-size: 16px;
+    }
+    .empty-sub{
+      font-weight: 850;
+      color: rgba(15,23,42,.65);
+      font-size: 13px;
+      max-width: 420px;
+    }
+
     @media (max-width: 576px){
       .title{ font-size: 24px; }
       .cardx-head{ padding: 18px 16px 10px; }
       .filters{ padding: 0 16px 16px; }
       .kpi-grid{ padding: 0 16px 16px; }
+      .active-filters{ padding: 0 16px 12px; }
       .table-wrap{ margin: 0 16px 14px; }
       .footer-row{ padding: 0 16px 18px; }
       .brand h1{ font-size: 15px; }
@@ -379,9 +512,14 @@
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="brand-badge">
-          <i class="bi bi-mortarboard-fill" style="font-size:20px;"></i>
-        </div>
+        <div class="brand-badge uni-badge">
+  <img
+    src="{% static 'asistencias/img/uni_logo.png' %}"
+    alt="UNI"
+    class="uni-logo"
+  />
+</div>
+
         <div>
           <h1>Universidad Nacional de Ingeniería</h1>
           <small>Proyecto Manhattan • Control de Asistencia</small>
@@ -420,10 +558,16 @@
           </div>
         </div>
 
+        <!-- ✅ Exportar Excel PRO (con filtros) -->
         <div class="d-flex gap-2 flex-wrap">
           <a class="btnx btnx-success"
+             title="Exporta el reporte con los filtros actuales"
              href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}">
-            <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+            <i class="bi bi-file-earmark-excel"></i>
+            <span>
+              Exportar Excel
+              <span class="subtxt">Con filtros aplicados</span>
+            </span>
           </a>
         </div>
       </div>
@@ -446,6 +590,27 @@
           <div class="k-title"><i class="bi bi-person-badge-fill"></i> Registros condición C</div>
           <div class="k-val">{{ registros_c }}</div>
         </div>
+      </div>
+
+      <!-- ✅ Filtros activos -->
+      <div class="active-filters">
+        {% if q %}
+          <span class="pill"><i class="bi bi-search"></i> <span class="muted">Búsqueda:</span> {{ q }}</span>
+        {% endif %}
+        {% if desde %}
+          <span class="pill"><i class="bi bi-calendar-event"></i> <span class="muted">Desde:</span> <span class="mono">{{ desde }}</span></span>
+        {% endif %}
+        {% if hasta %}
+          <span class="pill"><i class="bi bi-calendar-check"></i> <span class="muted">Hasta:</span> <span class="mono">{{ hasta }}</span></span>
+        {% endif %}
+        {% if condicion %}
+          <span class="pill"><i class="bi bi-person-badge"></i> <span class="muted">Condición:</span> {{ condicion|upper }}</span>
+        {% endif %}
+        <span class="pill"><i class="bi bi-eye"></i> <span class="muted">Mostrar:</span> {{ ps }} / pág</span>
+
+        {% if q or desde or hasta or condicion %}
+          <span class="pill"><i class="bi bi-funnel"></i> Filtros activos</span>
+        {% endif %}
       </div>
 
       <!-- FILTERS -->
@@ -517,11 +682,9 @@
             <thead>
               <tr>
                 <th style="width:60px;">#</th>
-                <th>Código</th>
-                <th>Apellidos</th>
-                <th>Nombres</th>
-                <th style="width:140px;">Condición</th>
-                <th style="width:190px;">Fecha y hora</th>
+                <th>Docente</th>
+                <th style="width:220px;">Condición</th>
+                <th style="width:230px;">Fecha y hora</th>
               </tr>
             </thead>
 
@@ -529,30 +692,60 @@
               {% for a in asistencias %}
                 <tr>
                   <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
-                  <td>{{ a.profesor.codigo }}</td>
-                  <td>{{ a.profesor.apellidos }}</td>
-                  <td>{{ a.profesor.nombres }}</td>
 
+                  <!-- ✅ Docente en 1 celda -->
+                  <td>
+                    <div class="doc-name">{{ a.profesor.apellidos }}, {{ a.profesor.nombres }}</div>
+                    <div class="doc-sub">
+                      <span class="doc-chip"><i class="bi bi-hash"></i> Código: {{ a.profesor.codigo }}</span>
+                    </div>
+                  </td>
+
+                  <!-- ✅ badges con texto -->
                   <td>
                     {% if a.profesor.condicion == "N" %}
-                      <span class="badge-cond cond-n">N</span>
+                      <span class="badge-cond cond-n">
+                        <i class="bi bi-check-circle-fill"></i> N • Nombrado
+                      </span>
                     {% elif a.profesor.condicion == "C" %}
-                      <span class="badge-cond cond-c">C</span>
+                      <span class="badge-cond cond-c">
+                        <i class="bi bi-briefcase-fill"></i> C • Contratado
+                      </span>
                     {% else %}
-                      <span class="badge-cond cond-otro">{{ a.profesor.condicion }}</span>
+                      <span class="badge-cond cond-otro">
+                        <i class="bi bi-info-circle-fill"></i> {{ a.profesor.condicion }}
+                      </span>
                     {% endif %}
                   </td>
 
+                  <!-- ✅ fecha humana + hace X -->
                   <td>
-                    <i class="bi bi-clock-history" style="color:rgba(15,23,42,.55);"></i>
-                    {{ a.fecha_hora|date:"d/m/Y H:i" }}
+                    <div class="date-main">
+                      <i class="bi bi-clock-history" style="color:rgba(15,23,42,.55);"></i>
+                      {{ a.fecha_hora|date:"d/m/Y H:i" }}
+                    </div>
+                    <div class="date-sub">
+                      Hace {{ a.fecha_hora|timesince }}
+                    </div>
                   </td>
                 </tr>
+
               {% empty %}
+                <!-- ✅ empty state pro -->
                 <tr>
-                  <td colspan="6" class="text-center text-muted py-4" style="font-weight:900;">
-                    <i class="bi bi-inbox" style="font-size:20px;"></i>
-                    &nbsp;No hay registros con esos filtros.
+                  <td colspan="4">
+                    <div class="empty-wrap">
+                      <div class="empty-ico">
+                        <i class="bi bi-inbox" style="font-size:26px;color:rgba(37,99,235,.85);"></i>
+                      </div>
+                      <div class="empty-title">No hay registros con esos filtros</div>
+                      <div class="empty-sub">
+                        Prueba cambiando la búsqueda, la condición o el rango de fechas.
+                      </div>
+                      <a class="btn-clear mt-2" href="{% url 'historial_asistencias' %}">
+                        <i class="bi bi-arrow-counterclockwise"></i> Quitar filtros
+                      </a>
+                    </div>
                   </td>
                 </tr>
               {% endfor %}
@@ -579,7 +772,7 @@
             <i class="bi bi-skip-backward-fill"></i> Inicio
           </a>
 
-          <!-- Anterior (SOLO si existe) -->
+          <!-- Anterior -->
           {% if page_obj.has_previous %}
             <a class="pbtn"
                href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.previous_page_number }}">
@@ -589,7 +782,7 @@
             <span class="pbtn disabled"><i class="bi bi-chevron-left"></i> Anterior</span>
           {% endif %}
 
-          <!-- Siguiente (SOLO si existe) -->
+          <!-- Siguiente -->
           {% if page_obj.has_next %}
             <a class="pbtn"
                href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.next_page_number }}">

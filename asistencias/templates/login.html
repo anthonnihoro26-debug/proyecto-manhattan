@@ -7,7 +7,6 @@
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
@@ -85,9 +84,7 @@
       flex: 0 0 auto;
     }
 
-    .brand{
-      line-height: 1.1;
-    }
+    .brand{ line-height: 1.1; }
     .brand h1{
       margin:0;
       font-weight: 950;
@@ -107,9 +104,7 @@
       margin: 6px 18px 0;
     }
 
-    .content{
-      padding: 16px 18px 18px;
-    }
+    .content{ padding: 16px 18px 18px; }
 
     .title{
       margin: 8px 0 2px;
@@ -208,6 +203,12 @@
       box-shadow: 0 18px 40px rgba(37,99,235,.28);
     }
     .btnx-primary:active{ transform: translateY(1px); opacity:.95; }
+    .btnx[disabled]{
+      opacity:.60;
+      cursor:not-allowed;
+      transform:none !important;
+      box-shadow:none !important;
+    }
 
     .helper{
       margin-top: 12px;
@@ -218,19 +219,15 @@
       text-align:center;
     }
 
-    /* ✅ Alert */
+    /* Alerts */
     .alert{
       border-radius: 16px;
       font-weight: 850;
       border: 1px solid rgba(255,255,255,.18);
       color: rgba(255,255,255,.95);
     }
-    .alert-danger{
-      background: rgba(239,68,68,.16);
-    }
-    .alert-warning{
-      background: rgba(245,158,11,.18);
-    }
+    .alert-danger{ background: rgba(239,68,68,.16); }
+    .alert-warning{ background: rgba(245,158,11,.18); }
 
     @media (min-width: 992px){
       .cardx{ width: min(980px, 94vw); }
@@ -302,21 +299,34 @@
 
           <form method="post" autocomplete="on">
             {% csrf_token %}
-
-            <!-- ✅ respeta redirección -->
             <input type="hidden" name="next" value="{{ next }}">
 
-            <!-- ✅ muestra error real de login -->
+            <!-- ✅ SOLO 1 mensaje: bloqueo con contador -->
+            {% if request.session.axes_unlock_at %}
+              <div class="alert alert-warning mt-2" id="lockoutAlert" data-unlock-at="{{ request.session.axes_unlock_at }}">
+                <i class="bi bi-shield-lock-fill me-1"></i>
+                Cuenta bloqueada por demasiados intentos.
+                Te quedan <b><span id="lockoutTime">15:00</span></b> para intentar nuevamente.
+              </div>
+            {% endif %}
+
+            <!-- ✅ error de login normal -->
             {% if form.errors %}
               <div class="alert alert-danger mt-2">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
                 Usuario o contraseña incorrectos.
               </div>
             {% endif %}
 
-            {% if messages %}
-              <div class="alert alert-warning mt-2">
-                {% for message in messages %}{{ message }}{% endfor %}
-              </div>
+            <!-- ✅ otros mensajes (solo si NO hay bloqueo) -->
+            {% if not request.session.axes_unlock_at %}
+              {% if messages %}
+                {% for message in messages %}
+                  <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-warning{% endif %} mt-2">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
             {% endif %}
 
             <div class="mb-3 mt-3">
@@ -338,7 +348,7 @@
               </div>
             </div>
 
-            <button class="btnx btnx-primary mt-3" type="submit">
+            <button class="btnx btnx-primary mt-3" type="submit" id="btnLogin">
               <i class="bi bi-box-arrow-in-right"></i> Ingresar
             </button>
 
@@ -353,16 +363,59 @@
   </div>
 
   <script>
-    const toggle = document.getElementById("togglePass");
-    const pass = document.getElementById("password");
-    toggle?.addEventListener("click", () => {
-      const isPass = pass.type === "password";
-      pass.type = isPass ? "text" : "password";
-      toggle.innerHTML = isPass ? '<i class="bi bi-eye-slash-fill"></i>' : '<i class="bi bi-eye-fill"></i>';
-    });
-  </script>
+  // Toggle password
+  const toggle = document.getElementById("togglePass");
+  const pass = document.getElementById("password");
+  toggle?.addEventListener("click", () => {
+    const isPass = pass.type === "password";
+    pass.type = isPass ? "text" : "password";
+    toggle.innerHTML = isPass ? '<i class="bi bi-eye-slash-fill"></i>' : '<i class="bi bi-eye-fill"></i>';
+  });
+
+  // Countdown real del bloqueo
+  const lockoutAlert = document.getElementById("lockoutAlert");
+  const lockoutTimeEl = document.getElementById("lockoutTime");
+  const btnLogin = document.getElementById("btnLogin");
+
+  function pad2(n){ return String(n).padStart(2, "0"); }
+
+  if (lockoutAlert && lockoutTimeEl && btnLogin) {
+    const unlockAtStr = lockoutAlert.dataset.unlockAt;
+    const unlockAt = new Date(unlockAtStr);
+
+    const tick = () => {
+      const now = new Date();
+      const diffMs = unlockAt - now;
+
+      if (diffMs <= 0) {
+        // ✅ Se desbloquea SIN recargar la página
+        lockoutAlert.style.display = "none";
+        btnLogin.disabled = false;
+
+        // (opcional) limpia password para que el usuario vuelva a escribir
+        // const pw = document.getElementById("password");
+        // if (pw) pw.value = "";
+
+        return;
+      }
+
+      btnLogin.disabled = true;
+
+      const totalSec = Math.floor(diffMs / 1000);
+      const min = Math.floor(totalSec / 60);
+      const sec = totalSec % 60;
+
+      lockoutTimeEl.textContent = `${pad2(min)}:${pad2(sec)}`;
+    };
+
+    tick();
+    setInterval(tick, 1000);
+  }
+</script>
 </body>
 </html>
+
+
 
 
 
