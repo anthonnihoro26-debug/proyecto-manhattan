@@ -1,6 +1,7 @@
 from datetime import timedelta
+import requests
+
 from django.core.management.base import BaseCommand
-from django.core.mail import EmailMessage
 from django.utils import timezone
 from django.conf import settings
 
@@ -8,38 +9,59 @@ from asistencias.models import Profesor, Asistencia
 
 
 class Command(BaseCommand):
-    help = "Envía por email un reporte de asistencias (Lun-Vie) a cada profesor."
+    help = "Envía por email un reporte de asistencias (Lun-Vie) a cada profesor SOLO si tiene registros (Brevo API)."
 
     def add_arguments(self, parser):
         parser.add_argument("--limite", type=int, default=50, help="Máximo de registros listados (default 50).")
+        parser.add_argument("--max-emails", type=int, default=40, help="Máximo de correos a enviar por ejecución (default 40).")
         parser.add_argument("--dry-run", action="store_true", help="No envía correos, solo imprime en consola.")
-        parser.add_argument("--to", type=str, default="", help="Enviar SOLO a este correo (para pruebas).")
-        parser.add_argument("--force-empty", action="store_true", help="Enviar aunque no haya registros (manda 0).")
 
     def _rango_lun_vie(self):
         """
-        Reporte de LUNES 00:00 hasta VIERNES 23:59:59 (hora local America/Lima).
-        Ideal para ejecutarse el sábado 00:00 (cuando termina el viernes).
+        Reporte de LUNES 00:00 hasta VIERNES 23:59:59 (semana actual, hora local).
+        Ideal si lo ejecutas el sábado 00:00.
         """
-        now_local = timezone.localtime(timezone.now())
+        now = timezone.localtime(timezone.now())
 
-        # lunes 00:00 de la semana actual (local)
-        lunes = (now_local - timedelta(days=now_local.weekday())).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        lunes = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+        viernes_fin = (lunes + timedelta(days=4)).replace(hour=23, minute=59, second=59, microsecond=999999)
 
-        # viernes 23:59:59.999999 (lunes + 4 días)
-        viernes_fin = (lunes + timedelta(days=4)).replace(
-            hour=23, minute=59, second=59, microsecond=999999
-        )
+        return now, lunes, viernes_fin
 
-        return now_local, lunes, viernes_fin
+    def _brevo_send_email(self, to_email: str, subject: str, body_text: str):
+        api_key = (getattr(settings, "BREVO_API_KEY", "") or "").strip()
+        sender_email = (getattr(settings, "BREVO_SENDER_EMAIL", "") or "").strip()
+        sender_name = (getattr(settings, "BREVO_SENDER_NAME", "Proyecto Manhattan") or "").strip()
+        timeout = int(getattr(settings, "EMAIL_TIMEOUT", 20))
+
+        if not api_key:
+            raise RuntimeError("Falta BREVO_API_KEY en settings/env.")
+        if not sender_email:
+            raise RuntimeError("Falta BREVO_SENDER_EMAIL en settings/env (debe ser un remitente verificado en Brevo).")
+
+        url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json",
+        }
+        payload = {
+            "sender": {"name": sender_name, "email": sender_email},
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "textContent": body_text,
+        }
+
+        r = requests.post(url, headers=headers, json=payload, timeout=timeout)
+        if r.status_code >= 400:
+            raise RuntimeError(f"Brevo error {r.status_code}: {r.text}")
+
+        return True
 
     def handle(self, *args, **options):
         limite = int(options["limite"])
+        max_emails = int(options["max_emails"])
         dry_run = bool(options["dry_run"])
-        only_to = (options["to"] or "").strip()
-        force_empty = bool(options["force_empty"])
 
         now, desde, hasta = self._rango_lun_vie()
 
@@ -53,18 +75,16 @@ class Command(BaseCommand):
         enviados = 0
         errores = 0
         saltados_sin_email = 0
-        sin_registros = 0
+        saltados_sin_registros = 0
 
         for prof in profesores:
-            email = (getattr(prof, "email", "") or "").strip()
+            if enviados >= max_emails:
+                self.stdout.write(self.style.WARNING(f"[STOP] Alcanzado max-emails={max_emails}."))
+                break
 
+            email = (getattr(prof, "email", "") or "").strip()
             if not email:
                 saltados_sin_email += 1
-                self.stdout.write(f"[SKIP] {prof} -> sin email")
-                continue
-
-            # Si estás probando con un solo correo:
-            if only_to and email.lower() != only_to.lower():
                 continue
 
             qs = (
@@ -74,8 +94,9 @@ class Command(BaseCommand):
             )
 
             total = qs.count()
-            if total == 0 and not force_empty:
-                sin_registros += 1
+            if total == 0:
+                saltados_sin_registros += 1
+                # ✅ SOLO envía si tiene registros
                 self.stdout.write(f"[SKIP] {email} -> sin registros en el rango")
                 continue
 
@@ -109,29 +130,20 @@ class Command(BaseCommand):
 
             body = "\n".join(body_lines)
 
-            from_email = (
-                getattr(settings, "DEFAULT_FROM_EMAIL", "") or
-                getattr(settings, "EMAIL_HOST_USER", "")
-            )
-
-            # Log de destinatario (para que lo veas en tu endpoint)
-            self.stdout.write(f"[SEND] to={email} total={total} E={entradas} S={salidas} dry_run={dry_run}")
-
             if dry_run:
                 enviados += 1
+                self.stdout.write(self.style.WARNING(f"[DRY-RUN] to={email} total={total} E={entradas} S={salidas}"))
                 continue
 
-            msg = EmailMessage(subject=subject, body=body, from_email=from_email, to=[email])
-
             try:
-                msg.send(fail_silently=False)
+                self._brevo_send_email(email, subject, body)
                 enviados += 1
-                self.stdout.write(self.style.SUCCESS(f"[OK] Enviado a {email}"))
+                self.stdout.write(self.style.SUCCESS(f"[SEND] to={email} total={total} E={entradas} S={salidas}"))
             except Exception as e:
                 errores += 1
                 self.stderr.write(self.style.ERROR(f"[ERROR] Enviando a {email}: {e}"))
 
         self.stdout.write(self.style.SUCCESS(
             f"[DONE] Enviados: {enviados}. Errores: {errores}. "
-            f"Saltados (sin email): {saltados_sin_email}. Sin registros: {sin_registros}."
+            f"Saltados (sin email): {saltados_sin_email}. Saltados (sin registros): {saltados_sin_registros}."
         ))

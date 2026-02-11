@@ -17,7 +17,7 @@ from datetime import timedelta
 import dj_database_url
 
 # =========================
-# ✅ Cargar .env SOLO en local (si existe)
+# ✅ Cargar .env SOLO en local
 # =========================
 try:
     from dotenv import load_dotenv
@@ -74,7 +74,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
 
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "asistencias.middleware.ClearAxesUnlockAtMiddleware",  # ✅ limpia axes_unlock_at
+    "asistencias.middleware.ClearAxesUnlockAtMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -111,9 +111,6 @@ WSGI_APPLICATION = "proyecto_manhattan.wsgi.application"
 # =========================
 # DATABASE
 # =========================
-# ✅ Para evitar que “cambie solo” a SQLite, lo hacemos explícito:
-# - Por defecto: PostgreSQL (DATABASE_URL obligatorio)
-# - Si quieres SQLite local: exporta USE_SQLITE=1
 USE_SQLITE = os.environ.get("USE_SQLITE", "0") == "1"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
@@ -136,7 +133,7 @@ else:
         "default": dj_database_url.parse(
             DATABASE_URL,
             conn_max_age=600,
-            ssl_require=not DEBUG,  # en producción True; en local normalmente False
+            ssl_require=not DEBUG,
         )
     }
 
@@ -164,7 +161,6 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# ✅ Evita warning si la carpeta no existe
 STATICFILES_DIRS = []
 _static_dir = BASE_DIR / "static"
 if _static_dir.exists():
@@ -196,7 +192,6 @@ AXES_RESET_ON_SUCCESS = True
 AXES_LOCKOUT_CALLABLE = "asistencias.axes.lockout"
 AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
 
-# Render/proxy: toma IP real del cliente
 AXES_META_PRECEDENCE_ORDER = [
     "HTTP_X_FORWARDED_FOR",
     "REMOTE_ADDR",
@@ -204,22 +199,28 @@ AXES_META_PRECEDENCE_ORDER = [
 AXES_PROXY_ORDER = "left-most"
 
 # =========================
-# ✅ EMAIL (SMTP) - IMPORTANTE
+# ✅ EMAIL (SMTP) - opcional (para local)
 # =========================
-# Antes te estaba quedando localhost:25. Ahora solo usa SMTP real por env vars.
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
-
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
-
 EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "20"))
+
+# =========================
+# ✅ CRON TOKEN (endpoint /cron/reporte-asistencia/)
+# =========================
 REPORT_TRIGGER_TOKEN = os.environ.get("REPORT_TRIGGER_TOKEN", "").strip()
 
+# =========================
+# ✅ BREVO (API HTTP) - recomendado para Render
+# =========================
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
+BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", DEFAULT_FROM_EMAIL).strip()
+BREVO_SENDER_NAME = os.environ.get("BREVO_SENDER_NAME", "Proyecto Manhattan").strip()
 
 # =========================
 # COOKIES / SECURITY
@@ -263,4 +264,3 @@ LOGGING = {
         "axes.backends": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
     },
 }
-
