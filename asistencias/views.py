@@ -7,17 +7,18 @@ from PIL import Image as PILImage
 
 from django.conf import settings
 from django.shortcuts import render, redirect
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout
 from django.utils import timezone
 from django.db.models import Q, Min
 from django.utils.dateparse import parse_date
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
+from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect, csrf_exempt
 from django.core.paginator import Paginator
 from django.contrib.staticfiles import finders
 from django.db import transaction
+from django.core.management import call_command
 
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl import Workbook
@@ -124,7 +125,6 @@ def historial_asistencias(request):
         qs = qs.filter(profesor__condicion__iexact=condicion)
 
     if desde:
-        # ahora también funciona con "fecha" si existe
         qs = qs.filter(fecha_hora__date__gte=desde)
     if hasta:
         qs = qs.filter(fecha_hora__date__lte=hasta)
@@ -183,7 +183,6 @@ def exportar_reporte_excel(request):
     if condicion:
         profesores = profesores.filter(condicion__iexact=condicion)
 
-    # ✅ Tomamos SOLO ENTRADA del día (más correcto)
     asistencias_del_dia = (
         Asistencia.objects
         .filter(fecha=fecha_eval, tipo="E")
@@ -346,13 +345,12 @@ def scan_page(request):
 
 
 # =========================================================
-# ✅ API SCAN PRO (solo grupo SCANNER) ✅ ENTRADA/SALIDA + BLOQUEO
+# ✅ API SCAN PRO (solo grupo SCANNER) ✅ SOLO ENTRADA + BLOQUEO
 # =========================================================
 @csrf_protect
 @require_POST
 @user_passes_test(_in_group("SCANNER"), login_url="login")
 def api_scan_asistencia(request):
-    # 1) leer code
     try:
         raw = _read_code_from_request(request)
     except UnicodeDecodeError:
@@ -365,12 +363,10 @@ def api_scan_asistencia(request):
     if not raw:
         return JsonResponse({"ok": False, "msg": "No llegó ningún código/DNI"}, status=400)
 
-    # 2) extraer dni
     dni = _extract_dni(raw)
     if not (dni.isdigit() and len(dni) == 8):
         return JsonResponse({"ok": False, "msg": "DNI inválido (debe ser 8 dígitos)"}, status=400)
 
-    # 3) buscar profesor
     try:
         profesor = Profesor.objects.get(dni=dni)
     except Profesor.DoesNotExist:
@@ -390,14 +386,12 @@ def api_scan_asistencia(request):
     ip = _get_client_ip(request)
     ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
 
-    # 4) transacción anti doble-scan
     with transaction.atomic():
         qs = (Asistencia.objects
               .select_for_update()
               .filter(profesor=profesor, fecha=hoy, tipo="E")
               .order_by("fecha_hora"))
 
-        # ✅ SOLO ENTRADA: si ya existe una "E" hoy => DUPLICADO
         if qs.exists():
             logger.info("DUPLICADO entrada dni=%s hoy=%s user=%s ip=%s",
                         dni, hoy, request.user.username, ip)
@@ -409,7 +403,6 @@ def api_scan_asistencia(request):
                 "profesor": payload_prof,
             }, status=200)
 
-        # ✅ crear SOLO entrada
         a = Asistencia.objects.create(
             profesor=profesor,
             fecha=hoy,
@@ -436,3 +429,25 @@ def api_scan_asistencia(request):
         }
     }, status=201)
 
+
+# =========================================================
+# ✅ CRON PRIVADO (Render Free + cron-job.org)
+# =========================================================
+@csrf_exempt
+@require_GET
+def trigger_reporte_asistencia(request):
+    """
+    Ejecuta el comando: python manage.py enviar_reporte_asistencia
+    Protegido por token (REPORT_TRIGGER_TOKEN).
+
+    URL:
+    /cron/reporte-asistencia/?token=TU_TOKEN
+    """
+    token = (request.GET.get("token") or "").strip()
+    secret = (getattr(settings, "REPORT_TRIGGER_TOKEN", "") or "").strip()
+
+    if not secret or token != secret:
+        return HttpResponseForbidden("Forbidden")
+
+    call_command("enviar_reporte_asistencia")
+    return JsonResponse({"ok": True, "msg": "Reporte enviado"})

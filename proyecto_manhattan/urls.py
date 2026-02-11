@@ -34,9 +34,14 @@ urlpatterns = [
     # ✅ Post-login redirect por grupo (GEORGE o JORGE)
     path('', asist_views.post_login_redirect, name='post_login'),
 
+# ✅ CRON PRIVADO (DEBE ESTAR AQUÍ, EN EL ROOT)
+    path("cron/reporte-asistencia/", asist_views.trigger_reporte_asistencia, name="cron_reporte_asistencia"),
+
+    
     # ✅ App
     path('asistencia/', include('asistencias.urls')),
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
