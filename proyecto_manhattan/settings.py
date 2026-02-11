@@ -219,6 +219,8 @@ EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+REPORT_TRIGGER_TOKEN = os.environ.get("REPORT_TRIGGER_TOKEN", "").strip()
+
 
 # =========================
 # COOKIES / SECURITY
