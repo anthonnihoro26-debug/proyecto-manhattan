@@ -168,6 +168,12 @@ if _static_dir.exists():
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# =========================
+# ✅ MEDIA (SUBIDA DE PDFs)
+# =========================
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # =========================
@@ -264,3 +270,4 @@ LOGGING = {
         "axes.backends": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
     },
 }
+

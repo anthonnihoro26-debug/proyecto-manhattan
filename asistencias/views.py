@@ -747,6 +747,14 @@ def set_justificacion(request):
     tipo = (request.POST.get("tipo") or "DM").strip().upper()
     detalle = (request.POST.get("detalle") or "").strip()
 
+    # ✅ PDF (input name="archivo")
+    archivo = request.FILES.get("archivo")  # puede ser None
+
+    # ✅ SOLO PERMITIMOS "set"
+    if accion != "set":
+        messages.error(request, "Acción inválida.")
+        return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}" if fecha_str else "/asistencia/justificaciones/")
+
     fecha = parse_date(fecha_str)
     if not fecha:
         messages.error(request, "Fecha inválida.")
@@ -765,52 +773,76 @@ def set_justificacion(request):
 
     # ✅ Si ya asistió ese día, no tiene sentido justificarlo
     if Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="E").exists():
-        messages.warning(request, f"⚠️ {profesor.apellidos} {profesor.nombres} ya tiene ASISTENCIA ese día. No se registró justificación.")
+        messages.warning(
+            request,
+            f"⚠️ {profesor.apellidos} {profesor.nombres} ya tiene ASISTENCIA ese día. No se registró justificación."
+        )
         return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
 
-    if accion == "set":
-        with transaction.atomic():
-            # 1) ✅ guarda/actualiza en tu tabla JustificacionAsistencia (como ya hacías)
-            obj, created = JustificacionAsistencia.objects.update_or_create(
-                profesor=profesor,
-                fecha=fecha,
-                defaults={
-                    "tipo": tipo_ok,
-                    "detalle": detalle,
-                    "actualizado_por": request.user,
-                    "creado_por": request.user,
-                }
-            )
+    # ✅ Validación simple: si sube archivo, que sea PDF
+    if archivo:
+        nombre = (archivo.name or "").lower()
+        ctype = (getattr(archivo, "content_type", "") or "").lower()
+        if not (nombre.endswith(".pdf") or ctype == "application/pdf"):
+            messages.error(request, "El archivo debe ser PDF.")
+            return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
 
-            # 2) ✅ NUEVO: también registra en Asistencia tipo="J" para que salga en el historial
-            Asistencia.objects.update_or_create(
-                profesor=profesor,
-                fecha=fecha,
-                tipo="J",
-                defaults={
-                    "fecha_hora": timezone.now(),
-                    "motivo": tipo_ok,
-                    "detalle": detalle,
-                    "registrado_por": request.user,
-                    "ip": ip,
-                    "user_agent": ua,
-                }
-            )
+    with transaction.atomic():
+        # 1) ✅ guarda/actualiza JustificacionAsistencia
+        obj, created = JustificacionAsistencia.objects.update_or_create(
+            profesor=profesor,
+            fecha=fecha,
+            defaults={
+                "tipo": tipo_ok,
+                "detalle": detalle,
+                "actualizado_por": request.user,
+                "creado_por": request.user,
+            }
+        )
 
-        if created:
-            messages.success(request, f"✅ Justificación registrada para {profesor.apellidos} {profesor.nombres}.")
-        else:
-            messages.success(request, f"✅ Justificación actualizada para {profesor.apellidos} {profesor.nombres}.")
+        # ✅ si subió PDF, lo guardamos y reemplazamos el anterior
+        if archivo:
+            # borrar archivo viejo si existía y es distinto
+            if obj.archivo and hasattr(obj.archivo, "path"):
+                try:
+                    old_path = obj.archivo.path
+                except Exception:
+                    old_path = None
 
-    elif accion == "clear":
-        with transaction.atomic():
-            JustificacionAsistencia.objects.filter(profesor=profesor, fecha=fecha).delete()
-            # ✅ NUEVO: borra también del historial (Asistencia tipo J)
-            Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="J").delete()
+                # asignar nuevo y guardar primero (para que exista el nuevo)
+                obj.archivo = archivo
+                obj.save(update_fields=["archivo", "actualizado_en", "actualizado_por"])
 
-        messages.warning(request, f"🗑️ Justificación eliminada para {profesor.apellidos} {profesor.nombres}.")
+                # si se pudo obtener path anterior, borrarlo
+                if old_path:
+                    try:
+                        import os
+                        if os.path.exists(old_path):
+                            os.remove(old_path)
+                    except Exception:
+                        pass
+            else:
+                obj.archivo = archivo
+                obj.save(update_fields=["archivo", "actualizado_en", "actualizado_por"])
 
+        # 2) ✅ registra en Asistencia tipo="J" para que salga en el historial
+        Asistencia.objects.update_or_create(
+            profesor=profesor,
+            fecha=fecha,
+            tipo="J",
+            defaults={
+                "fecha_hora": timezone.now(),
+                "motivo": tipo_ok,
+                "detalle": detalle,
+                "registrado_por": request.user,
+                "ip": ip,
+                "user_agent": ua,
+            }
+        )
+
+    if created:
+        messages.success(request, f"✅ Justificación registrada para {profesor.apellidos} {profesor.nombres}.")
     else:
-        messages.error(request, "Acción inválida.")
+        messages.success(request, f"✅ Justificación actualizada para {profesor.apellidos} {profesor.nombres}.")
 
     return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")

@@ -84,11 +84,22 @@ class JustificacionAsistencia(models.Model):
         ("O", "Otro"),
     ]
 
-    profesor = models.ForeignKey(Profesor, on_delete=models.CASCADE, related_name="justificaciones")
+    profesor = models.ForeignKey(
+        "Profesor",
+        on_delete=models.CASCADE,
+        related_name="justificaciones"
+    )
     fecha = models.DateField(db_index=True)
 
     tipo = models.CharField(max_length=2, choices=TIPO_CHOICES, default="DM")
     detalle = models.CharField(max_length=255, blank=True, default="")
+
+    # ✅ NUEVO: PDF de sustento (descanso médico, permiso, etc.)
+    archivo = models.FileField(
+        upload_to="justificaciones/",
+        null=True,
+        blank=True
+    )
 
     creado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
