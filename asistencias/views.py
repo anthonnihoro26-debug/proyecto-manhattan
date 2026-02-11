@@ -25,6 +25,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.drawing.image import Image as XLImage
+from io import StringIO
 
 from .models import Profesor, Asistencia
 
@@ -436,18 +437,20 @@ def api_scan_asistencia(request):
 @csrf_exempt
 @require_GET
 def trigger_reporte_asistencia(request):
-    """
-    Ejecuta el comando: python manage.py enviar_reporte_asistencia
-    Protegido por token (REPORT_TRIGGER_TOKEN).
-
-    URL:
-    /cron/reporte-asistencia/?token=TU_TOKEN
-    """
     token = (request.GET.get("token") or "").strip()
     secret = (getattr(settings, "REPORT_TRIGGER_TOKEN", "") or "").strip()
 
     if not secret or token != secret:
         return HttpResponseForbidden("Forbidden")
 
-    call_command("enviar_reporte_asistencia")
-    return JsonResponse({"ok": True, "msg": "Reporte enviado"})
+    out = StringIO()
+    call_command("enviar_reporte_asistencia", stdout=out, stderr=out)
+
+    texto = out.getvalue()
+
+    # Devuelve la salida del comando (para ver a quién se envió)
+    return JsonResponse({
+        "ok": True,
+        "msg": "Reporte ejecutado",
+        "output": texto,
+    })
