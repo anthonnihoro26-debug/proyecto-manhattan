@@ -1,0 +1,479 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Proyecto Manhattan - Registro Manual</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg1:#0b1020;
+      --bg2:#2b1fff;
+      --muted:#6b7280;
+      --primary:#2563eb;
+      --primary2:#4f46e5;
+      --success:#16a34a;
+      --danger:#dc2626;
+      --shadow: 0 22px 55px rgba(0,0,0,.22);
+      --radius: 22px;
+      --stroke: rgba(15, 23, 42, 0.10);
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(1200px 700px at 10% 10%, rgba(79,70,229,.52), transparent 55%),
+        radial-gradient(900px 600px at 90% 20%, rgba(37,99,235,.42), transparent 60%),
+        radial-gradient(900px 700px at 50% 100%, rgba(168,85,247,.25), transparent 60%),
+        linear-gradient(135deg, #0b1020, #2a165f);
+      color:#111827;
+    }
+
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,0.80);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(17,24,39,.08);
+    }
+    .topbar-inner{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 260px;
+    }
+    .uni-badge{
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+    }
+    .uni-logo{
+      width: 44px;
+      height: 44px;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.10));
+    }
+    .brand h1{
+      font-size: 16px;
+      line-height: 1.1;
+      margin: 0;
+      font-weight: 950;
+      color:#0f172a;
+      letter-spacing: .2px;
+    }
+    .brand small{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .userbox{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .userpill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(17,24,39,0.05);
+      border: 1px solid rgba(17,24,39,0.08);
+      color:#111827;
+      font-weight: 850;
+      font-size: 13px;
+    }
+
+    .btnx{
+      border:0;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-weight: 950;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      text-decoration:none;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      box-shadow: 0 12px 26px rgba(0,0,0,.10);
+      user-select:none;
+      white-space: nowrap;
+    }
+    .btnx:hover{ transform: translateY(-1px); box-shadow: 0 16px 34px rgba(0,0,0,.14); }
+    .btnx:active{ transform: translateY(0px); opacity:.92; }
+    .btnx-danger{ background: linear-gradient(135deg, #dc2626, #ef4444); color:#fff; }
+    .btnx-primary{ background: linear-gradient(135deg, var(--primary), var(--primary2)); color:#fff; }
+    .btnx-ghost{
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(15,23,42,0.12);
+      color:#0f172a;
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
+    }
+
+    .page{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    .cardx{
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .cardx-head{
+      padding: 22px 22px 12px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .title{
+      margin:0;
+      font-weight: 950;
+      font-size: 26px;
+      letter-spacing: -0.5px;
+      color: #0f172a;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .subtitle{
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .content{
+      padding: 0 22px 22px;
+    }
+
+    .box{
+      background: rgba(15, 23, 42, 0.03);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .form-label{
+      font-weight: 950;
+      color:#0f172a;
+      font-size: 13px;
+      letter-spacing: .2px;
+    }
+
+    .form-control{
+      border-radius: 14px !important;
+      padding: 12px 12px;
+      border: 1px solid rgba(15, 23, 42, 0.14);
+      font-weight: 900;
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+
+    .help{
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(15,23,42,.65);
+      font-weight: 800;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .msg-wrap{ padding: 0 22px 10px; }
+    .fade-message{ transition: opacity .35s ease; }
+    .fade-out{ opacity: 0; }
+
+    .prof-box{
+      border-radius: 18px;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(15,23,42,0.10);
+      padding: 16px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.08);
+    }
+
+    .prof-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .prof-title{
+      font-weight: 950;
+      color:#0f172a;
+      margin:0;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .kv{
+      margin: 10px 0 0;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 620px){
+      .kv{ grid-template-columns: 1fr; }
+      .userpill{ display:none; }
+    }
+
+    .kv .item{
+      background: rgba(15,23,42,0.04);
+      border: 1px solid rgba(15,23,42,0.10);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+    .kv .k{
+      font-size: 12px;
+      font-weight: 900;
+      color: rgba(15,23,42,.62);
+      margin-bottom: 2px;
+    }
+    .kv .v{
+      font-weight: 950;
+      color:#0f172a;
+      font-size: 14px;
+    }
+
+    .actions{
+      margin-top: 14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn-big{
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 950;
+      border:0;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 14px 30px rgba(37,99,235,.22);
+      text-decoration:none;
+    }
+
+    .btn-search{ background: linear-gradient(135deg, var(--primary), var(--primary2)); color:#fff; }
+    .btn-accept{ background: linear-gradient(135deg, #16a34a, #22c55e); color:#fff; box-shadow: 0 14px 30px rgba(34,197,94,.22); }
+
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="uni-badge">
+          <img src="{% static 'asistencias/img/uni_logo.png' %}" alt="UNI" class="uni-logo" />
+        </div>
+        <div>
+          <h1>Universidad Nacional de Ingeniería</h1>
+          <small>Proyecto Manhattan • Registro Manual</small>
+        </div>
+      </div>
+
+      <div class="userbox">
+        <div class="userpill">
+          <i class="bi bi-person-circle"></i>
+          Usuario: <span style="font-weight:950;">{{ request.user.username }}</span>
+        </div>
+
+        <a class="btnx btnx-ghost" href="{% url 'historial_asistencias' %}">
+          <i class="bi bi-clock-history"></i> Volver al historial
+        </a>
+
+        <form method="post" action="{% url 'logout' %}" class="m-0">
+          {% csrf_token %}
+          <button type="submit" class="btnx btnx-danger">
+            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="cardx">
+      <div class="cardx-head">
+        <div>
+          <h2 class="title">
+            <i class="bi bi-pencil-square"></i>
+            Registro manual por DNI
+          </h2>
+          <p class="subtitle">
+            Usa esto si el docente olvidó su check/foto y necesitas registrar su asistencia manualmente.
+          </p>
+        </div>
+      </div>
+
+      <!-- ✅ MENSAJES -->
+      {% if messages %}
+        <div id="msgBox" class="msg-wrap fade-message">
+          {% for message in messages %}
+            <div class="alert
+              {% if message.tags == 'success' %} alert-success
+              {% elif message.tags == 'error' %} alert-danger
+              {% else %} alert-info {% endif %}
+              mb-2" role="alert" style="border-radius:14px; font-weight:850;">
+              {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill"></i>
+              {% elif message.tags == 'error' %}<i class="bi bi-x-circle-fill"></i>
+              {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
+              <span class="ms-1">{{ message }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="content">
+
+        <!-- ✅ 1) FORMULARIO BUSCAR DNI (solo si NO hay profesor) -->
+        {% if not profesor %}
+          <div class="box">
+            <form method="post" autocomplete="off">
+              {% csrf_token %}
+              <input type="hidden" name="accion" value="buscar">
+
+              <label class="form-label">DNI del docente (8 dígitos)</label>
+              <input
+                type="text"
+                name="dni"
+                class="form-control"
+                maxlength="8"
+                required
+                autofocus
+                inputmode="numeric"
+                pattern="[0-9]{8}"
+                placeholder="Ej: 12345678"
+              />
+
+              <div class="help">
+                <i class="bi bi-shield-lock"></i>
+                Solo el DNI. El sistema buscará al docente y te pedirá confirmar.
+              </div>
+
+              <div class="actions">
+                <button type="submit" class="btn-big btn-search">
+                  <i class="bi bi-search"></i> Buscar docente
+                </button>
+
+                <a class="btnx btnx-ghost" href="{% url 'historial_asistencias' %}">
+                  <i class="bi bi-arrow-left"></i> Cancelar
+                </a>
+              </div>
+            </form>
+          </div>
+        {% endif %}
+
+        <!-- ✅ 2) DATOS DEL PROFESOR + BOTÓN ACEPTAR -->
+        {% if profesor %}
+          <div class="prof-box">
+            <div class="prof-row">
+              <h5 class="prof-title">
+                <i class="bi bi-person-badge"></i> Docente encontrado
+              </h5>
+
+              <div class="d-flex gap-2 flex-wrap">
+                <a class="btnx btnx-ghost" href="{% url 'registro_manual' %}">
+                  <i class="bi bi-arrow-counterclockwise"></i> Buscar otro DNI
+                </a>
+
+                <!-- ✅ ACEPTAR = registra -->
+                <form method="post" class="m-0">
+                  {% csrf_token %}
+                  <input type="hidden" name="accion" value="aceptar">
+                  <input type="hidden" name="dni" value="{{ profesor.dni }}">
+                  <button type="submit" class="btn-big btn-accept">
+                    <i class="bi bi-check2-circle"></i> Confirmar y registrar
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div class="kv">
+              <div class="item">
+                <div class="k">Código</div>
+                <div class="v">{{ profesor.codigo }}</div>
+              </div>
+              <div class="item">
+                <div class="k">Condición</div>
+                <div class="v">{{ profesor.condicion }}</div>
+              </div>
+              <div class="item">
+                <div class="k">Apellidos</div>
+                <div class="v">{{ profesor.apellidos }}</div>
+              </div>
+              <div class="item">
+                <div class="k">Nombres</div>
+                <div class="v">{{ profesor.nombres }}</div>
+              </div>
+              <div class="item" style="grid-column: 1 / -1;">
+                <div class="k">Fecha y hora</div>
+                <div class="v">{{ fecha_hora_str }}</div>
+              </div>
+            </div>
+
+            <div class="help mt-3">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              Verifica que sea el docente correcto antes de confirmar.
+            </div>
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ✅ Ocultar mensajes en 2 segundos
+    const msgBox = document.getElementById("msgBox");
+    if (msgBox) {
+      setTimeout(() => {
+        msgBox.classList.add("fade-out");
+        setTimeout(() => msgBox.remove(), 400);
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

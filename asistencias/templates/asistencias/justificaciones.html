@@ -1,0 +1,201 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Justificaciones</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <style>
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #0b1020, #2a165f);
+      color:#0f172a;
+    }
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:24px 16px 40px;
+    }
+    .cardx{
+      background: rgba(255,255,255,.95);
+      border-radius: 18px;
+      box-shadow: 0 22px 55px rgba(0,0,0,.22);
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.3);
+    }
+    .head{
+      padding:18px 18px 10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .title{
+      margin:0;
+      font-weight:950;
+      font-size:22px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .sub{ margin:6px 0 0; color:#6b7280; font-weight:800; }
+    .filters{ padding:0 18px 16px; }
+    .table-wrap{ padding:0 18px 18px; }
+    .badgex{
+      font-weight:900;
+      border-radius:999px;
+      padding:6px 10px;
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
+      white-space:nowrap;
+    }
+    .b-ok{ background:#dcfce7; color:#166534; }
+    .b-warn{ background:#fee2e2; color:#991b1b; }
+    .b-info{ background:#e0e7ff; color:#1e3a8a; }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="cardx">
+
+    <div class="head">
+      <div>
+        <h1 class="title"><i class="bi bi-clipboard2-check"></i> Justificaciones</h1>
+        <div class="sub">Marca descanso médico u otros para una fecha</div>
+      </div>
+
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'historial_asistencias' %}" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-clock-history"></i> Ir al historial
+        </a>
+
+        <form method="post" action="{% url 'logout' %}" class="m-0">
+          {% csrf_token %}
+          <button class="btn btn-danger btn-sm">
+            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="filters">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert
+            {% if message.tags == 'success' %}alert-success
+            {% elif message.tags == 'error' %}alert-danger
+            {% elif message.tags == 'warning' %}alert-warning
+            {% else %}alert-info{% endif %}
+            mb-2" style="border-radius:14px; font-weight:850;">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-12 col-md-3">
+          <label class="form-label fw-bold">Fecha</label>
+          <input type="date" name="fecha" class="form-control" value="{{ fecha|date:'Y-m-d' }}">
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label fw-bold">Buscar</label>
+          <input type="text" name="q" class="form-control" value="{{ q }}"
+                 placeholder="DNI / Código / Apellidos / Nombres">
+        </div>
+
+        <div class="col-12 col-md-3 d-grid">
+          <button class="btn btn-primary">
+            <i class="bi bi-funnel-fill"></i> Aplicar
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Docente</th>
+              <th style="width:220px;">Estado</th>
+              <th style="width:520px;">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr>
+                <td>
+                  <div class="fw-bold">{{ r.profesor.apellidos }}, {{ r.profesor.nombres }}</div>
+                  <div class="text-muted small">
+                    Código: {{ r.profesor.codigo }}
+                    <span class="ms-2">Condición: {{ r.profesor.condicion }}</span>
+                  </div>
+                </td>
+
+                <td>
+                  {% if "ASISTIÓ" in r.estado %}
+                    <span class="badgex b-ok"><i class="bi bi-check-circle-fill"></i> {{ r.estado }}</span>
+                  {% elif "JUSTIFICADO" in r.estado %}
+                    <span class="badgex b-info"><i class="bi bi-file-medical-fill"></i> {{ r.estado }}</span>
+                  {% else %}
+                    <span class="badgex b-warn"><i class="bi bi-x-circle-fill"></i> {{ r.estado }}</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  <!-- SET -->
+                  <form method="post" action="{% url 'set_justificacion' %}" class="row g-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+                    <input type="hidden" name="profesor_id" value="{{ r.profesor.id }}">
+
+                    <div class="col-12 col-md-3">
+                      <select name="tipo" class="form-select form-select-sm">
+                        <option value="DM" {% if r.justificacion and r.justificacion.tipo == "DM" %}selected{% endif %}>DM</option>
+                        <option value="C"  {% if r.justificacion and r.justificacion.tipo == "C" %}selected{% endif %}>Comisión</option>
+                        <option value="P"  {% if r.justificacion and r.justificacion.tipo == "P" %}selected{% endif %}>Permiso</option>
+                        <option value="O"  {% if r.justificacion and r.justificacion.tipo == "O" %}selected{% endif %}>Otro</option>
+                      </select>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                      <input name="detalle" class="form-control form-control-sm"
+                             value="{% if r.justificacion %}{{ r.justificacion.detalle }}{% endif %}"
+                             placeholder="Detalle (opcional)">
+                    </div>
+
+                    <div class="col-12 col-md-3 d-flex gap-2">
+                      <button class="btn btn-success btn-sm" name="accion" value="set" type="submit">
+                        <i class="bi bi-check2-circle"></i> Justificar
+                      </button>
+
+                      <button class="btn btn-outline-danger btn-sm" name="accion" value="clear" type="submit">
+                        <i class="bi bi-trash"></i> Quitar
+                      </button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" class="text-center text-muted p-4">No hay profesores con ese filtro.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

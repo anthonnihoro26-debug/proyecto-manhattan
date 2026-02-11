@@ -2,7 +2,9 @@ import os
 import json
 import re
 import logging
-from io import BytesIO
+from datetime import timedelta
+from io import BytesIO, StringIO
+
 from PIL import Image as PILImage
 
 from django.conf import settings
@@ -10,6 +12,8 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout
+from django.contrib import messages
+
 from django.utils import timezone
 from django.db.models import Q, Min
 from django.utils.dateparse import parse_date
@@ -25,9 +29,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.drawing.image import Image as XLImage
-from io import StringIO
 
-from .models import Profesor, Asistencia
+from .models import Profesor, Asistencia, JustificacionAsistencia
 
 
 logger = logging.getLogger(__name__)
@@ -84,14 +87,18 @@ def _read_code_from_request(request) -> str:
 def post_login_redirect(request):
     """
     ✅ Redirección según grupo:
-    - SCANNER   -> /asistencia/scan/
-    - HISTORIAL -> /asistencia/historial/
+    - SCANNER          -> /asistencia/scan/
+    - HISTORIAL        -> /asistencia/historial/
+    - JUSTIFICACIONES  -> /asistencia/justificaciones/
     """
     if request.user.groups.filter(name="SCANNER").exists():
         return redirect("scan_page")
 
     if request.user.groups.filter(name="HISTORIAL").exists():
         return redirect("historial_asistencias")
+
+    if request.user.groups.filter(name="JUSTIFICACIONES").exists():
+        return redirect("panel_justificaciones")
 
     logout(request)
     return redirect("login")
@@ -158,7 +165,8 @@ def historial_asistencias(request):
 
 
 # =========================================================
-# ✅ EXCEL (solo grupo HISTORIAL) ✅ RESTAURADO (Mejorado)
+# ✅ EXCEL (solo grupo HISTORIAL)
+# ✅ AHORA: ASISTIÓ / JUSTIFICADO (DM) / FALTÓ
 # =========================================================
 @user_passes_test(_in_group("HISTORIAL"), login_url="login")
 def exportar_reporte_excel(request):
@@ -192,6 +200,13 @@ def exportar_reporte_excel(request):
     )
     asistio_map = {x["profesor_id"]: x["primera_hora"] for x in asistencias_del_dia}
 
+    justificados_del_dia = (
+        JustificacionAsistencia.objects
+        .filter(fecha=fecha_eval)
+        .values("profesor_id", "tipo")
+    )
+    just_map = {x["profesor_id"]: x["tipo"] for x in justificados_del_dia}
+
     wb = Workbook()
     ws: Worksheet = wb.active
     ws.title = "Reporte"
@@ -201,6 +216,7 @@ def exportar_reporte_excel(request):
     gray_bg = "F3F4F6"
     ok_bg = "DCFCE7"
     bad_bg = "FEE2E2"
+    info_bg = "E0E7FF"
     text_dark = "0F172A"
 
     thin = Side(style="thin", color="CBD5E1")
@@ -270,16 +286,19 @@ def exportar_reporte_excel(request):
         c.border = border_all
 
     ws.row_dimensions[header_row].height = 22
-
     data_start = header_row + 1
 
     for p in profesores:
         dt = asistio_map.get(p.id)
+        jt = just_map.get(p.id)  # DM/C/P/O
 
         if dt:
             dt_local = timezone.localtime(dt)
             estado = "ASISTIÓ"
             hora = dt_local.strftime("%H:%M")
+        elif jt:
+            estado = f"JUSTIFICADO ({jt})"
+            hora = ""
         else:
             estado = "FALTÓ"
             hora = ""
@@ -300,7 +319,13 @@ def exportar_reporte_excel(request):
         estado_cell = ws.cell(row=r, column=5)
         estado_cell.font = Font(bold=True, color=text_dark)
         estado_cell.alignment = Alignment(horizontal="center", vertical="center")
-        estado_cell.fill = PatternFill("solid", fgColor=ok_bg if estado == "ASISTIÓ" else bad_bg)
+
+        if estado.startswith("ASISTIÓ"):
+            estado_cell.fill = PatternFill("solid", fgColor=ok_bg)
+        elif estado.startswith("JUSTIFICADO"):
+            estado_cell.fill = PatternFill("solid", fgColor=info_bg)
+        else:
+            estado_cell.fill = PatternFill("solid", fgColor=bad_bg)
 
         ws.cell(row=r, column=6).alignment = Alignment(horizontal="center", vertical="center")
 
@@ -319,7 +344,7 @@ def exportar_reporte_excel(request):
 
     ws.freeze_panes = f"A{data_start}"
 
-    widths = {"A": 14, "B": 14, "C": 40, "D": 12, "E": 12, "F": 10}
+    widths = {"A": 14, "B": 14, "C": 40, "D": 12, "E": 18, "F": 10}
     for col, w in widths.items():
         ws.column_dimensions[col].width = w
 
@@ -448,9 +473,192 @@ def trigger_reporte_asistencia(request):
 
     texto = out.getvalue()
 
-    # Devuelve la salida del comando (para ver a quién se envió)
     return JsonResponse({
         "ok": True,
         "msg": "Reporte ejecutado",
         "output": texto,
     })
+
+
+# =========================================================
+# ✅ REGISTRO MANUAL (solo grupo HISTORIAL)
+# Buscar DNI -> Mostrar profesor -> Confirmar y registrar
+# =========================================================
+@user_passes_test(_in_group("HISTORIAL"), login_url="login")
+def registro_manual(request):
+    profesor = None
+    fecha_hora_str = timezone.localtime(timezone.now()).strftime("%d/%m/%Y %H:%M:%S")
+
+    if request.method == "POST":
+        accion = (request.POST.get("accion") or "").strip().lower()
+        raw_dni = (request.POST.get("dni") or "").strip()
+
+        dni = _extract_dni(raw_dni)
+        if not (dni.isdigit() and len(dni) == 8):
+            messages.error(request, "DNI inválido (debe ser 8 dígitos).")
+            return render(request, "asistencias/registro_manual.html", {
+                "profesor": None,
+                "fecha_hora_str": fecha_hora_str,
+            })
+
+        if accion == "buscar":
+            try:
+                profesor = Profesor.objects.get(dni=dni)
+                messages.info(request, "Docente encontrado. Verifica y confirma para registrar.")
+            except Profesor.DoesNotExist:
+                messages.error(request, f"No se encontró docente con DNI {dni}.")
+                profesor = None
+
+        elif accion == "aceptar":
+            try:
+                profesor = Profesor.objects.get(dni=dni)
+            except Profesor.DoesNotExist:
+                messages.error(request, f"No se encontró docente con DNI {dni}.")
+                profesor = None
+            else:
+                hoy = timezone.localdate()
+                now = timezone.now()
+
+                ip = _get_client_ip(request)
+                ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
+
+                with transaction.atomic():
+                    qs = (Asistencia.objects
+                          .select_for_update()
+                          .filter(profesor=profesor, fecha=hoy, tipo="E")
+                          .order_by("fecha_hora"))
+
+                    if qs.exists():
+                        ya = qs.first()
+                        ya_local = timezone.localtime(ya.fecha_hora).strftime("%H:%M")
+                        messages.warning(
+                            request,
+                            f"⚠️ Ya registró ENTRADA hoy ({ya_local}): {profesor.apellidos} {profesor.nombres}"
+                        )
+                    else:
+                        Asistencia.objects.create(
+                            profesor=profesor,
+                            fecha=hoy,
+                            fecha_hora=now,
+                            tipo="E",
+                            registrado_por=request.user,
+                            ip=ip,
+                            user_agent=ua,
+                        )
+                        messages.success(
+                            request,
+                            f"✅ ENTRADA registrada: {profesor.apellidos} {profesor.nombres}"
+                        )
+
+                fecha_hora_str = timezone.localtime(timezone.now()).strftime("%d/%m/%Y %H:%M:%S")
+
+        else:
+            messages.error(request, "Acción inválida.")
+            profesor = None
+
+    return render(request, "asistencias/registro_manual.html", {
+        "profesor": profesor,
+        "fecha_hora_str": fecha_hora_str,
+    })
+
+
+# =========================================================
+# ✅ PANEL JUSTIFICACIONES (solo grupo JUSTIFICACIONES)
+# Por defecto muestra AYER (para justificar al día siguiente)
+# =========================================================
+@user_passes_test(_in_group("JUSTIFICACIONES"), login_url="login")
+def panel_justificaciones(request):
+    fecha_str = (request.GET.get("fecha") or "").strip()
+    fecha = parse_date(fecha_str) if fecha_str else (timezone.localdate() - timedelta(days=1))
+
+    q = (request.GET.get("q") or "").strip()
+
+    profesores = Profesor.objects.all().order_by("apellidos", "nombres")
+    if q:
+        profesores = profesores.filter(
+            Q(dni__icontains=q) |
+            Q(codigo__icontains=q) |
+            Q(apellidos__icontains=q) |
+            Q(nombres__icontains=q)
+        )
+
+    asistio_ids = set(
+        Asistencia.objects
+        .filter(fecha=fecha, tipo="E")
+        .values_list("profesor_id", flat=True)
+    )
+
+    just_qs = JustificacionAsistencia.objects.filter(fecha=fecha).select_related("profesor")
+    just_map = {j.profesor_id: j for j in just_qs}
+
+    rows = []
+    for p in profesores:
+        j = just_map.get(p.id)
+        if p.id in asistio_ids:
+            estado = "ASISTIÓ"
+        elif j:
+            estado = f"JUSTIFICADO ({j.tipo})"
+        else:
+            estado = "FALTÓ"
+
+        rows.append({
+            "profesor": p,
+            "estado": estado,
+            "justificacion": j
+        })
+
+    return render(request, "asistencias/justificaciones.html", {
+        "fecha": fecha,
+        "q": q,
+        "rows": rows,
+    })
+
+
+# =========================================================
+# ✅ SET / CLEAR JUSTIFICACIÓN (solo JUSTIFICACIONES)
+# =========================================================
+@require_POST
+@user_passes_test(_in_group("JUSTIFICACIONES"), login_url="login")
+def set_justificacion(request):
+    accion = (request.POST.get("accion") or "").strip().lower()
+    profesor_id = (request.POST.get("profesor_id") or "").strip()
+    fecha_str = (request.POST.get("fecha") or "").strip()
+    tipo = (request.POST.get("tipo") or "DM").strip().upper()
+    detalle = (request.POST.get("detalle") or "").strip()
+
+    fecha = parse_date(fecha_str)
+    if not fecha:
+        messages.error(request, "Fecha inválida.")
+        return redirect("panel_justificaciones")
+
+    try:
+        profesor = Profesor.objects.get(id=profesor_id)
+    except Profesor.DoesNotExist:
+        messages.error(request, "Profesor no encontrado.")
+        return redirect(f"{request.path}?fecha={fecha_str}")
+
+    if accion == "set":
+        tipo_ok = tipo if tipo in ("DM", "C", "P", "O") else "DM"
+        obj, created = JustificacionAsistencia.objects.update_or_create(
+            profesor=profesor,
+            fecha=fecha,
+            defaults={
+                "tipo": tipo_ok,
+                "detalle": detalle,
+                "actualizado_por": request.user,
+                "creado_por": request.user,
+            }
+        )
+        if created:
+            messages.success(request, f"✅ Justificación registrada para {profesor.apellidos} {profesor.nombres}.")
+        else:
+            messages.success(request, f"✅ Justificación actualizada para {profesor.apellidos} {profesor.nombres}.")
+
+    elif accion == "clear":
+        JustificacionAsistencia.objects.filter(profesor=profesor, fecha=fecha).delete()
+        messages.warning(request, f"🗑️ Justificación eliminada para {profesor.apellidos} {profesor.nombres}.")
+
+    else:
+        messages.error(request, "Acción inválida.")
+
+    return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")

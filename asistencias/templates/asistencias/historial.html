@@ -63,17 +63,6 @@
       gap:12px;
       min-width: 260px;
     }
-    .brand-badge{
-      width:44px;
-      height:44px;
-      border-radius: 14px;
-      display:grid;
-      place-items:center;
-      background: linear-gradient(135deg, var(--primary), var(--primary2));
-      color:#fff;
-      box-shadow: 0 16px 34px rgba(37,99,235,.22);
-      flex: 0 0 auto;
-    }
     .brand h1{
       font-size: 18px;
       line-height: 1.1;
@@ -128,8 +117,8 @@
     .btnx:active{ transform: translateY(0px); opacity:.92; }
     .btnx-success{ background: linear-gradient(135deg, #16a34a, #22c55e); color:#fff; }
     .btnx-danger{ background: linear-gradient(135deg, #dc2626, #ef4444); color:#fff; }
+    .btnx-primary{ background: linear-gradient(135deg, var(--primary), var(--primary2)); color:#fff; }
 
-    /* ✅ Export pro: añade mini-subtítulo */
     .btnx .subtxt{
       display:block;
       font-size: 11px;
@@ -144,33 +133,26 @@
       margin: 0 auto;
       padding: 24px 16px 40px;
     }
-/* El contenedor ya no “pinta” nada */
-/* Badge del logo UNI (sin “cuadro blanco”) */
-.uni-badge{
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  border-radius: 0 !important;     /* <-- quita el borde redondeado del cuadro */
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-}
 
-/* El logo ocupa todo */
-.uni-logo{
-  width: 44px;
-  height: 44px;
-  display: block;
-  object-fit: contain;
-  /* Opcional: para que se vea “pro” sobre fondos claros */
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,.10));
-}
-
-
-
-
+    /* Badge del logo UNI (sin “cuadro blanco”) */
+    .uni-badge{
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+    }
+    .uni-logo{
+      width: 44px;
+      height: 44px;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.10));
+    }
 
     .cardx{
       background: rgba(255,255,255,0.92);
@@ -258,7 +240,6 @@
       gap:8px;
     }
 
-    /* ✅ KPIs */
     .kpi-grid{
       display:grid;
       grid-template-columns: repeat(4, 1fr);
@@ -291,7 +272,6 @@
       letter-spacing: -0.3px;
     }
 
-    /* ✅ filtros activos */
     .active-filters{
       padding: 0 22px 14px;
       display:flex;
@@ -343,7 +323,6 @@
       background: rgba(37,99,235,0.04);
     }
 
-    /* ✅ Docente (una sola celda) */
     .doc-name{ font-weight: 950; color:#0f172a; }
     .doc-sub{
       margin-top: 2px;
@@ -369,7 +348,6 @@
       width: fit-content;
     }
 
-    /* ✅ badges con texto */
     .badge-cond{
       display:inline-flex;
       align-items:center;
@@ -389,7 +367,6 @@
     .cond-c{ background: linear-gradient(135deg,#2563eb,#4f46e5); }
     .cond-otro{ background: linear-gradient(135deg,#64748b,#475569); }
 
-    /* ✅ fecha humana + hace X */
     .date-main{
       font-weight: 950;
       color:#0f172a;
@@ -436,7 +413,6 @@
       gap:8px;
     }
 
-    /* ✅ paginación */
     .pager{
       display:flex;
       gap:8px;
@@ -467,7 +443,6 @@
       font-size: 13px;
     }
 
-    /* ✅ empty state pro */
     .empty-wrap{
       padding: 46px 14px;
       display:flex;
@@ -513,12 +488,12 @@
     <div class="topbar-inner">
       <div class="brand">
         <div class="brand-badge uni-badge">
-  <img
-    src="{% static 'asistencias/img/uni_logo.png' %}"
-    alt="UNI"
-    class="uni-logo"
-  />
-</div>
+          <img
+            src="{% static 'asistencias/img/uni_logo.png' %}"
+            alt="UNI"
+            class="uni-logo"
+          />
+        </div>
 
         <div>
           <h1>Universidad Nacional de Ingeniería</h1>
@@ -558,8 +533,22 @@
           </div>
         </div>
 
-        <!-- ✅ Exportar Excel PRO (con filtros) -->
+        <!-- ✅ Acciones -->
         <div class="d-flex gap-2 flex-wrap">
+          <!-- ✅ SOLO GEORGE: botón registro manual -->
+          {% if request.user.username|lower == 'george' %}
+            <a class="btnx btnx-primary"
+               title="Registrar asistencia manualmente por DNI"
+               href="{% url 'registro_manual' %}">
+              <i class="bi bi-pencil-square"></i>
+              <span>
+                Registro manual
+                <span class="subtxt">Por DNI</span>
+              </span>
+            </a>
+          {% endif %}
+
+          <!-- ✅ Exportar Excel -->
           <a class="btnx btnx-success"
              title="Exporta el reporte con los filtros actuales"
              href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}">
@@ -693,7 +682,6 @@
                 <tr>
                   <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
 
-                  <!-- ✅ Docente en 1 celda -->
                   <td>
                     <div class="doc-name">{{ a.profesor.apellidos }}, {{ a.profesor.nombres }}</div>
                     <div class="doc-sub">
@@ -701,7 +689,6 @@
                     </div>
                   </td>
 
-                  <!-- ✅ badges con texto -->
                   <td>
                     {% if a.profesor.condicion == "N" %}
                       <span class="badge-cond cond-n">
@@ -718,7 +705,6 @@
                     {% endif %}
                   </td>
 
-                  <!-- ✅ fecha humana + hace X -->
                   <td>
                     <div class="date-main">
                       <i class="bi bi-clock-history" style="color:rgba(15,23,42,.55);"></i>
@@ -731,7 +717,6 @@
                 </tr>
 
               {% empty %}
-                <!-- ✅ empty state pro -->
                 <tr>
                   <td colspan="4">
                     <div class="empty-wrap">
@@ -766,13 +751,11 @@
         </div>
 
         <div class="pager">
-          <!-- Inicio -->
           <a class="pbtn {% if not page_obj.has_previous %}disabled{% endif %}"
              href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page=1">
             <i class="bi bi-skip-backward-fill"></i> Inicio
           </a>
 
-          <!-- Anterior -->
           {% if page_obj.has_previous %}
             <a class="pbtn"
                href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.previous_page_number }}">
@@ -782,7 +765,6 @@
             <span class="pbtn disabled"><i class="bi bi-chevron-left"></i> Anterior</span>
           {% endif %}
 
-          <!-- Siguiente -->
           {% if page_obj.has_next %}
             <a class="pbtn"
                href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.next_page_number }}">
@@ -792,7 +774,6 @@
             <span class="pbtn disabled">Siguiente <i class="bi bi-chevron-right"></i></span>
           {% endif %}
 
-          <!-- Fin -->
           <a class="pbtn {% if not page_obj.has_next %}disabled{% endif %}"
              href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.paginator.num_pages }}">
             Fin <i class="bi bi-skip-forward-fill"></i>
@@ -804,6 +785,3 @@
   </div>
 </body>
 </html>
-
-
-

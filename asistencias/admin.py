@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Profesor, Asistencia
-
+from .models import JustificacionAsistencia
 
 @admin.register(Profesor)
 class ProfesorAdmin(admin.ModelAdmin):
@@ -17,3 +17,9 @@ class AsistenciaAdmin(admin.ModelAdmin):
     list_filter = ("tipo", "fecha")
     date_hierarchy = "fecha"
     ordering = ("-fecha_hora",)
+
+@admin.register(JustificacionAsistencia)
+class JustificacionAsistenciaAdmin(admin.ModelAdmin):
+    list_display = ("fecha", "profesor", "tipo", "detalle", "creado_por", "creado_en")
+    list_filter = ("fecha", "tipo")
+    search_fields = ("profesor__dni", "profesor__codigo", "profesor__apellidos", "profesor__nombres", "detalle")

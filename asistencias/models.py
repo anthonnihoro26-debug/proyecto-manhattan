@@ -10,7 +10,7 @@ class Profesor(models.Model):
     nombres = models.CharField(max_length=120)
     condicion = models.CharField(max_length=20)
 
-    # ✅ NUEVO: correo para enviar reportes
+    # ✅ correo para enviar reportes
     email = models.EmailField(blank=True, null=True)
 
     def __str__(self):
@@ -34,7 +34,7 @@ class Asistencia(models.Model):
     # ✅ Entrada o salida
     tipo = models.CharField(max_length=1, choices=TIPOS, default="E")
 
-    # ✅ Auditoría (opcional, pero pro)
+    # ✅ Auditoría
     registrado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True, blank=True,
@@ -55,3 +55,50 @@ class Asistencia(models.Model):
     def __str__(self):
         tipo = "ENTRADA" if self.tipo == "E" else "SALIDA"
         return f"{self.profesor} - {tipo} - {self.fecha_hora:%d/%m/%Y %H:%M}"
+
+
+# =========================================================
+# ✅ JUSTIFICACIONES (Descanso Médico / Permiso / etc.)
+# Marcan AUSENCIA como "JUSTIFICADO" para una fecha
+# =========================================================
+class JustificacionAsistencia(models.Model):
+    TIPO_CHOICES = [
+        ("DM", "Descanso médico"),
+        ("C", "Comisión / Encargo"),
+        ("P", "Permiso"),
+        ("O", "Otro"),
+    ]
+
+    profesor = models.ForeignKey(Profesor, on_delete=models.CASCADE, related_name="justificaciones")
+    fecha = models.DateField(db_index=True)
+
+    tipo = models.CharField(max_length=2, choices=TIPO_CHOICES, default="DM")
+    detalle = models.CharField(max_length=255, blank=True, default="")
+
+    creado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="justificaciones_creadas"
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    actualizado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="justificaciones_actualizadas"
+    )
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["profesor", "fecha"], name="uniq_justificacion_profesor_fecha")
+        ]
+        indexes = [
+            models.Index(fields=["fecha", "profesor"]),
+        ]
+        ordering = ["-fecha", "profesor__apellidos", "profesor__nombres"]
+
+    def __str__(self):
+        return f"{self.profesor} - {self.fecha} ({self.tipo})"
