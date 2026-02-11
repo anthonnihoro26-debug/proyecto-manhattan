@@ -392,48 +392,41 @@ def api_scan_asistencia(request):
 
     # 4) transacción anti doble-scan
     with transaction.atomic():
-        # bloquea registros de ese profesor/día mientras decide
         qs = (Asistencia.objects
               .select_for_update()
-              .filter(profesor=profesor, fecha=hoy)
+              .filter(profesor=profesor, fecha=hoy, tipo="E")
               .order_by("fecha_hora"))
 
-        tipos_hoy = set(qs.values_list("tipo", flat=True))  # {"E","S"}
-
-        if "E" not in tipos_hoy:
-            tipo = "E"
-            accion = "entrada"
-        elif "S" not in tipos_hoy:
-            tipo = "S"
-            accion = "salida"
-        else:
-            logger.info("DUPLICADO dni=%s hoy=%s user=%s ip=%s", dni, hoy, request.user.username, ip)
+        # ✅ SOLO ENTRADA: si ya existe una "E" hoy => DUPLICADO
+        if qs.exists():
+            logger.info("DUPLICADO entrada dni=%s hoy=%s user=%s ip=%s",
+                        dni, hoy, request.user.username, ip)
             return JsonResponse({
                 "ok": True,
                 "duplicado": True,
                 "accion": "ninguna",
-                "msg": f"⚠️ Ya registró ENTRADA y SALIDA hoy: {profesor.apellidos} {profesor.nombres}",
+                "msg": f"⚠️ Ya registró ENTRADA hoy: {profesor.apellidos} {profesor.nombres}",
                 "profesor": payload_prof,
             }, status=200)
 
-        # crea registro
+        # ✅ crear SOLO entrada
         a = Asistencia.objects.create(
             profesor=profesor,
             fecha=hoy,
             fecha_hora=now,
-            tipo=tipo,
+            tipo="E",
             registrado_por=request.user,
             ip=ip,
             user_agent=ua,
         )
 
-    logger.info("OK %s dni=%s hoy=%s user=%s ip=%s", accion, dni, hoy, request.user.username, ip)
+    logger.info("OK entrada dni=%s hoy=%s user=%s ip=%s", dni, hoy, request.user.username, ip)
 
     return JsonResponse({
         "ok": True,
         "duplicado": False,
-        "accion": accion,  # "entrada" o "salida"
-        "msg": f"✅ {accion.upper()} registrada: {profesor.apellidos} {profesor.nombres}",
+        "accion": "entrada",
+        "msg": f"✅ ENTRADA registrada: {profesor.apellidos} {profesor.nombres}",
         "profesor": payload_prof,
         "asistencia": {
             "id": a.id,
@@ -442,3 +435,4 @@ def api_scan_asistencia(request):
             "fecha_hora": a.fecha_hora.isoformat(),
         }
     }, status=201)
+
