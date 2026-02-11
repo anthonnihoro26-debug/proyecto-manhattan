@@ -6,11 +6,11 @@ from datetime import timedelta
 from io import BytesIO, StringIO
 
 from PIL import Image as PILImage
-
+from datetime import datetime, time
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required, user_passes_test 
 from django.contrib.auth import logout
 from django.contrib import messages
 
@@ -23,6 +23,7 @@ from django.core.paginator import Paginator
 from django.contrib.staticfiles import finders
 from django.db import transaction
 from django.core.management import call_command
+from types import SimpleNamespace
 
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl import Workbook
@@ -43,6 +44,14 @@ def _in_group(group_name: str):
     def check(user):
         return user.is_authenticated and user.groups.filter(name=group_name).exists()
     return check
+
+
+def _in_any_group(*group_names: str):
+    def check(user):
+        return user.is_authenticated and user.groups.filter(name__in=list(group_names)).exists()
+    return check
+
+
 
 
 def _get_client_ip(request):
@@ -85,12 +94,6 @@ def _read_code_from_request(request) -> str:
 # =========================================================
 @login_required
 def post_login_redirect(request):
-    """
-    ✅ Redirección según grupo:
-    - SCANNER         -> /asistencia/scan/
-    - HISTORIAL       -> /asistencia/historial/
-    - JUSTIFICACIONES -> /asistencia/justificaciones/
-    """
     user = request.user
 
     if user.groups.filter(name="SCANNER").exists():
@@ -99,9 +102,8 @@ def post_login_redirect(request):
     if user.groups.filter(name="HISTORIAL").exists():
         return redirect("historial_asistencias")
 
-    # ✅ FIX: tu sistema usa el grupo JUSTIFICACIONES (no JUSTIFICADOR)
     if user.groups.filter(name="JUSTIFICACIONES").exists():
-        return redirect("/asistencia/justificaciones/")
+        return redirect("panel_justificaciones")
 
     logout(request)
     return redirect("login")
@@ -110,10 +112,7 @@ def post_login_redirect(request):
 # =========================================================
 # HISTORIAL (solo grupo HISTORIAL) ✅ KPIs + PAGINACIÓN
 # =========================================================
-@user_passes_test(_in_group("HISTORIAL"), login_url="login")
 def historial_asistencias(request):
-    qs = Asistencia.objects.select_related("profesor").order_by("-fecha_hora")
-
     q = request.GET.get("q", "").strip()
     desde = request.GET.get("desde", "").strip()
     hasta = request.GET.get("hasta", "").strip()
@@ -124,33 +123,109 @@ def historial_asistencias(request):
         ps = "25"
     ps = int(ps)
 
+    # ✅ Fecha para regresar a justificaciones (si vienes desde ese panel)
+    fecha_just = request.session.get("just_fecha")
+    if not fecha_just:
+        fecha_just = (timezone.localdate() - timezone.timedelta(days=1)).strftime("%Y-%m-%d")
+
+    # ✅ Mostrar botón "Ir a justificaciones" solo a usuarios que pertenecen al grupo
+    puede_volver_just = request.user.is_authenticated and request.user.groups.filter(name="JUSTIFICACIONES").exists()
+
+    # =========================
+    # 1) ASISTENCIAS (solo ENTRADA)
+    # =========================
+    asist_qs = (
+        Asistencia.objects
+        .select_related("profesor")
+        .filter(tipo="E")   # ✅ NO salida
+    )
+
     if q:
-        qs = qs.filter(
+        asist_qs = asist_qs.filter(
             Q(profesor__dni__icontains=q) |
             Q(profesor__codigo__icontains=q) |
             Q(profesor__apellidos__icontains=q) |
             Q(profesor__nombres__icontains=q)
         )
-
     if condicion:
-        qs = qs.filter(profesor__condicion__iexact=condicion)
-
+        asist_qs = asist_qs.filter(profesor__condicion__iexact=condicion)
     if desde:
-        qs = qs.filter(fecha_hora__date__gte=desde)
+        asist_qs = asist_qs.filter(fecha_hora__date__gte=desde)
     if hasta:
-        qs = qs.filter(fecha_hora__date__lte=hasta)
+        asist_qs = asist_qs.filter(fecha_hora__date__lte=hasta)
 
-    total_registros = qs.count()
-    docentes_unicos = qs.values("profesor_id").distinct().count()
-    registros_n = qs.filter(profesor__condicion__iexact="N").count()
-    registros_c = qs.filter(profesor__condicion__iexact="C").count()
+    # =========================
+    # 2) JUSTIFICACIONES
+    # =========================
+    just_qs = (
+        JustificacionAsistencia.objects
+        .select_related("profesor")
+        .all()
+    )
 
-    paginator = Paginator(qs, ps)
+    if q:
+        just_qs = just_qs.filter(
+            Q(profesor__dni__icontains=q) |
+            Q(profesor__codigo__icontains=q) |
+            Q(profesor__apellidos__icontains=q) |
+            Q(profesor__nombres__icontains=q)
+        )
+    if condicion:
+        just_qs = just_qs.filter(profesor__condicion__iexact=condicion)
+    if desde:
+        just_qs = just_qs.filter(fecha__gte=desde)
+    if hasta:
+        just_qs = just_qs.filter(fecha__lte=hasta)
+
+    # =========================
+    # 3) UNIR EN UNA LISTA "EVENTOS"
+    # =========================
+    events = []
+
+    # asistencias => evento ASISTIÓ
+    for a in asist_qs:
+        events.append({
+            "kind": "A",
+            "profesor": a.profesor,
+            "estado": "ASISTIÓ",
+            "fecha_hora": a.fecha_hora,
+            "codigo": a.profesor.codigo,
+            "condicion": a.profesor.condicion,
+            "detalle": "",
+        })
+
+    # justificaciones => evento JUSTIFICADO (DM/C/P/O)
+    for j in just_qs:
+        dt = datetime.combine(j.fecha, time(0, 0, 0))
+        dt = timezone.make_aware(dt, timezone.get_current_timezone())
+
+        events.append({
+            "kind": "J",
+            "profesor": j.profesor,
+            "estado": f"JUSTIFICADO ({j.tipo})",
+            "fecha_hora": dt,
+            "codigo": j.profesor.codigo,
+            "condicion": j.profesor.condicion,
+            "detalle": j.detalle or "",
+        })
+
+    # ordenar por fecha/hora desc
+    events.sort(key=lambda x: x["fecha_hora"], reverse=True)
+
+    # =========================
+    # 4) KPIs + PAGINACIÓN
+    # =========================
+    total_registros = len(events)
+    docentes_unicos = len({e["profesor"].id for e in events})
+    registros_n = sum(1 for e in events if (e.get("condicion") or "").upper() == "N")
+    registros_c = sum(1 for e in events if (e.get("condicion") or "").upper() == "C")
+
+    paginator = Paginator(events, ps)
     page_number = request.GET.get("page", "1")
     page_obj = paginator.get_page(page_number)
 
     return render(request, "asistencias/historial.html", {
-        "asistencias": page_obj.object_list,
+        "items": page_obj.object_list,
         "page_obj": page_obj,
         "paginator": paginator,
 
@@ -164,24 +239,33 @@ def historial_asistencias(request):
         "docentes_unicos": docentes_unicos,
         "registros_n": registros_n,
         "registros_c": registros_c,
+
+        # ✅ para que el botón del HTML funcione
+        "puede_volver_just": puede_volver_just,
+        "fecha_just": fecha_just,
     })
+
 
 
 # =========================================================
 # ✅ EXCEL (solo grupo HISTORIAL)
 # ✅ AHORA: ASISTIÓ / JUSTIFICADO (DM) / FALTÓ
 # =========================================================
-@user_passes_test(_in_group("HISTORIAL"), login_url="login")
+@user_passes_test(_in_any_group("HISTORIAL", "JUSTIFICACIONES"), login_url="login")
+
+
 def exportar_reporte_excel(request):
     q = (request.GET.get("q") or "").strip()
     condicion = (request.GET.get("condicion") or "").strip()
     desde = (request.GET.get("desde") or "").strip()
     hasta = (request.GET.get("hasta") or "").strip()
 
+    # ✅ Fecha evaluada (si mandan "desde", usa esa; si no, hoy)
     fecha_eval = parse_date(desde) if desde else None
     if not fecha_eval:
         fecha_eval = timezone.localdate()
 
+    # ✅ Profesores filtrados
     profesores = Profesor.objects.all().order_by("apellidos", "nombres")
 
     if q:
@@ -195,6 +279,7 @@ def exportar_reporte_excel(request):
     if condicion:
         profesores = profesores.filter(condicion__iexact=condicion)
 
+    # ✅ Asistencias del día: SOLO ENTRADA (tipo="E")
     asistencias_del_dia = (
         Asistencia.objects
         .filter(fecha=fecha_eval, tipo="E")
@@ -203,6 +288,7 @@ def exportar_reporte_excel(request):
     )
     asistio_map = {x["profesor_id"]: x["primera_hora"] for x in asistencias_del_dia}
 
+    # ✅ Justificaciones del día
     justificados_del_dia = (
         JustificacionAsistencia.objects
         .filter(fecha=fecha_eval)
@@ -210,6 +296,9 @@ def exportar_reporte_excel(request):
     )
     just_map = {x["profesor_id"]: x["tipo"] for x in justificados_del_dia}
 
+    # =========================
+    # ✅ EXCEL SETUP
+    # =========================
     wb = Workbook()
     ws: Worksheet = wb.active
     ws.title = "Reporte"
@@ -225,6 +314,7 @@ def exportar_reporte_excel(request):
     thin = Side(style="thin", color="CBD5E1")
     border_all = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+    # fondo header
     for r in (1, 2):
         for c in range(1, 8):
             ws.cell(row=r, column=c).fill = PatternFill("solid", fgColor=gray_bg)
@@ -234,6 +324,7 @@ def exportar_reporte_excel(request):
     ws.row_dimensions[3].height = 10
     ws.column_dimensions["A"].width = 16
 
+    # Logo
     logo_path = finders.find("asistencias/img/uni_logo.png")
     if logo_path:
         with PILImage.open(logo_path) as im:
@@ -252,12 +343,14 @@ def exportar_reporte_excel(request):
         ws.row_dimensions[3].height = 10
         ws.column_dimensions["A"].width = 18
 
+    # Título
     titulo = f"REPORTE DE ASISTENCIA — {fecha_eval.strftime('%d/%m/%Y')}"
     ws["B1"] = titulo
     ws.merge_cells("B1:G1")
     ws["B1"].font = Font(bold=True, size=16, color=navy)
     ws["B1"].alignment = Alignment(vertical="center")
 
+    # Filtros (info)
     filtros_txt = []
     if q:
         filtros_txt.append(f"Búsqueda: {q}")
@@ -273,10 +366,17 @@ def exportar_reporte_excel(request):
     ws["B2"].font = Font(size=11, color="334155")
     ws["B2"].alignment = Alignment(vertical="center")
 
+    # =========================
+    # ✅ TABLA (HEADERS + DATA)  (FIX openpyxl warning)
+    # =========================
     headers = ["DNI", "Código", "Docente", "Condición", "Estado", "Hora"]
-    header_row = 5
+
+    # fila de separación
     ws.append([])
-    ws.append(headers)
+
+    # escribimos headers y guardamos la fila real
+    ws.append([str(h) for h in headers])
+    header_row = ws.max_row
 
     header_fill = PatternFill("solid", fgColor=blue)
     header_font = Font(bold=True, color="FFFFFF")
@@ -291,6 +391,7 @@ def exportar_reporte_excel(request):
     ws.row_dimensions[header_row].height = 22
     data_start = header_row + 1
 
+    # datos
     for p in profesores:
         dt = asistio_map.get(p.id)
         jt = just_map.get(p.id)  # DM/C/P/O
@@ -308,7 +409,15 @@ def exportar_reporte_excel(request):
 
         docente = f"{(p.apellidos or '').strip()}, {(p.nombres or '').strip()}".strip().strip(",")
 
-        row = [p.dni, p.codigo, docente, (p.condicion or "").upper(), estado, hora]
+        # ✅ todo string para evitar warnings
+        row = [
+            str(p.dni),
+            str(p.codigo or ""),
+            str(docente),
+            str((p.condicion or "").upper()),
+            str(estado),
+            str(hora),
+        ]
         ws.append(row)
         r = ws.max_row
 
@@ -332,6 +441,7 @@ def exportar_reporte_excel(request):
 
         ws.cell(row=r, column=6).alignment = Alignment(horizontal="center", vertical="center")
 
+    # Tabla estilo Excel
     last_row = ws.max_row
     if last_row >= data_start:
         table_ref = f"A{header_row}:F{last_row}"
@@ -345,12 +455,15 @@ def exportar_reporte_excel(request):
         )
         ws.add_table(table)
 
+    # Freeze
     ws.freeze_panes = f"A{data_start}"
 
-    widths = {"A": 14, "B": 14, "C": 40, "D": 12, "E": 18, "F": 10}
+    # Anchos
+    widths = {"A": 14, "B": 14, "C": 40, "D": 12, "E": 22, "F": 10}
     for col, w in widths.items():
         ws.column_dimensions[col].width = w
 
+    # Respuesta
     filename = f"reporte_asistencia_{fecha_eval.strftime('%Y-%m-%d')}.xlsx"
     bio = BytesIO()
     wb.save(bio)
@@ -488,6 +601,8 @@ def trigger_reporte_asistencia(request):
 # Buscar DNI -> Mostrar profesor -> Confirmar y registrar
 # =========================================================
 @user_passes_test(_in_group("HISTORIAL"), login_url="login")
+
+
 def registro_manual(request):
     profesor = None
     fecha_hora_str = timezone.localtime(timezone.now()).strftime("%d/%m/%Y %H:%M:%S")
@@ -574,6 +689,9 @@ def panel_justificaciones(request):
     fecha_str = (request.GET.get("fecha") or "").strip()
     fecha = parse_date(fecha_str) if fecha_str else (timezone.localdate() - timedelta(days=1))
 
+    # ✅ guardamos la fecha para que al ir a Historial, pueda regresar a esta misma fecha
+    request.session["just_fecha"] = fecha.strftime("%Y-%m-%d")
+
     q = (request.GET.get("q") or "").strip()
 
     profesores = Profesor.objects.all().order_by("apellidos", "nombres")
@@ -587,7 +705,7 @@ def panel_justificaciones(request):
 
     asistio_ids = set(
         Asistencia.objects
-        .filter(fecha=fecha, tipo="E")
+        .filter(fecha=fecha, tipo="E")  # ✅ solo ENTRADA
         .values_list("profesor_id", flat=True)
     )
 

@@ -134,7 +134,6 @@
       padding: 24px 16px 40px;
     }
 
-    /* Badge del logo UNI (sin “cuadro blanco”) */
     .uni-badge{
       background: transparent !important;
       border: 0 !important;
@@ -367,6 +366,10 @@
     .cond-c{ background: linear-gradient(135deg,#2563eb,#4f46e5); }
     .cond-otro{ background: linear-gradient(135deg,#64748b,#475569); }
 
+    /* ✅ Estado badges */
+    .st-asistio{ background: linear-gradient(135deg,#16a34a,#22c55e); }
+    .st-just{ background: linear-gradient(135deg,#7c3aed,#a855f7); }
+
     .date-main{
       font-weight: 950;
       color:#0f172a;
@@ -488,11 +491,7 @@
     <div class="topbar-inner">
       <div class="brand">
         <div class="brand-badge uni-badge">
-          <img
-            src="{% static 'asistencias/img/uni_logo.png' %}"
-            alt="UNI"
-            class="uni-logo"
-          />
+          <img src="{% static 'asistencias/img/uni_logo.png' %}" alt="UNI" class="uni-logo" />
         </div>
 
         <div>
@@ -523,7 +522,7 @@
         <div>
           <h2 class="title">
             <i class="bi bi-clock-history"></i>
-            Historial de Asistencias
+            Historial
           </h2>
           <p class="subtitle">Filtra por docente, condición y rango de fechas</p>
 
@@ -533,9 +532,7 @@
           </div>
         </div>
 
-        <!-- ✅ Acciones -->
         <div class="d-flex gap-2 flex-wrap">
-          <!-- ✅ SOLO GEORGE: botón registro manual -->
           {% if request.user.username|lower == 'george' %}
             <a class="btnx btnx-primary"
                title="Registrar asistencia manualmente por DNI"
@@ -548,7 +545,18 @@
             </a>
           {% endif %}
 
-          <!-- ✅ Exportar Excel -->
+          {% if puede_volver_just %}
+            <a class="btnx btnx-primary"
+               title="Volver al panel de justificaciones"
+               href="{% url 'panel_justificaciones' %}?fecha={{ fecha_just|urlencode }}">
+              <i class="bi bi-arrow-left-circle"></i>
+              <span>
+                Ir a justificaciones
+                <span class="subtxt">Volver al panel</span>
+              </span>
+            </a>
+          {% endif %}
+
           <a class="btnx btnx-success"
              title="Exporta el reporte con los filtros actuales"
              href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}">
@@ -561,7 +569,6 @@
         </div>
       </div>
 
-      <!-- ✅ KPIs -->
       <div class="kpi-grid">
         <div class="kpi">
           <div class="k-title"><i class="bi bi-list-check"></i> Total registros</div>
@@ -581,7 +588,6 @@
         </div>
       </div>
 
-      <!-- ✅ Filtros activos -->
       <div class="active-filters">
         {% if q %}
           <span class="pill"><i class="bi bi-search"></i> <span class="muted">Búsqueda:</span> {{ q }}</span>
@@ -602,7 +608,6 @@
         {% endif %}
       </div>
 
-      <!-- FILTERS -->
       <div class="filters">
         <div class="filter-card">
           <form method="get">
@@ -664,7 +669,6 @@
         </div>
       </div>
 
-      <!-- TABLE -->
       <div class="table-wrap">
         <div class="table-responsive">
           <table class="table table-hover align-middle">
@@ -673,12 +677,13 @@
                 <th style="width:60px;">#</th>
                 <th>Docente</th>
                 <th style="width:220px;">Condición</th>
+                <th style="width:220px;">Estado</th>
                 <th style="width:230px;">Fecha y hora</th>
               </tr>
             </thead>
 
             <tbody>
-              {% for a in asistencias %}
+              {% for a in items %}
                 <tr>
                   <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
 
@@ -705,6 +710,28 @@
                     {% endif %}
                   </td>
 
+                  <!-- ✅ ESTADO (ASISTIÓ / JUSTIFICADO) -->
+                  <td>
+                    {% if "ASISTIÓ" in a.estado %}
+                      <span class="badge-cond st-asistio">
+                        <i class="bi bi-check2-circle"></i> ASISTIÓ
+                      </span>
+                    {% elif "JUSTIFICADO" in a.estado %}
+                      <span class="badge-cond st-just">
+                        <i class="bi bi-shield-check"></i> {{ a.estado }}
+                      </span>
+                      {% if a.detalle %}
+                        <div class="date-sub" style="margin-top:6px;">
+                          <i class="bi bi-card-text"></i> {{ a.detalle }}
+                        </div>
+                      {% endif %}
+                    {% else %}
+                      <span class="badge-cond cond-otro">
+                        <i class="bi bi-info-circle"></i> {{ a.estado }}
+                      </span>
+                    {% endif %}
+                  </td>
+
                   <td>
                     <div class="date-main">
                       <i class="bi bi-clock-history" style="color:rgba(15,23,42,.55);"></i>
@@ -718,7 +745,7 @@
 
               {% empty %}
                 <tr>
-                  <td colspan="4">
+                  <td colspan="5">
                     <div class="empty-wrap">
                       <div class="empty-ico">
                         <i class="bi bi-inbox" style="font-size:26px;color:rgba(37,99,235,.85);"></i>
@@ -785,3 +812,4 @@
   </div>
 </body>
 </html>
+
