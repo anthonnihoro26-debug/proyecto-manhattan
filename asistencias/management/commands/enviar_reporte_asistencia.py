@@ -13,38 +13,58 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--limite", type=int, default=50, help="Máximo de registros listados (default 50).")
         parser.add_argument("--dry-run", action="store_true", help="No envía correos, solo imprime en consola.")
+        parser.add_argument("--to", type=str, default="", help="Enviar SOLO a este correo (para pruebas).")
+        parser.add_argument("--force-empty", action="store_true", help="Enviar aunque no haya registros (manda 0).")
 
     def _rango_lun_vie(self):
         """
-        Reporte de LUNES 00:00 hasta VIERNES 23:59:59 (semana actual, hora local).
-        Si se ejecuta el viernes 00:00, el rango incluye Lun->Jue (y lo que haya del viernes).
+        Reporte de LUNES 00:00 hasta VIERNES 23:59:59 (hora local America/Lima).
+        Ideal para ejecutarse el sábado 00:00 (cuando termina el viernes).
         """
-        now = timezone.localtime(timezone.now())
+        now_local = timezone.localtime(timezone.now())
 
-        # Lunes 00:00
-        lunes = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+        # lunes 00:00 de la semana actual (local)
+        lunes = (now_local - timedelta(days=now_local.weekday())).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
-        # Viernes 23:59:59 (mismo lunes + 4 días)
-        viernes_fin = (lunes + timedelta(days=4)).replace(hour=23, minute=59, second=59, microsecond=999999)
+        # viernes 23:59:59.999999 (lunes + 4 días)
+        viernes_fin = (lunes + timedelta(days=4)).replace(
+            hour=23, minute=59, second=59, microsecond=999999
+        )
 
-        return now, lunes, viernes_fin
+        return now_local, lunes, viernes_fin
 
     def handle(self, *args, **options):
-        limite = options["limite"]
-        dry_run = options["dry_run"]
+        limite = int(options["limite"])
+        dry_run = bool(options["dry_run"])
+        only_to = (options["to"] or "").strip()
+        force_empty = bool(options["force_empty"])
 
         now, desde, hasta = self._rango_lun_vie()
+
+        self.stdout.write(
+            f"[INFO] Ejecutando reporte (hora local): now={now:%Y-%m-%d %H:%M} "
+            f"desde={desde:%Y-%m-%d %H:%M} hasta={hasta:%Y-%m-%d %H:%M}"
+        )
 
         profesores = Profesor.objects.all().order_by("apellidos", "nombres")
 
         enviados = 0
-        saltados = 0
+        errores = 0
+        saltados_sin_email = 0
         sin_registros = 0
 
         for prof in profesores:
-            email = (prof.email or "").strip()
+            email = (getattr(prof, "email", "") or "").strip()
+
             if not email:
-                saltados += 1
+                saltados_sin_email += 1
+                self.stdout.write(f"[SKIP] {prof} -> sin email")
+                continue
+
+            # Si estás probando con un solo correo:
+            if only_to and email.lower() != only_to.lower():
                 continue
 
             qs = (
@@ -54,20 +74,21 @@ class Command(BaseCommand):
             )
 
             total = qs.count()
-            if total == 0:
+            if total == 0 and not force_empty:
                 sin_registros += 1
+                self.stdout.write(f"[SKIP] {email} -> sin registros en el rango")
                 continue
 
             entradas = qs.filter(tipo="E").count()
             salidas = qs.filter(tipo="S").count()
 
-            nombre = f"{prof.apellidos} {prof.nombres}".strip()
+            nombre = f"{(prof.apellidos or '').strip()} {(prof.nombres or '').strip()}".strip()
             subject = f"Reporte Asistencia (Lun-Vie) - {desde:%d/%m} al {hasta:%d/%m/%Y}"
 
             body_lines = [
                 f"Hola {nombre},",
                 "",
-                f"Reporte de asistencias (Lunes a Viernes)",
+                "Reporte de asistencias (Lunes a Viernes)",
                 f"Desde: {desde:%d/%m/%Y %H:%M}",
                 f"Hasta: {hasta:%d/%m/%Y %H:%M}",
                 "",
@@ -88,10 +109,15 @@ class Command(BaseCommand):
 
             body = "\n".join(body_lines)
 
-            from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "") or getattr(settings, "EMAIL_HOST_USER", "")
+            from_email = (
+                getattr(settings, "DEFAULT_FROM_EMAIL", "") or
+                getattr(settings, "EMAIL_HOST_USER", "")
+            )
+
+            # Log de destinatario (para que lo veas en tu endpoint)
+            self.stdout.write(f"[SEND] to={email} total={total} E={entradas} S={salidas} dry_run={dry_run}")
 
             if dry_run:
-                self.stdout.write(self.style.WARNING(f"[DRY-RUN] A: {email}\n{body}\n"))
                 enviados += 1
                 continue
 
@@ -100,9 +126,12 @@ class Command(BaseCommand):
             try:
                 msg.send(fail_silently=False)
                 enviados += 1
+                self.stdout.write(self.style.SUCCESS(f"[OK] Enviado a {email}"))
             except Exception as e:
-                self.stderr.write(self.style.ERROR(f"Error enviando a {email}: {e}"))
+                errores += 1
+                self.stderr.write(self.style.ERROR(f"[ERROR] Enviando a {email}: {e}"))
 
         self.stdout.write(self.style.SUCCESS(
-            f"Listo. Enviados: {enviados}. Saltados (sin email): {saltados}. Sin registros: {sin_registros}."
+            f"[DONE] Enviados: {enviados}. Errores: {errores}. "
+            f"Saltados (sin email): {saltados_sin_email}. Sin registros: {sin_registros}."
         ))
