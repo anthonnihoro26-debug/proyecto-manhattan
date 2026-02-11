@@ -207,18 +207,17 @@ AXES_PROXY_ORDER = "left-most"
 # ✅ EMAIL (SMTP) - IMPORTANTE
 # =========================
 # Antes te estaba quedando localhost:25. Ahora solo usa SMTP real por env vars.
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 
-# 587 -> TLS (recomendado)
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
-# 465 -> SSL (si lo usas, pon EMAIL_USE_SSL=1 y EMAIL_USE_TLS=0)
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "20"))
 REPORT_TRIGGER_TOKEN = os.environ.get("REPORT_TRIGGER_TOKEN", "").strip()
 
 
