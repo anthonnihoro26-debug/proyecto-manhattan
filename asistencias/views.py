@@ -87,18 +87,21 @@ def _read_code_from_request(request) -> str:
 def post_login_redirect(request):
     """
     ✅ Redirección según grupo:
-    - SCANNER          -> /asistencia/scan/
-    - HISTORIAL        -> /asistencia/historial/
-    - JUSTIFICACIONES  -> /asistencia/justificaciones/
+    - SCANNER         -> /asistencia/scan/
+    - HISTORIAL       -> /asistencia/historial/
+    - JUSTIFICACIONES -> /asistencia/justificaciones/
     """
-    if request.user.groups.filter(name="SCANNER").exists():
+    user = request.user
+
+    if user.groups.filter(name="SCANNER").exists():
         return redirect("scan_page")
 
-    if request.user.groups.filter(name="HISTORIAL").exists():
+    if user.groups.filter(name="HISTORIAL").exists():
         return redirect("historial_asistencias")
 
-    if request.user.groups.filter(name="JUSTIFICACIONES").exists():
-        return redirect("panel_justificaciones")
+    # ✅ FIX: tu sistema usa el grupo JUSTIFICACIONES (no JUSTIFICADOR)
+    if user.groups.filter(name="JUSTIFICACIONES").exists():
+        return redirect("/asistencia/justificaciones/")
 
     logout(request)
     return redirect("login")
@@ -629,33 +632,64 @@ def set_justificacion(request):
     fecha = parse_date(fecha_str)
     if not fecha:
         messages.error(request, "Fecha inválida.")
-        return redirect("panel_justificaciones")
+        return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}" if fecha_str else "/asistencia/justificaciones/")
 
     try:
         profesor = Profesor.objects.get(id=profesor_id)
     except Profesor.DoesNotExist:
         messages.error(request, "Profesor no encontrado.")
-        return redirect(f"{request.path}?fecha={fecha_str}")
+        return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
+
+    tipo_ok = tipo if tipo in ("DM", "C", "P", "O") else "DM"
+
+    ip = _get_client_ip(request)
+    ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
+
+    # ✅ Si ya asistió ese día, no tiene sentido justificarlo
+    if Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="E").exists():
+        messages.warning(request, f"⚠️ {profesor.apellidos} {profesor.nombres} ya tiene ASISTENCIA ese día. No se registró justificación.")
+        return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
 
     if accion == "set":
-        tipo_ok = tipo if tipo in ("DM", "C", "P", "O") else "DM"
-        obj, created = JustificacionAsistencia.objects.update_or_create(
-            profesor=profesor,
-            fecha=fecha,
-            defaults={
-                "tipo": tipo_ok,
-                "detalle": detalle,
-                "actualizado_por": request.user,
-                "creado_por": request.user,
-            }
-        )
+        with transaction.atomic():
+            # 1) ✅ guarda/actualiza en tu tabla JustificacionAsistencia (como ya hacías)
+            obj, created = JustificacionAsistencia.objects.update_or_create(
+                profesor=profesor,
+                fecha=fecha,
+                defaults={
+                    "tipo": tipo_ok,
+                    "detalle": detalle,
+                    "actualizado_por": request.user,
+                    "creado_por": request.user,
+                }
+            )
+
+            # 2) ✅ NUEVO: también registra en Asistencia tipo="J" para que salga en el historial
+            Asistencia.objects.update_or_create(
+                profesor=profesor,
+                fecha=fecha,
+                tipo="J",
+                defaults={
+                    "fecha_hora": timezone.now(),
+                    "motivo": tipo_ok,
+                    "detalle": detalle,
+                    "registrado_por": request.user,
+                    "ip": ip,
+                    "user_agent": ua,
+                }
+            )
+
         if created:
             messages.success(request, f"✅ Justificación registrada para {profesor.apellidos} {profesor.nombres}.")
         else:
             messages.success(request, f"✅ Justificación actualizada para {profesor.apellidos} {profesor.nombres}.")
 
     elif accion == "clear":
-        JustificacionAsistencia.objects.filter(profesor=profesor, fecha=fecha).delete()
+        with transaction.atomic():
+            JustificacionAsistencia.objects.filter(profesor=profesor, fecha=fecha).delete()
+            # ✅ NUEVO: borra también del historial (Asistencia tipo J)
+            Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="J").delete()
+
         messages.warning(request, f"🗑️ Justificación eliminada para {profesor.apellidos} {profesor.nombres}.")
 
     else:

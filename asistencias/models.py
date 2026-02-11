@@ -21,18 +21,31 @@ class Asistencia(models.Model):
     TIPOS = (
         ("E", "Entrada"),
         ("S", "Salida"),
+        ("J", "Justificación"),  # ✅ NUEVO
+    )
+
+    # ✅ mismos motivos que tu JustificacionAsistencia (2 letras)
+    MOTIVOS = (
+        ("DM", "Descanso médico"),
+        ("C", "Comisión / Encargo"),
+        ("P", "Permiso"),
+        ("O", "Otro"),
     )
 
     profesor = models.ForeignKey(Profesor, on_delete=models.CASCADE)
 
-    # ✅ Día “normalizado” para buscar rápido y controlar duplicados por día
+    # ✅ Día “normalizado”
     fecha = models.DateField(db_index=True, default=timezone.localdate)
 
-    # ✅ Fecha/hora exacta del escaneo
+    # ✅ Fecha/hora exacta del registro (escaneo / registro manual / justificación)
     fecha_hora = models.DateTimeField(default=timezone.now, db_index=True)
 
-    # ✅ Entrada o salida
+    # ✅ Entrada / salida / justificación
     tipo = models.CharField(max_length=1, choices=TIPOS, default="E")
+
+    # ✅ Solo si tipo="J"
+    motivo = models.CharField(max_length=2, choices=MOTIVOS, blank=True, default="")
+    detalle = models.CharField(max_length=255, blank=True, default="")
 
     # ✅ Auditoría
     registrado_por = models.ForeignKey(
@@ -45,7 +58,7 @@ class Asistencia(models.Model):
 
     class Meta:
         constraints = [
-            # ✅ NO permite 2 entradas el mismo día ni 2 salidas el mismo día
+            # ✅ NO permite 2 entradas/2 salidas/2 justificaciones el mismo día
             models.UniqueConstraint(fields=["profesor", "fecha", "tipo"], name="uniq_profesor_fecha_tipo"),
         ]
         indexes = [
@@ -53,6 +66,8 @@ class Asistencia(models.Model):
         ]
 
     def __str__(self):
+        if self.tipo == "J":
+            return f"{self.profesor} - JUSTIFICADO({self.motivo}) - {self.fecha:%d/%m/%Y}"
         tipo = "ENTRADA" if self.tipo == "E" else "SALIDA"
         return f"{self.profesor} - {tipo} - {self.fecha_hora:%d/%m/%Y %H:%M}"
 
