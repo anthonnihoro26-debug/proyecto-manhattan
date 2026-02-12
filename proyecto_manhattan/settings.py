@@ -167,21 +167,42 @@ if _static_dir.exists():
     STATICFILES_DIRS.append(_static_dir)
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
 # =========================
 # ✅ MEDIA (SUBIDA DE PDFs)
 # =========================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# ✅ Cloudinary en producción (Render)
+# =========================
+# CLOUDINARY (PRODUCCIÓN)
+# =========================
 CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "").strip()
 
+# ✅ Django 5.x usa STORAGES
+# - En Render: si hay CLOUDINARY_URL => guardar PDFs en Cloudinary
+# - En local: guarda en /media normal
 if CLOUDINARY_URL:
     INSTALLED_APPS += ["cloudinary", "cloudinary_storage"]
 
-    # Cloudinary será el storage por defecto (incluye PDFs)
-    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # =========================
 # LOGIN / LOGOUT
