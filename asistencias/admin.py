@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import Profesor, Asistencia
 from .models import JustificacionAsistencia
+from django.utils.html import format_html
 
 @admin.register(Profesor)
 class ProfesorAdmin(admin.ModelAdmin):
@@ -20,6 +21,13 @@ class AsistenciaAdmin(admin.ModelAdmin):
 
 @admin.register(JustificacionAsistencia)
 class JustificacionAsistenciaAdmin(admin.ModelAdmin):
-    list_display = ("fecha", "profesor", "tipo", "detalle", "creado_por", "creado_en")
+    list_display = ("fecha", "profesor", "tipo", "detalle", "ver_pdf", "creado_por", "creado_en")
     list_filter = ("fecha", "tipo")
-    search_fields = ("profesor__dni", "profesor__codigo", "profesor__apellidos", "profesor__nombres", "detalle")
+    search_fields = ("profesor__apellidos", "profesor__nombres", "profesor__dni", "profesor__codigo", "detalle")
+    readonly_fields = ("ver_pdf",)
+
+    def ver_pdf(self, obj):
+        if obj.archivo:
+            return format_html('<a href="{}" target="_blank">📄 Ver PDF</a>', obj.archivo.url)
+        return "—"
+    ver_pdf.short_description = "PDF"

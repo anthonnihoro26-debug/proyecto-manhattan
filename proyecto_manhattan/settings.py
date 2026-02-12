@@ -174,6 +174,19 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# =========================
+# ✅ (RECOMENDADO) Cloudinary para Render: PDFs permanentes
+# - En Render crea env var: CLOUDINARY_URL
+# - Si no existe, se usa MEDIA_ROOT normal (local / temporal en Render)
+# =========================
+CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "").strip()
+if CLOUDINARY_URL:
+    INSTALLED_APPS += [
+        "cloudinary",
+        "cloudinary_storage",
+    ]
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # =========================
@@ -270,4 +283,5 @@ LOGGING = {
         "axes.backends": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
     },
 }
+
 

@@ -78,14 +78,14 @@
       border: 0 !important;
       box-shadow: none !important;
       padding: 0 !important;
-      width: 44px;
-      height: 44px;
+      width: 52px;
+      height: 52px;
       display: grid;
       place-items: center;
     }
     .uni-logo{
-      width: 44px;
-      height: 44px;
+      width: 52px;
+      height: 52px;
       display: block;
       object-fit: contain;
       filter: drop-shadow(0 6px 10px rgba(0,0,0,.10));
@@ -229,11 +229,47 @@
     .b-warn{ background:#fee2e2; color:#991b1b; }
     .b-info{ background:#e0e7ff; color:#1e3a8a; }
 
+    /* ✅ NUEVO: layout acción más espacioso */
+    .action-box{
+      background: rgba(15,23,42,0.03);
+      border: 1px solid rgba(15,23,42,0.10);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .action-row{
+      display:grid;
+      grid-template-columns: 170px 1fr;
+      gap:10px;
+      align-items:center;
+    }
+    .action-row + .action-row{ margin-top: 10px; }
+
     .file-help{
       font-size: 12px;
-      color: rgba(15,23,42,.65);
+      color: rgba(15,23,42,.70);
       font-weight: 850;
-      margin-top: 4px;
+      margin-top: 6px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .file-help a{ text-decoration:none; }
+
+    .btn-just{
+      border-radius: 14px;
+      font-weight: 950;
+      padding: 10px 14px;
+      width: 100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 992px){
+      .action-row{ grid-template-columns: 1fr; }
     }
 
     @media (max-width: 576px){
@@ -243,13 +279,14 @@
       .table-wrap{ margin: 0 16px 16px; }
       .brand h1{ font-size: 15px; }
       .userpill{ display:none; }
+      .uni-badge{ width: 46px; height: 46px; }
+      .uni-logo{ width: 46px; height: 46px; }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">
@@ -334,10 +371,11 @@
             <thead>
               <tr>
                 <th>Docente</th>
-                <th style="width:220px;">Estado</th>
-                <th style="width:560px;">Acción</th>
+                <th style="width:240px;">Estado</th>
+                <th style="min-width:720px;">Acción</th>
               </tr>
             </thead>
+
             <tbody>
               {% for r in rows %}
                 <tr>
@@ -360,61 +398,56 @@
                   </td>
 
                   <td>
-                    <!-- ✅ IMPORTANTE: multipart para PDF -->
-                    <form method="post"
-                          action="{% url 'set_justificacion' %}"
-                          enctype="multipart/form-data"
-                          class="row g-2">
-                      {% csrf_token %}
-                      <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
-                      <input type="hidden" name="profesor_id" value="{{ r.profesor.id }}">
+                    <div class="action-box">
+                      <form method="post"
+                            action="{% url 'set_justificacion' %}"
+                            enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+                        <input type="hidden" name="profesor_id" value="{{ r.profesor.id }}">
 
-                      <div class="col-12 col-md-2">
-                        <select name="tipo" class="form-select form-select-sm" style="border-radius:14px;">
-                          <option value="DM" {% if r.justificacion and r.justificacion.tipo == "DM" %}selected{% endif %}>DM</option>
-                          <option value="C"  {% if r.justificacion and r.justificacion.tipo == "C" %}selected{% endif %}>Comisión</option>
-                          <option value="P"  {% if r.justificacion and r.justificacion.tipo == "P" %}selected{% endif %}>Permiso</option>
-                          <option value="O"  {% if r.justificacion and r.justificacion.tipo == "O" %}selected{% endif %}>Otro</option>
-                        </select>
-                      </div>
+                        <!-- ✅ fila 1: tipo + detalle -->
+                        <div class="action-row">
+                          <select name="tipo" class="form-select form-select-sm">
+                            <option value="DM" {% if r.justificacion and r.justificacion.tipo == "DM" %}selected{% endif %}>Descanso médico (DM)</option>
+                            <option value="C"  {% if r.justificacion and r.justificacion.tipo == "C" %}selected{% endif %}>Comisión / Encargo (C)</option>
+                            <option value="P"  {% if r.justificacion and r.justificacion.tipo == "P" %}selected{% endif %}>Permiso (P)</option>
+                            <option value="O"  {% if r.justificacion and r.justificacion.tipo == "O" %}selected{% endif %}>Otro (O)</option>
+                          </select>
 
-                      <div class="col-12 col-md-4">
-                        <input name="detalle"
-                               class="form-control form-control-sm"
-                               style="border-radius:14px;"
-                               value="{% if r.justificacion %}{{ r.justificacion.detalle }}{% endif %}"
-                               placeholder="Detalle (opcional)">
-                      </div>
-
-                      <!-- ✅ NUEVO: PDF -->
-                      <div class="col-12 col-md-4">
-                        <input type="file"
-                               name="archivo"
-                               accept="application/pdf"
-                               class="form-control form-control-sm"
-                               style="border-radius:14px;">
-                        <div class="file-help">
-                          PDF opcional (descanso médico, permiso, etc.)
-                          {% if r.justificacion and r.justificacion.archivo %}
-                            • <a href="{{ r.justificacion.archivo.url }}" target="_blank" style="font-weight:950;">
-                              Ver PDF
-                            </a>
-                          {% endif %}
+                          <input name="detalle"
+                                 class="form-control form-control-sm"
+                                 value="{% if r.justificacion %}{{ r.justificacion.detalle }}{% endif %}"
+                                 placeholder="Detalle (opcional)">
                         </div>
-                      </div>
 
-                      <div class="col-12 col-md-2 d-grid">
-                        <button class="btn btn-success btn-sm"
-                                name="accion"
-                                value="set"
-                                type="submit"
-                                style="border-radius:14px; font-weight:950;">
-                          <i class="bi bi-check2-circle"></i> Justificar
-                        </button>
-                      </div>
-                    </form>
+                        <!-- ✅ fila 2: pdf + botón -->
+                        <div class="action-row">
+                          <div>
+                            <input type="file"
+                                   name="archivo"
+                                   accept="application/pdf"
+                                   class="form-control form-control-sm">
+                            <div class="file-help">
+                              <span>PDF opcional (descanso médico, permiso, etc.)</span>
+                              {% if r.justificacion and r.justificacion.archivo %}
+                                <a href="{{ r.justificacion.archivo.url }}" target="_blank" style="font-weight:950;">
+                                  <i class="bi bi-file-earmark-pdf"></i> Ver PDF
+                                </a>
+                              {% endif %}
+                            </div>
+                          </div>
+
+                          <button class="btn btn-success btn-sm btn-just"
+                                  name="accion" value="set" type="submit">
+                            <i class="bi bi-check2-circle"></i> Justificar
+                          </button>
+                        </div>
+                      </form>
+                    </div>
                   </td>
                 </tr>
+
               {% empty %}
                 <tr>
                   <td colspan="3" class="text-center text-muted p-4">
@@ -423,6 +456,7 @@
                 </tr>
               {% endfor %}
             </tbody>
+
           </table>
         </div>
       </div>

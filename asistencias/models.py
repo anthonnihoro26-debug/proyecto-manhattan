@@ -94,9 +94,9 @@ class JustificacionAsistencia(models.Model):
     tipo = models.CharField(max_length=2, choices=TIPO_CHOICES, default="DM")
     detalle = models.CharField(max_length=255, blank=True, default="")
 
-    # ✅ NUEVO: PDF de sustento (descanso médico, permiso, etc.)
+    # ✅ PDF de sustento (descanso médico, permiso, etc.)
     archivo = models.FileField(
-        upload_to="justificaciones/",
+        upload_to="justificaciones/%Y/%m/",
         null=True,
         blank=True
     )

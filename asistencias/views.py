@@ -741,6 +741,9 @@ def panel_justificaciones(request):
 @require_POST
 @user_passes_test(_in_group("JUSTIFICACIONES"), login_url="login")
 def set_justificacion(request):
+    if request.method != "POST":
+        return redirect("/asistencia/justificaciones/")
+
     accion = (request.POST.get("accion") or "").strip().lower()
     profesor_id = (request.POST.get("profesor_id") or "").strip()
     fecha_str = (request.POST.get("fecha") or "").strip()
@@ -768,9 +771,6 @@ def set_justificacion(request):
 
     tipo_ok = tipo if tipo in ("DM", "C", "P", "O") else "DM"
 
-    ip = _get_client_ip(request)
-    ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
-
     # ✅ Si ya asistió ese día, no tiene sentido justificarlo
     if Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="E").exists():
         messages.warning(
@@ -779,7 +779,7 @@ def set_justificacion(request):
         )
         return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
 
-    # ✅ Validación simple: si sube archivo, que sea PDF
+    # ✅ Validación: si sube archivo, que sea PDF
     if archivo:
         nombre = (archivo.name or "").lower()
         ctype = (getattr(archivo, "content_type", "") or "").lower()
@@ -787,8 +787,12 @@ def set_justificacion(request):
             messages.error(request, "El archivo debe ser PDF.")
             return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
 
+    # ✅ Datos para historial (si los usas)
+    ip = _get_client_ip(request)
+    ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
+
     with transaction.atomic():
-        # 1) ✅ guarda/actualiza JustificacionAsistencia
+        # 1) guarda/actualiza JustificacionAsistencia
         obj, created = JustificacionAsistencia.objects.update_or_create(
             profesor=profesor,
             fecha=fecha,
@@ -800,32 +804,20 @@ def set_justificacion(request):
             }
         )
 
-        # ✅ si subió PDF, lo guardamos y reemplazamos el anterior
+        # ✅ si subió PDF: reemplaza el anterior (compatible con Cloudinary/Storage)
         if archivo:
-            # borrar archivo viejo si existía y es distinto
-            if obj.archivo and hasattr(obj.archivo, "path"):
+            # borra el archivo anterior usando el storage (NO os.remove)
+            if obj.archivo:
                 try:
-                    old_path = obj.archivo.path
+                    obj.archivo.delete(save=False)
                 except Exception:
-                    old_path = None
+                    pass
 
-                # asignar nuevo y guardar primero (para que exista el nuevo)
-                obj.archivo = archivo
-                obj.save(update_fields=["archivo", "actualizado_en", "actualizado_por"])
+            obj.archivo = archivo
+            obj.actualizado_por = request.user
+            obj.save()
 
-                # si se pudo obtener path anterior, borrarlo
-                if old_path:
-                    try:
-                        import os
-                        if os.path.exists(old_path):
-                            os.remove(old_path)
-                    except Exception:
-                        pass
-            else:
-                obj.archivo = archivo
-                obj.save(update_fields=["archivo", "actualizado_en", "actualizado_por"])
-
-        # 2) ✅ registra en Asistencia tipo="J" para que salga en el historial
+        # 2) registra en Asistencia tipo="J" para que salga en el historial
         Asistencia.objects.update_or_create(
             profesor=profesor,
             fecha=fecha,
