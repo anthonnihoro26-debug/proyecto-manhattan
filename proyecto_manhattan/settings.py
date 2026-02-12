@@ -166,23 +166,29 @@ _static_dir = BASE_DIR / "static"
 if _static_dir.exists():
     STATICFILES_DIRS.append(_static_dir)
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # =========================
-# ✅ MEDIA (SUBIDA DE PDFs)
+# ✅ MEDIA (LOCAL)
 # =========================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 # =========================
-# CLOUDINARY (PRODUCCIÓN)
+# ✅ CLOUDINARY (PRODUCCIÓN)
 # =========================
 CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "").strip()
 
 # ✅ Django 5.x usa STORAGES
-# - En Render: si hay CLOUDINARY_URL => guardar PDFs en Cloudinary
-# - En local: guarda en /media normal
+# - Si existe CLOUDINARY_URL => guardar PDFs en Cloudinary
+# - Si NO existe => guardar en /media local
 if CLOUDINARY_URL:
     INSTALLED_APPS += ["cloudinary", "cloudinary_storage"]
+
+    # ✅ Para PDF: Cloudinary debe tratarlo como "raw"
+    CLOUDINARY_STORAGE = {
+        "RESOURCE_TYPE": "raw",
+    }
 
     STORAGES = {
         "default": {
@@ -202,8 +208,6 @@ else:
         },
     }
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 # =========================
 # LOGIN / LOGOUT
 # =========================
@@ -222,7 +226,6 @@ AUTHENTICATION_BACKENDS = [
 AXES_FAILURE_LIMIT = 3
 AXES_COOLOFF_TIME = timedelta(minutes=15)
 AXES_RESET_ON_SUCCESS = True
-
 AXES_LOCKOUT_CALLABLE = "asistencias.axes.lockout"
 AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
 
@@ -245,12 +248,12 @@ DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "20"))
 
 # =========================
-# ✅ CRON TOKEN (endpoint /cron/reporte-asistencia/)
+# ✅ CRON TOKEN
 # =========================
 REPORT_TRIGGER_TOKEN = os.environ.get("REPORT_TRIGGER_TOKEN", "").strip()
 
 # =========================
-# ✅ BREVO (API HTTP) - recomendado para Render
+# ✅ BREVO (API HTTP)
 # =========================
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
 BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", DEFAULT_FROM_EMAIL).strip()
@@ -298,5 +301,3 @@ LOGGING = {
         "axes.backends": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
     },
 }
-
-
