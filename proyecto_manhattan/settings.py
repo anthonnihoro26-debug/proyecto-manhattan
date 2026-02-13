@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
-
 import dj_database_url
 
 # =========================
@@ -25,22 +24,13 @@ try:
 except Exception:
     pass
 
-# =========================
-# BASE
-# =========================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# =========================
-# SECURITY / ENV
-# =========================
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-key")
 DEBUG = os.environ.get("DEBUG", "1") == "1"
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
-# =========================
-# HOSTS / CSRF
-# =========================
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
@@ -49,9 +39,6 @@ CSRF_TRUSTED_ORIGINS = []
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
-# =========================
-# APPS
-# =========================
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -62,13 +49,9 @@ INSTALLED_APPS = [
 
     "asistencias",
 
-    # ✅ Anti fuerza bruta
     "axes",
 ]
 
-# =========================
-# MIDDLEWARE
-# =========================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -81,15 +64,11 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 
-    # ✅ Axes (después de AuthenticationMiddleware)
     "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "proyecto_manhattan.urls"
 
-# =========================
-# TEMPLATES
-# =========================
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -125,10 +104,8 @@ else:
     if not DATABASE_URL:
         raise RuntimeError(
             "❌ DATABASE_URL no está definido.\n"
-            "✅ Estás por usar SQLite sin querer.\n"
             "➡️ Solución: define DATABASE_URL (PostgreSQL) o usa USE_SQLITE=1."
         )
-
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
@@ -137,9 +114,6 @@ else:
         )
     }
 
-# =========================
-# PASSWORD VALIDATION
-# =========================
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 10}},
@@ -147,16 +121,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# =========================
-# INTERNATIONALIZATION
-# =========================
 LANGUAGE_CODE = "es-pe"
 TIME_ZONE = "America/Lima"
 USE_I18N = True
 USE_TZ = True
 
 # =========================
-# STATIC FILES
+# STATIC
 # =========================
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -172,27 +143,20 @@ if _static_dir.exists():
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 # =========================
 # ✅ CLOUDINARY (PRODUCCIÓN)
 # =========================
 CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "").strip()
 
-# ✅ Django 5.x usa STORAGES
-# - Si existe CLOUDINARY_URL => guardar PDFs en Cloudinary
-# - Si NO existe => guardar en /media local
 if CLOUDINARY_URL:
+    # apps para cloudinary
     INSTALLED_APPS += ["cloudinary", "cloudinary_storage"]
 
-    # ✅ Para PDF: Cloudinary debe tratarlo como "raw"
-    CLOUDINARY_STORAGE = {
-        "RESOURCE_TYPE": "raw",
-    }
-
+    # ✅ Django 5 usa STORAGES
     STORAGES = {
         "default": {
-            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+            # ✅ IMPORTANTE: RAW para PDFs
+            "BACKEND": "cloudinary_storage.storage.RawMediaCloudinaryStorage",
         },
         "staticfiles": {
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -208,16 +172,12 @@ else:
         },
     }
 
-# =========================
-# LOGIN / LOGOUT
-# =========================
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "post_login"
 LOGOUT_REDIRECT_URL = "login"
 
-# =========================
-# AXES (bloqueo fuerza bruta)
-# =========================
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",
     "django.contrib.auth.backends.ModelBackend",
@@ -229,15 +189,9 @@ AXES_RESET_ON_SUCCESS = True
 AXES_LOCKOUT_CALLABLE = "asistencias.axes.lockout"
 AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
 
-AXES_META_PRECEDENCE_ORDER = [
-    "HTTP_X_FORWARDED_FOR",
-    "REMOTE_ADDR",
-]
+AXES_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 AXES_PROXY_ORDER = "left-most"
 
-# =========================
-# ✅ EMAIL (SMTP) - opcional (para local)
-# =========================
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
@@ -247,21 +201,12 @@ EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "20"))
 
-# =========================
-# ✅ CRON TOKEN
-# =========================
 REPORT_TRIGGER_TOKEN = os.environ.get("REPORT_TRIGGER_TOKEN", "").strip()
 
-# =========================
-# ✅ BREVO (API HTTP)
-# =========================
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
 BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", DEFAULT_FROM_EMAIL).strip()
 BREVO_SENDER_NAME = os.environ.get("BREVO_SENDER_NAME", "Proyecto Manhattan").strip()
 
-# =========================
-# COOKIES / SECURITY
-# =========================
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 días
 
@@ -284,15 +229,10 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# =========================
-# LOGGING (silenciar Axes)
-# =========================
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {
-        "null": {"class": "logging.NullHandler"},
-    },
+    "handlers": {"null": {"class": "logging.NullHandler"}},
     "loggers": {
         "axes": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
         "axes.handlers.database": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
@@ -301,3 +241,4 @@ LOGGING = {
         "axes.backends": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
     },
 }
+
