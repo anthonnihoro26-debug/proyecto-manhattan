@@ -741,19 +741,14 @@ def panel_justificaciones(request):
 @require_POST
 @user_passes_test(_in_group("JUSTIFICACIONES"), login_url="login")
 def set_justificacion(request):
-    if request.method != "POST":
-        return redirect("/asistencia/justificaciones/")
-
     accion = (request.POST.get("accion") or "").strip().lower()
     profesor_id = (request.POST.get("profesor_id") or "").strip()
     fecha_str = (request.POST.get("fecha") or "").strip()
     tipo = (request.POST.get("tipo") or "DM").strip().upper()
     detalle = (request.POST.get("detalle") or "").strip()
 
-    # ✅ PDF (input name="archivo")
-    archivo = request.FILES.get("archivo")  # puede ser None
+    archivo = request.FILES.get("archivo")  # input name="archivo"
 
-    # ✅ SOLO PERMITIMOS "set"
     if accion != "set":
         messages.error(request, "Acción inválida.")
         return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}" if fecha_str else "/asistencia/justificaciones/")
@@ -771,7 +766,10 @@ def set_justificacion(request):
 
     tipo_ok = tipo if tipo in ("DM", "C", "P", "O") else "DM"
 
-    # ✅ Si ya asistió ese día, no tiene sentido justificarlo
+    ip = _get_client_ip(request)
+    ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
+
+    # ✅ Si ya asistió ese día, no justificar
     if Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="E").exists():
         messages.warning(
             request,
@@ -787,12 +785,7 @@ def set_justificacion(request):
             messages.error(request, "El archivo debe ser PDF.")
             return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
 
-    # ✅ Datos para historial (si los usas)
-    ip = _get_client_ip(request)
-    ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
-
     with transaction.atomic():
-        # 1) guarda/actualiza JustificacionAsistencia
         obj, created = JustificacionAsistencia.objects.update_or_create(
             profesor=profesor,
             fecha=fecha,
@@ -804,20 +797,14 @@ def set_justificacion(request):
             }
         )
 
-        # ✅ si subió PDF: reemplaza el anterior (compatible con Cloudinary/Storage)
+        # ✅ PDF: si llega uno nuevo, borra el anterior (funciona en local y Cloudinary)
         if archivo:
-            # borra el archivo anterior usando el storage (NO os.remove)
             if obj.archivo:
-                try:
-                    obj.archivo.delete(save=False)
-                except Exception:
-                    pass
-
+                obj.archivo.delete(save=False)  # ✅ NO os.remove
             obj.archivo = archivo
-            obj.actualizado_por = request.user
-            obj.save()
+            obj.save(update_fields=["archivo", "actualizado_por", "actualizado_en"])
 
-        # 2) registra en Asistencia tipo="J" para que salga en el historial
+        # ✅ historial
         Asistencia.objects.update_or_create(
             profesor=profesor,
             fecha=fecha,
@@ -832,9 +819,8 @@ def set_justificacion(request):
             }
         )
 
-    if created:
-        messages.success(request, f"✅ Justificación registrada para {profesor.apellidos} {profesor.nombres}.")
-    else:
-        messages.success(request, f"✅ Justificación actualizada para {profesor.apellidos} {profesor.nombres}.")
-
+    messages.success(
+        request,
+        f"✅ Justificación {'registrada' if created else 'actualizada'} para {profesor.apellidos} {profesor.nombres}."
+    )
     return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")

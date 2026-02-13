@@ -23,18 +23,11 @@ class AsistenciaAdmin(admin.ModelAdmin):
 class JustificacionAsistenciaAdmin(admin.ModelAdmin):
     list_display = ("fecha", "profesor", "tipo", "detalle", "ver_pdf", "creado_por", "creado_en")
     list_filter = ("fecha", "tipo")
-    search_fields = (
-        "profesor__apellidos",
-        "profesor__nombres",
-        "profesor__dni",
-        "profesor__codigo",
-        "detalle",
-    )
-
+    search_fields = ("profesor__apellidos", "profesor__nombres", "profesor__dni", "profesor__codigo", "detalle")
     readonly_fields = ("ver_pdf",)
 
     def ver_pdf(self, obj):
         if obj.archivo:
-            return format_html('<a href="{}" target="_blank" rel="noopener">📄 Ver PDF</a>', obj.archivo.url)
+            return format_html('<a href="{}" target="_blank">📄 Ver PDF</a>', obj.archivo.url)
         return "—"
     ver_pdf.short_description = "PDF"
