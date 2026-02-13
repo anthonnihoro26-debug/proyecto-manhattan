@@ -161,12 +161,12 @@ MEDIA_ROOT = BASE_DIR / "media"
 # =========================
 # CLOUDINARY (PROD)
 # =========================
-CLOUDINARY_URL = (os.environ.get("CLOUDINARY_URL") or "").strip()
+CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "").strip()
 
 if CLOUDINARY_URL:
     INSTALLED_APPS += ["cloudinary", "cloudinary_storage"]
 
-    # IMPORTANT: this is what django-cloudinary-storage reads
+    # ✅ Fuerza a usar esa URL (y URLs seguras https)
     CLOUDINARY_STORAGE = {
         "CLOUDINARY_URL": CLOUDINARY_URL,
         "SECURE": True,
