@@ -5,33 +5,44 @@ from cloudinary.utils import cloudinary_url
 
 class MediaCloudinaryStorageAuto(MediaCloudinaryStorage):
     """
-    - Sube con resource_type='auto' (Cloudinary detecta si es PDF/imagen/video)
-    - Pero al generar URL:
-        * si es PDF -> usa 'raw' (evita 401 por intentar servirlo como image)
-        * si no -> usa 'image'
+    Sube con resource_type='auto'.
+    Al generar URL:
+      - si es PDF -> entrega como RAW y fuerza extensión .pdf
+      - si no -> entrega como IMAGE
     """
-
     resource_type = "auto"
 
-    def _delivery_resource_type(self, name: str) -> str:
+    def _looks_like_pdf(self, name: str) -> bool:
         n = (name or "").lower()
 
-        # Si el nombre guarda extensión, perfecto
+        # Si ya tiene .pdf
         if n.endswith(".pdf"):
-            return "raw"
+            return True
 
-        # Si NO guarda extensión (a veces Cloudinary genera sin .pdf),
-        # como este campo es "archivo" de justificaciones,
-        # asumimos raw cuando venga en esa carpeta:
-        if "/justificaciones/" in n or "justificaciones/" in n:
-            return "raw"
+        # Si está en tu carpeta de justificaciones (tu caso)
+        if "justificaciones/" in n or "/justificaciones/" in n:
+            return True
 
-        return "image"
+        return False
 
-    def url(self, name, **options):
-        options = options or {}
-        options.setdefault("secure", True)
-        options["resource_type"] = self._delivery_resource_type(name)
+    def url(self, name, *args, **kwargs):
+        if not name:
+            return ""
 
-        # cloudinary_url devuelve (url, options)
-        return cloudinary_url(name, **options)[0]
+        if self._looks_like_pdf(name):
+            # ✅ RAW + FORZAR .pdf
+            url, _ = cloudinary_url(
+                name,
+                resource_type="raw",
+                secure=True,
+                format="pdf",   # <- esto hace que termine en .pdf
+            )
+            return url
+
+        # ✅ resto como imagen normal
+        url, _ = cloudinary_url(
+            name,
+            resource_type="image",
+            secure=True,
+        )
+        return url
