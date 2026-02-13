@@ -7,10 +7,11 @@ from io import BytesIO, StringIO
 
 from PIL import Image as PILImage
 from datetime import datetime, time
+
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
-from django.contrib.auth.decorators import login_required, user_passes_test 
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout
 from django.contrib import messages
 
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 # =========================================================
-# ✅ HELPERS DE ROLES (GRUPOS)
+# HELPERS DE ROLES (GRUPOS)
 # =========================================================
 def _in_group(group_name: str):
     def check(user):
@@ -50,8 +51,6 @@ def _in_any_group(*group_names: str):
     def check(user):
         return user.is_authenticated and user.groups.filter(name__in=list(group_names)).exists()
     return check
-
-
 
 
 def _get_client_ip(request):
@@ -90,7 +89,7 @@ def _read_code_from_request(request) -> str:
 
 
 # =========================================================
-# ✅ POST LOGIN REDIRECT
+# POST LOGIN REDIRECT
 # =========================================================
 @login_required
 def post_login_redirect(request):
@@ -110,8 +109,9 @@ def post_login_redirect(request):
 
 
 # =========================================================
-# HISTORIAL (solo grupo HISTORIAL) ✅ KPIs + PAGINACIÓN
+# HISTORIAL (solo grupo HISTORIAL)  KPIs + PAGINACIÓN
 # =========================================================
+@user_passes_test(_in_group("HISTORIAL"), login_url="login")
 def historial_asistencias(request):
     q = request.GET.get("q", "").strip()
     desde = request.GET.get("desde", "").strip()
@@ -123,21 +123,22 @@ def historial_asistencias(request):
         ps = "25"
     ps = int(ps)
 
-    # ✅ Fecha para regresar a justificaciones (si vienes desde ese panel)
+    # Fecha para regresar a justificaciones (si vienes desde ese panel)
     fecha_just = request.session.get("just_fecha")
     if not fecha_just:
-        fecha_just = (timezone.localdate() - timezone.timedelta(days=1)).strftime("%Y-%m-%d")
+        fecha_just = (timezone.localdate() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-    # ✅ Mostrar botón "Ir a justificaciones" solo a usuarios que pertenecen al grupo
-    puede_volver_just = request.user.is_authenticated and request.user.groups.filter(name="JUSTIFICACIONES").exists()
+    # mostrar botón solo si pertenece al grupo
+    puede_volver_just = (
+        request.user.is_authenticated
+        and request.user.groups.filter(name="JUSTIFICACIONES").exists()
+    )
 
-    # =========================
     # 1) ASISTENCIAS (solo ENTRADA)
-    # =========================
     asist_qs = (
         Asistencia.objects
         .select_related("profesor")
-        .filter(tipo="E")   # ✅ NO salida
+        .filter(tipo="E")
     )
 
     if q:
@@ -154,9 +155,7 @@ def historial_asistencias(request):
     if hasta:
         asist_qs = asist_qs.filter(fecha_hora__date__lte=hasta)
 
-    # =========================
     # 2) JUSTIFICACIONES
-    # =========================
     just_qs = (
         JustificacionAsistencia.objects
         .select_related("profesor")
@@ -177,12 +176,9 @@ def historial_asistencias(request):
     if hasta:
         just_qs = just_qs.filter(fecha__lte=hasta)
 
-    # =========================
-    # 3) UNIR EN UNA LISTA "EVENTOS"
-    # =========================
+    # 3) UNIR EVENTOS
     events = []
 
-    # asistencias => evento ASISTIÓ
     for a in asist_qs:
         events.append({
             "kind": "A",
@@ -194,11 +190,9 @@ def historial_asistencias(request):
             "detalle": "",
         })
 
-    # justificaciones => evento JUSTIFICADO (DM/C/P/O)
     for j in just_qs:
         dt = datetime.combine(j.fecha, time(0, 0, 0))
         dt = timezone.make_aware(dt, timezone.get_current_timezone())
-
         events.append({
             "kind": "J",
             "profesor": j.profesor,
@@ -209,12 +203,9 @@ def historial_asistencias(request):
             "detalle": j.detalle or "",
         })
 
-    # ordenar por fecha/hora desc
     events.sort(key=lambda x: x["fecha_hora"], reverse=True)
 
-    # =========================
     # 4) KPIs + PAGINACIÓN
-    # =========================
     total_registros = len(events)
     docentes_unicos = len({e["profesor"].id for e in events})
     registros_n = sum(1 for e in events if (e.get("condicion") or "").upper() == "N")
@@ -240,32 +231,25 @@ def historial_asistencias(request):
         "registros_n": registros_n,
         "registros_c": registros_c,
 
-        # ✅ para que el botón del HTML funcione
         "puede_volver_just": puede_volver_just,
         "fecha_just": fecha_just,
     })
 
 
-
 # =========================================================
-# ✅ EXCEL (solo grupo HISTORIAL)
-# ✅ AHORA: ASISTIÓ / JUSTIFICADO (DM) / FALTÓ
+# EXCEL (HISTORIAL o JUSTIFICACIONES)
 # =========================================================
 @user_passes_test(_in_any_group("HISTORIAL", "JUSTIFICACIONES"), login_url="login")
-
-
 def exportar_reporte_excel(request):
     q = (request.GET.get("q") or "").strip()
     condicion = (request.GET.get("condicion") or "").strip()
     desde = (request.GET.get("desde") or "").strip()
     hasta = (request.GET.get("hasta") or "").strip()
 
-    # ✅ Fecha evaluada (si mandan "desde", usa esa; si no, hoy)
     fecha_eval = parse_date(desde) if desde else None
     if not fecha_eval:
         fecha_eval = timezone.localdate()
 
-    # ✅ Profesores filtrados
     profesores = Profesor.objects.all().order_by("apellidos", "nombres")
 
     if q:
@@ -279,7 +263,6 @@ def exportar_reporte_excel(request):
     if condicion:
         profesores = profesores.filter(condicion__iexact=condicion)
 
-    # ✅ Asistencias del día: SOLO ENTRADA (tipo="E")
     asistencias_del_dia = (
         Asistencia.objects
         .filter(fecha=fecha_eval, tipo="E")
@@ -288,7 +271,6 @@ def exportar_reporte_excel(request):
     )
     asistio_map = {x["profesor_id"]: x["primera_hora"] for x in asistencias_del_dia}
 
-    # ✅ Justificaciones del día
     justificados_del_dia = (
         JustificacionAsistencia.objects
         .filter(fecha=fecha_eval)
@@ -296,9 +278,6 @@ def exportar_reporte_excel(request):
     )
     just_map = {x["profesor_id"]: x["tipo"] for x in justificados_del_dia}
 
-    # =========================
-    # ✅ EXCEL SETUP
-    # =========================
     wb = Workbook()
     ws: Worksheet = wb.active
     ws.title = "Reporte"
@@ -314,7 +293,6 @@ def exportar_reporte_excel(request):
     thin = Side(style="thin", color="CBD5E1")
     border_all = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    # fondo header
     for r in (1, 2):
         for c in range(1, 8):
             ws.cell(row=r, column=c).fill = PatternFill("solid", fgColor=gray_bg)
@@ -324,7 +302,6 @@ def exportar_reporte_excel(request):
     ws.row_dimensions[3].height = 10
     ws.column_dimensions["A"].width = 16
 
-    # Logo
     logo_path = finders.find("asistencias/img/uni_logo.png")
     if logo_path:
         with PILImage.open(logo_path) as im:
@@ -343,14 +320,12 @@ def exportar_reporte_excel(request):
         ws.row_dimensions[3].height = 10
         ws.column_dimensions["A"].width = 18
 
-    # Título
     titulo = f"REPORTE DE ASISTENCIA — {fecha_eval.strftime('%d/%m/%Y')}"
     ws["B1"] = titulo
     ws.merge_cells("B1:G1")
     ws["B1"].font = Font(bold=True, size=16, color=navy)
     ws["B1"].alignment = Alignment(vertical="center")
 
-    # Filtros (info)
     filtros_txt = []
     if q:
         filtros_txt.append(f"Búsqueda: {q}")
@@ -366,15 +341,9 @@ def exportar_reporte_excel(request):
     ws["B2"].font = Font(size=11, color="334155")
     ws["B2"].alignment = Alignment(vertical="center")
 
-    # =========================
-    # ✅ TABLA (HEADERS + DATA)  (FIX openpyxl warning)
-    # =========================
     headers = ["DNI", "Código", "Docente", "Condición", "Estado", "Hora"]
 
-    # fila de separación
     ws.append([])
-
-    # escribimos headers y guardamos la fila real
     ws.append([str(h) for h in headers])
     header_row = ws.max_row
 
@@ -391,10 +360,9 @@ def exportar_reporte_excel(request):
     ws.row_dimensions[header_row].height = 22
     data_start = header_row + 1
 
-    # datos
     for p in profesores:
         dt = asistio_map.get(p.id)
-        jt = just_map.get(p.id)  # DM/C/P/O
+        jt = just_map.get(p.id)
 
         if dt:
             dt_local = timezone.localtime(dt)
@@ -409,7 +377,6 @@ def exportar_reporte_excel(request):
 
         docente = f"{(p.apellidos or '').strip()}, {(p.nombres or '').strip()}".strip().strip(",")
 
-        # ✅ todo string para evitar warnings
         row = [
             str(p.dni),
             str(p.codigo or ""),
@@ -441,7 +408,6 @@ def exportar_reporte_excel(request):
 
         ws.cell(row=r, column=6).alignment = Alignment(horizontal="center", vertical="center")
 
-    # Tabla estilo Excel
     last_row = ws.max_row
     if last_row >= data_start:
         table_ref = f"A{header_row}:F{last_row}"
@@ -455,15 +421,12 @@ def exportar_reporte_excel(request):
         )
         ws.add_table(table)
 
-    # Freeze
     ws.freeze_panes = f"A{data_start}"
 
-    # Anchos
     widths = {"A": 14, "B": 14, "C": 40, "D": 12, "E": 22, "F": 10}
     for col, w in widths.items():
         ws.column_dimensions[col].width = w
 
-    # Respuesta
     filename = f"reporte_asistencia_{fecha_eval.strftime('%Y-%m-%d')}.xlsx"
     bio = BytesIO()
     wb.save(bio)
@@ -478,7 +441,7 @@ def exportar_reporte_excel(request):
 
 
 # =========================================================
-# ✅ SCAN PAGE (solo grupo SCANNER)
+# SCAN PAGE (solo grupo SCANNER)
 # =========================================================
 @ensure_csrf_cookie
 @user_passes_test(_in_group("SCANNER"), login_url="login")
@@ -487,7 +450,7 @@ def scan_page(request):
 
 
 # =========================================================
-# ✅ API SCAN PRO (solo grupo SCANNER) ✅ SOLO ENTRADA + BLOQUEO
+# API SCAN (solo grupo SCANNER)  SOLO ENTRADA
 # =========================================================
 @csrf_protect
 @require_POST
@@ -529,10 +492,12 @@ def api_scan_asistencia(request):
     ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
 
     with transaction.atomic():
-        qs = (Asistencia.objects
-              .select_for_update()
-              .filter(profesor=profesor, fecha=hoy, tipo="E")
-              .order_by("fecha_hora"))
+        qs = (
+            Asistencia.objects
+            .select_for_update()
+            .filter(profesor=profesor, fecha=hoy, tipo="E")
+            .order_by("fecha_hora")
+        )
 
         if qs.exists():
             logger.info("DUPLICADO entrada dni=%s hoy=%s user=%s ip=%s",
@@ -573,7 +538,7 @@ def api_scan_asistencia(request):
 
 
 # =========================================================
-# ✅ CRON PRIVADO (Render Free + cron-job.org)
+# CRON PRIVADO (Render + cron-job)
 # =========================================================
 @csrf_exempt
 @require_GET
@@ -586,23 +551,15 @@ def trigger_reporte_asistencia(request):
 
     out = StringIO()
     call_command("enviar_reporte_asistencia", stdout=out, stderr=out)
-
     texto = out.getvalue()
 
-    return JsonResponse({
-        "ok": True,
-        "msg": "Reporte ejecutado",
-        "output": texto,
-    })
+    return JsonResponse({"ok": True, "msg": "Reporte ejecutado", "output": texto})
 
 
 # =========================================================
-# ✅ REGISTRO MANUAL (solo grupo HISTORIAL)
-# Buscar DNI -> Mostrar profesor -> Confirmar y registrar
+# REGISTRO MANUAL (solo grupo HISTORIAL)
 # =========================================================
 @user_passes_test(_in_group("HISTORIAL"), login_url="login")
-
-
 def registro_manual(request):
     profesor = None
     fecha_hora_str = timezone.localtime(timezone.now()).strftime("%d/%m/%Y %H:%M:%S")
@@ -641,10 +598,12 @@ def registro_manual(request):
                 ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
 
                 with transaction.atomic():
-                    qs = (Asistencia.objects
-                          .select_for_update()
-                          .filter(profesor=profesor, fecha=hoy, tipo="E")
-                          .order_by("fecha_hora"))
+                    qs = (
+                        Asistencia.objects
+                        .select_for_update()
+                        .filter(profesor=profesor, fecha=hoy, tipo="E")
+                        .order_by("fecha_hora")
+                    )
 
                     if qs.exists():
                         ya = qs.first()
@@ -681,18 +640,26 @@ def registro_manual(request):
 
 
 # =========================================================
-# ✅ PANEL JUSTIFICACIONES (solo grupo JUSTIFICACIONES)
-# Por defecto muestra AYER (para justificar al día siguiente)
+# PANEL JUSTIFICACIONES (GET)
+# URL: /asistencia/justificaciones/
 # =========================================================
 @user_passes_test(_in_group("JUSTIFICACIONES"), login_url="login")
+@require_GET
 def panel_justificaciones(request):
+    hoy = timezone.localdate()
     fecha_str = (request.GET.get("fecha") or "").strip()
-    fecha = parse_date(fecha_str) if fecha_str else (timezone.localdate() - timedelta(days=1))
-
-    # ✅ guardamos la fecha para que al ir a Historial, pueda regresar a esta misma fecha
-    request.session["just_fecha"] = fecha.strftime("%Y-%m-%d")
-
     q = (request.GET.get("q") or "").strip()
+
+    # por defecto: ayer
+    if not fecha_str:
+        fecha = hoy - timedelta(days=1)
+    else:
+        fecha = parse_date(fecha_str)
+
+    if not fecha:
+        fecha = hoy - timedelta(days=1)
+
+    request.session["just_fecha"] = fecha.strftime("%Y-%m-%d")
 
     profesores = Profesor.objects.all().order_by("apellidos", "nombres")
     if q:
@@ -703,30 +670,28 @@ def panel_justificaciones(request):
             Q(nombres__icontains=q)
         )
 
-    asistio_ids = set(
-        Asistencia.objects
-        .filter(fecha=fecha, tipo="E")  # ✅ solo ENTRADA
-        .values_list("profesor_id", flat=True)
-    )
-
-    just_qs = JustificacionAsistencia.objects.filter(fecha=fecha).select_related("profesor")
-    just_map = {j.profesor_id: j for j in just_qs}
+    asist_map = {a.profesor_id: a for a in Asistencia.objects.filter(fecha=fecha)}
+    just_map = {j.profesor_id: j for j in JustificacionAsistencia.objects.filter(fecha=fecha)}
 
     rows = []
     for p in profesores:
+        a = asist_map.get(p.id)
         j = just_map.get(p.id)
-        if p.id in asistio_ids:
+
+        if a and a.tipo == "E":
             estado = "ASISTIÓ"
         elif j:
             estado = f"JUSTIFICADO ({j.tipo})"
+        elif a and a.tipo == "J":
+            estado = "JUSTIFICADO"
         else:
             estado = "FALTÓ"
 
-        rows.append({
-            "profesor": p,
-            "estado": estado,
-            "justificacion": j
-        })
+        rows.append(SimpleNamespace(
+            profesor=p,
+            estado=estado,
+            justificacion=j
+        ))
 
     return render(request, "asistencias/justificaciones.html", {
         "fecha": fecha,
@@ -736,10 +701,11 @@ def panel_justificaciones(request):
 
 
 # =========================================================
-# ✅ SET / CLEAR JUSTIFICACIÓN (solo JUSTIFICACIONES)
+# SET JUSTIFICACION (POST)
+# URL: /asistencia/justificaciones/set/
 # =========================================================
-@require_POST
 @user_passes_test(_in_group("JUSTIFICACIONES"), login_url="login")
+@require_POST
 def set_justificacion(request):
     accion = (request.POST.get("accion") or "").strip().lower()
     profesor_id = (request.POST.get("profesor_id") or "").strip()
@@ -747,7 +713,7 @@ def set_justificacion(request):
     tipo = (request.POST.get("tipo") or "DM").strip().upper()
     detalle = (request.POST.get("detalle") or "").strip()
 
-    archivo = request.FILES.get("archivo")  # input name="archivo"
+    archivo = request.FILES.get("archivo")
 
     if accion != "set":
         messages.error(request, "Acción inválida.")
@@ -769,7 +735,6 @@ def set_justificacion(request):
     ip = _get_client_ip(request)
     ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
 
-    # ✅ Si ya asistió ese día, no justificar
     if Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="E").exists():
         messages.warning(
             request,
@@ -777,50 +742,72 @@ def set_justificacion(request):
         )
         return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
 
-    # ✅ Validación: si sube archivo, que sea PDF
     if archivo:
         nombre = (archivo.name or "").lower()
         ctype = (getattr(archivo, "content_type", "") or "").lower()
-        if not (nombre.endswith(".pdf") or ctype == "application/pdf"):
-            messages.error(request, "El archivo debe ser PDF.")
+
+        if not nombre.endswith(".pdf"):
+            messages.error(request, "El archivo debe terminar en .pdf")
             return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
 
-    with transaction.atomic():
-        obj, created = JustificacionAsistencia.objects.update_or_create(
-            profesor=profesor,
-            fecha=fecha,
-            defaults={
-                "tipo": tipo_ok,
-                "detalle": detalle,
-                "actualizado_por": request.user,
-                "creado_por": request.user,
-            }
+        if ctype and ctype != "application/pdf":
+            messages.error(request, "El archivo debe ser PDF (application/pdf).")
+            return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
+
+        if getattr(archivo, "size", 0) > 10 * 1024 * 1024:
+            messages.error(request, "El PDF es muy pesado (máx. 10 MB).")
+            return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
+
+    try:
+        with transaction.atomic():
+            obj, created = JustificacionAsistencia.objects.update_or_create(
+                profesor=profesor,
+                fecha=fecha,
+                defaults={
+                    "tipo": tipo_ok,
+                    "detalle": detalle,
+                    "actualizado_por": request.user,
+                }
+            )
+
+            if created and not obj.creado_por:
+                obj.creado_por = request.user
+                obj.save(update_fields=["creado_por"])
+
+            if archivo:
+                old_name = obj.archivo.name if obj.archivo else None
+
+                obj.archivo = archivo
+                obj.actualizado_por = request.user
+                obj.save(update_fields=["archivo", "actualizado_por", "actualizado_en"])
+
+                if old_name and old_name != obj.archivo.name:
+                    try:
+                        storage = JustificacionAsistencia._meta.get_field("archivo").storage
+                        storage.delete(old_name)
+                    except Exception:
+                        pass
+
+            Asistencia.objects.update_or_create(
+                profesor=profesor,
+                fecha=fecha,
+                tipo="J",
+                defaults={
+                    "fecha_hora": timezone.now(),
+                    "motivo": tipo_ok,
+                    "detalle": detalle,
+                    "registrado_por": request.user,
+                    "ip": ip,
+                    "user_agent": ua,
+                }
+            )
+
+        messages.success(
+            request,
+            f"✅ Justificación {'registrada' if created else 'actualizada'} para {profesor.apellidos} {profesor.nombres}."
         )
+        return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
 
-        # ✅ PDF: si llega uno nuevo, borra el anterior (funciona en local y Cloudinary)
-        if archivo:
-            if obj.archivo:
-                obj.archivo.delete(save=False)  # ✅ NO os.remove
-            obj.archivo = archivo
-            obj.save(update_fields=["archivo", "actualizado_por", "actualizado_en"])
-
-        # ✅ historial
-        Asistencia.objects.update_or_create(
-            profesor=profesor,
-            fecha=fecha,
-            tipo="J",
-            defaults={
-                "fecha_hora": timezone.now(),
-                "motivo": tipo_ok,
-                "detalle": detalle,
-                "registrado_por": request.user,
-                "ip": ip,
-                "user_agent": ua,
-            }
-        )
-
-    messages.success(
-        request,
-        f"✅ Justificación {'registrada' if created else 'actualizada'} para {profesor.apellidos} {profesor.nombres}."
-    )
-    return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
+    except Exception as e:
+        messages.error(request, f"❌ Error guardando justificación/PDF: {type(e).__name__} - {str(e)[:200]}")
+        return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")

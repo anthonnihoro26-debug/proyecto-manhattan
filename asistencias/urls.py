@@ -15,5 +15,5 @@ urlpatterns = [
 
     # ✅ Justificaciones (solo grupo JUSTIFICACIONES)
     path("justificaciones/", views.panel_justificaciones, name="panel_justificaciones"),
-    path("justificaciones/set/", views.set_justificacion, name="set_justificacion"),
+path("justificaciones/set/", views.set_justificacion, name="set_justificacion"),
 ]

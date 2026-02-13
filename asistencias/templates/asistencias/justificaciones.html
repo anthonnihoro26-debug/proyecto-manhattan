@@ -229,7 +229,7 @@
     .b-warn{ background:#fee2e2; color:#991b1b; }
     .b-info{ background:#e0e7ff; color:#1e3a8a; }
 
-    /* ✅ NUEVO: layout acción más espacioso */
+    /* ✅ layout acción más espacioso */
     .action-box{
       background: rgba(15,23,42,0.03);
       border: 1px solid rgba(15,23,42,0.10);
@@ -238,7 +238,7 @@
     }
     .action-row{
       display:grid;
-      grid-template-columns: 170px 1fr;
+      grid-template-columns: 220px 1fr;
       gap:10px;
       align-items:center;
     }
@@ -399,6 +399,7 @@
 
                   <td>
                     <div class="action-box">
+                      <!-- ✅ ESTE ES EL FORM CORRECTO PARA SUBIR PDF -->
                       <form method="post"
                             action="{% url 'set_justificacion' %}"
                             enctype="multipart/form-data">
@@ -406,7 +407,6 @@
                         <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
                         <input type="hidden" name="profesor_id" value="{{ r.profesor.id }}">
 
-                        <!-- ✅ fila 1: tipo + detalle -->
                         <div class="action-row">
                           <select name="tipo" class="form-select form-select-sm">
                             <option value="DM" {% if r.justificacion and r.justificacion.tipo == "DM" %}selected{% endif %}>Descanso médico (DM)</option>
@@ -421,7 +421,6 @@
                                  placeholder="Detalle (opcional)">
                         </div>
 
-                        <!-- ✅ fila 2: pdf + botón -->
                         <div class="action-row">
                           <div>
                             <input type="file"

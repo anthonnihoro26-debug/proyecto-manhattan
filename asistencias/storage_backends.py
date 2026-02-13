@@ -3,7 +3,7 @@ from cloudinary_storage.storage import MediaCloudinaryStorage
 
 class MediaCloudinaryStorageAuto(MediaCloudinaryStorage):
     """
-    Cloudinary acepta:
+    Cloudinary acepta resource_type:
     - image (por defecto)
     - raw (PDF, doc, zip)
     - auto (detecta)
