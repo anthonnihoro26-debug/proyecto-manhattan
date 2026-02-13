@@ -2,11 +2,5 @@
 from cloudinary_storage.storage import MediaCloudinaryStorage
 
 class MediaCloudinaryStorageAuto(MediaCloudinaryStorage):
-    """
-    Cloudinary acepta resource_type:
-    - image (por defecto)
-    - raw (PDF, doc, zip)
-    - auto (detecta)
-    Usamos auto para que PDF no reviente.
-    """
+    # auto soporta raw/pdf e imágenes sin romper
     resource_type = "auto"

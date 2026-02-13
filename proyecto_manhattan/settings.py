@@ -16,7 +16,7 @@ from datetime import timedelta
 import dj_database_url
 
 # =========================
-# ✅ Cargar .env SOLO en local
+# Load .env only in local
 # =========================
 try:
     from dotenv import load_dotenv
@@ -52,9 +52,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "asistencias",
-
     "axes",
 ]
 
@@ -115,8 +113,7 @@ if USE_SQLITE:
 else:
     if not DATABASE_URL:
         raise RuntimeError(
-            "❌ DATABASE_URL no está definido.\n"
-            "➡️ Solución: define DATABASE_URL (PostgreSQL) o usa USE_SQLITE=1."
+            "DATABASE_URL is not defined. Define DATABASE_URL (PostgreSQL) or set USE_SQLITE=1."
         )
     DATABASES = {
         "default": dj_database_url.parse(
@@ -156,23 +153,27 @@ if _static_dir.exists():
     STATICFILES_DIRS.append(_static_dir)
 
 # =========================
-# ✅ MEDIA (LOCAL)
+# MEDIA (LOCAL)
 # =========================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # =========================
-# CLOUDINARY (PRODUCCIÓN)
+# CLOUDINARY (PROD)
 # =========================
-CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "").strip()
+CLOUDINARY_URL = (os.environ.get("CLOUDINARY_URL") or "").strip()
 
-# ✅ Django 5.x usa STORAGES
 if CLOUDINARY_URL:
     INSTALLED_APPS += ["cloudinary", "cloudinary_storage"]
 
+    # IMPORTANT: this is what django-cloudinary-storage reads
+    CLOUDINARY_STORAGE = {
+        "CLOUDINARY_URL": CLOUDINARY_URL,
+        "SECURE": True,
+    }
+
     STORAGES = {
         "default": {
-            # ✅ Backend custom con resource_type auto
             "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
         },
         "staticfiles": {
@@ -230,17 +231,17 @@ EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "20"))
 # =========================
 # CRON / BREVO
 # =========================
-REPORT_TRIGGER_TOKEN = os.environ.get("REPORT_TRIGGER_TOKEN", "").strip()
+REPORT_TRIGGER_TOKEN = (os.environ.get("REPORT_TRIGGER_TOKEN") or "").strip()
 
-BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
-BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", DEFAULT_FROM_EMAIL).strip()
-BREVO_SENDER_NAME = os.environ.get("BREVO_SENDER_NAME", "Proyecto Manhattan").strip()
+BREVO_API_KEY = (os.environ.get("BREVO_API_KEY") or "").strip()
+BREVO_SENDER_EMAIL = (os.environ.get("BREVO_SENDER_EMAIL") or DEFAULT_FROM_EMAIL).strip()
+BREVO_SENDER_NAME = (os.environ.get("BREVO_SENDER_NAME") or "Proyecto Manhattan").strip()
 
 # =========================
-# COOKIES / SECURITY
+# COOKIES / SECURITY (PROD)
 # =========================
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 días
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -276,5 +277,4 @@ LOGGING = {
         "axes.backends": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
     },
 }
-
 
