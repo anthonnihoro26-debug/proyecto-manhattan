@@ -687,6 +687,7 @@ def panel_justificaciones(request):
             Q(nombres__icontains=q)
         )
 
+    # ✅ Solo ENTRADAS cuentan como asistencia del día
     asist_map = {
         a.profesor_id: a
         for a in Asistencia.objects.filter(fecha=fecha, tipo="E")
@@ -698,20 +699,41 @@ def panel_justificaciones(request):
     }
 
     rows = []
+
+    # ✅ contadores para mostrar un resumen profesional arriba
+    c_asistio = 0
+    c_just = 0
+    c_falto = 0
+
     for p in profesores:
         a = asist_map.get(p.id)
         j = just_map.get(p.id)
 
         if a:
+            estado_key = "ASISTIO"
             estado = "ASISTIÓ"
+            estado_detalle = "Registro de entrada"
+            c_asistio += 1
+
         elif j:
-            estado = f"JUSTIFICADO ({j.tipo})"
+            # ✅ Mostrar bonito: JUSTIFICADO (Descanso médico)
+            estado_key = "JUSTIFICADO"
+            tipo_label = j.get_tipo_display() if hasattr(j, "get_tipo_display") else (j.tipo or "")
+            estado = f"JUSTIFICADO ({tipo_label})"
+            estado_detalle = (j.detalle or "").strip()
+            c_just += 1
+
         else:
+            estado_key = "FALTO"
             estado = "FALTÓ"
+            estado_detalle = "Sin registro ni justificación"
+            c_falto += 1
 
         rows.append({
             "profesor": p,
-            "estado": estado,
+            "estado": estado,                # texto (compatibilidad con tu template)
+            "estado_key": estado_key,        # ✅ NUEVO (más limpio)
+            "estado_detalle": estado_detalle,# ✅ NUEVO (opcional)
             "justificacion": j,
         })
 
@@ -727,6 +749,14 @@ def panel_justificaciones(request):
         "q": q,
         "rows": rows,
         "can_historial": can_historial,
+
+        # ✅ resumen profesional
+        "resumen": {
+            "asistio": c_asistio,
+            "justificado": c_just,
+            "falto": c_falto,
+            "total": c_asistio + c_just + c_falto
+        }
     })
 
 
@@ -740,20 +770,23 @@ def set_justificacion(request):
     detalle = (request.POST.get("detalle") or "").strip()
     archivo = request.FILES.get("archivo")  # PDF opcional
 
+    # ✅ redirect seguro a la misma pantalla
+    redirect_url = (f"/asistencia/justificaciones/?fecha={fecha_str}" if fecha_str else "/asistencia/justificaciones/")
+
     if accion != "set":
-        messages.error(request, "Accion invalida.")
-        return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}" if fecha_str else "/asistencia/justificaciones/")
+        messages.error(request, "Acción inválida.")
+        return redirect(redirect_url)
 
     fecha = parse_date(fecha_str)
     if not fecha:
-        messages.error(request, "Fecha invalida.")
+        messages.error(request, "Fecha inválida.")
         return redirect("/asistencia/justificaciones/")
 
     try:
         profesor = Profesor.objects.get(id=profesor_id)
     except Profesor.DoesNotExist:
         messages.error(request, "Profesor no encontrado.")
-        return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
+        return redirect(redirect_url)
 
     tipo_ok = tipo if tipo in ("DM", "C", "P", "O") else "DM"
     ip = _get_client_ip(request)
@@ -761,8 +794,8 @@ def set_justificacion(request):
 
     # si ya asistio ese dia, no justificar
     if Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="E").exists():
-        messages.warning(request, "Ya tiene ASISTENCIA ese dia. No se registro justificacion.")
-        return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
+        messages.warning(request, "Ya tiene ASISTENCIA ese día. No se registró justificación.")
+        return redirect(redirect_url)
 
     # validacion basica PDF
     if archivo:
@@ -770,13 +803,13 @@ def set_justificacion(request):
         ctype = (getattr(archivo, "content_type", "") or "").lower()
         if not nombre.endswith(".pdf"):
             messages.error(request, "El archivo debe terminar en .pdf")
-            return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
+            return redirect(redirect_url)
         if ctype and ctype != "application/pdf":
             messages.error(request, "El archivo debe ser application/pdf")
-            return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
+            return redirect(redirect_url)
         if getattr(archivo, "size", 0) > 10 * 1024 * 1024:
             messages.error(request, "El PDF es muy pesado (max 10 MB).")
-            return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
+            return redirect(redirect_url)
 
     try:
         with transaction.atomic():
@@ -789,6 +822,8 @@ def set_justificacion(request):
                     "actualizado_por": request.user,
                 }
             )
+
+            # ✅ asegurar creado_por si es nuevo
             if created and not obj.creado_por:
                 obj.creado_por = request.user
                 obj.save(update_fields=["creado_por"])
@@ -807,7 +842,7 @@ def set_justificacion(request):
                     except Exception:
                         pass
 
-            # para que salga en historial como evento
+            # para que salga en historial como evento (tipo="J")
             Asistencia.objects.update_or_create(
                 profesor=profesor,
                 fecha=fecha,
@@ -822,9 +857,9 @@ def set_justificacion(request):
                 }
             )
 
-        messages.success(request, "Justificacion guardada.")
-        return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
+        messages.success(request, "Justificación guardada correctamente.")
+        return redirect(redirect_url)
 
     except Exception as e:
-        messages.error(request, f"Error guardando justificacion/PDF: {type(e).__name__} - {str(e)[:200]}")
-        return redirect(f"/asistencia/justificaciones/?fecha={fecha_str}")
+        messages.error(request, f"Error guardando justificación/PDF: {type(e).__name__} - {str(e)[:200]}")
+        return redirect(redirect_url)

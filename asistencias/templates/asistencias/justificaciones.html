@@ -208,6 +208,30 @@
       gap:8px;
     }
 
+    /* ✅ resumen */
+    .summary{
+      padding: 0 22px 12px;
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .sum-card{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius: 18px;
+      padding: 14px 14px;
+    }
+    .sum-title{ font-size:12px; color: var(--muted); font-weight:900; }
+    .sum-value{ font-size:22px; font-weight:950; color:#0f172a; line-height:1.1; margin-top:4px; }
+    .sum-icon{ float:right; opacity:.15; font-size:26px; margin-top:-8px; }
+
+    @media (max-width: 992px){
+      .summary{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 576px){
+      .summary{ padding: 0 16px 12px; grid-template-columns: 1fr; }
+    }
+
     .table-wrap{
       margin: 0 22px 18px;
       border-radius: 18px;
@@ -286,7 +310,6 @@
 
 <body>
 
-  <!-- ✅ TOPBAR FINAL (Historial SIN filtros) -->
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">
@@ -305,11 +328,11 @@
           Usuario: <span style="font-weight:950;">{{ request.user.username }}</span>
         </div>
 
-       {% if can_historial %}
-  <a class="btnx btnx-primary" href="{% url 'historial_asistencias' %}">
-    <i class="bi bi-clock-history"></i> Ir al historial
-  </a>
-{% endif %}
+        {% if can_historial %}
+          <a class="btnx btnx-primary" href="{% url 'historial_asistencias' %}">
+            <i class="bi bi-clock-history"></i> Ir al historial
+          </a>
+        {% endif %}
 
         <form method="post" action="{% url 'logout' %}" class="m-0">
           {% csrf_token %}
@@ -330,6 +353,32 @@
           <p class="subtitle">Marca descanso médico u otros para una fecha</p>
         </div>
       </div>
+
+      <!-- ✅ RESUMEN (nuevo) -->
+      {% if resumen %}
+        <div class="summary">
+          <div class="sum-card">
+            <span class="sum-icon"><i class="bi bi-collection"></i></span>
+            <div class="sum-title">Total docentes</div>
+            <div class="sum-value">{{ resumen.total }}</div>
+          </div>
+          <div class="sum-card">
+            <span class="sum-icon"><i class="bi bi-check2-circle"></i></span>
+            <div class="sum-title">Asistieron</div>
+            <div class="sum-value">{{ resumen.asistio }}</div>
+          </div>
+          <div class="sum-card">
+            <span class="sum-icon"><i class="bi bi-file-medical"></i></span>
+            <div class="sum-title">Justificados</div>
+            <div class="sum-value">{{ resumen.justificado }}</div>
+          </div>
+          <div class="sum-card">
+            <span class="sum-icon"><i class="bi bi-x-circle"></i></span>
+            <div class="sum-title">Faltaron</div>
+            <div class="sum-value">{{ resumen.falto }}</div>
+          </div>
+        </div>
+      {% endif %}
 
       <div class="filters">
         {% if messages %}
@@ -355,7 +404,7 @@
             <div class="col-12 col-md-6">
               <label class="form-label">Buscar</label>
               <input type="text" name="q" class="form-control" value="{{ q }}"
-                    placeholder="DNI / Código / Apellidos / Nombres">
+                     placeholder="DNI / Código / Apellidos / Nombres">
             </div>
 
             <div class="col-12 col-md-3 d-grid">
@@ -373,7 +422,7 @@
             <thead>
               <tr>
                 <th>Docente</th>
-                <th style="width:240px;">Estado</th>
+                <th style="width:260px;">Estado</th>
                 <th style="min-width:720px;">Acción</th>
               </tr>
             </thead>
@@ -384,15 +433,21 @@
                   <td>
                     <div class="fw-bold">{{ r.profesor.apellidos }}, {{ r.profesor.nombres }}</div>
                     <div class="text-muted small">
-                      Código: {{ r.profesor.codigo }}
+                      DNI: {{ r.profesor.dni }}
+                      <span class="ms-2">Código: {{ r.profesor.codigo }}</span>
                       <span class="ms-2">Condición: {{ r.profesor.condicion }}</span>
                     </div>
+                    {% if r.estado_detalle %}
+                      <div class="text-muted small" style="margin-top:4px;">
+                        <i class="bi bi-info-circle"></i> {{ r.estado_detalle }}
+                      </div>
+                    {% endif %}
                   </td>
 
                   <td>
-                    {% if "ASISTIÓ" in r.estado %}
+                    {% if r.estado_key == "ASISTIO" or "ASISTIÓ" in r.estado %}
                       <span class="badgex b-ok"><i class="bi bi-check-circle-fill"></i> {{ r.estado }}</span>
-                    {% elif "JUSTIFICADO" in r.estado %}
+                    {% elif r.estado_key == "JUSTIFICADO" or "JUSTIFICADO" in r.estado %}
                       <span class="badgex b-info"><i class="bi bi-file-medical-fill"></i> {{ r.estado }}</span>
                     {% else %}
                       <span class="badgex b-warn"><i class="bi bi-x-circle-fill"></i> {{ r.estado }}</span>
@@ -428,8 +483,10 @@
                                    name="archivo"
                                    accept="application/pdf"
                                    class="form-control form-control-sm">
+
                             <div class="file-help">
                               <span>PDF opcional (descanso médico, permiso, etc.)</span>
+
                               {% if r.justificacion and r.justificacion.archivo %}
                                 <a href="{{ r.justificacion.archivo.url }}" target="_blank" style="font-weight:950;">
                                   <i class="bi bi-file-earmark-pdf"></i> Ver PDF
@@ -440,7 +497,7 @@
 
                           <button class="btn btn-success btn-sm btn-just"
                                   name="accion" value="set" type="submit">
-                            <i class="bi bi-check2-circle"></i> Justificar
+                            <i class="bi bi-check2-circle"></i> Guardar justificación
                           </button>
                         </div>
                       </form>
@@ -466,4 +523,5 @@
 
 </body>
 </html>
+
 

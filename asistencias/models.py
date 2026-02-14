@@ -13,6 +13,12 @@ class Profesor(models.Model):
     # ✅ correo para enviar reportes
     email = models.EmailField(blank=True, null=True)
 
+    @property
+    def nombre_completo(self):
+        ap = (self.apellidos or "").strip()
+        nom = (self.nombres or "").strip()
+        return f"{ap} {nom}".strip() or "Profesor(a)"
+
     def __str__(self):
         return f"{self.apellidos} {self.nombres}"
 
@@ -64,6 +70,55 @@ class Asistencia(models.Model):
         indexes = [
             models.Index(fields=["profesor", "fecha"]),
         ]
+
+    # =========================
+    # ✅ Helpers (profesional)
+    # =========================
+    @property
+    def es_entrada(self) -> bool:
+        return self.tipo == "E"
+
+    @property
+    def es_justificacion(self) -> bool:
+        return self.tipo == "J"
+
+    @property
+    def tipo_label_pro(self) -> str:
+        if self.tipo == "E":
+            return "ENTRADA"
+        if self.tipo == "J":
+            return "JUSTIFICACIÓN"
+        if self.tipo == "S":
+            return "SALIDA"
+        return str(self.tipo or "").strip() or "REGISTRO"
+
+    @property
+    def motivo_label(self) -> str:
+        try:
+            return self.get_motivo_display()
+        except Exception:
+            return (self.motivo or "").strip()
+
+    def resumen_pro(self) -> str:
+        """
+        ✅ Texto profesional para reportes:
+        - ENTRADA
+        - JUSTIFICACIÓN (Descanso médico) - detalle...
+        """
+        if self.tipo == "E":
+            return "ENTRADA"
+
+        if self.tipo == "J":
+            mot = self.motivo_label or "Sin motivo"
+            det = (self.detalle or "").strip()
+            if det:
+                return f"JUSTIFICACIÓN ({mot}) - {det}"
+            return f"JUSTIFICACIÓN ({mot})"
+
+        if self.tipo == "S":
+            return "SALIDA"
+
+        return self.tipo_label_pro
 
     def __str__(self):
         if self.tipo == "J":
@@ -125,6 +180,23 @@ class JustificacionAsistencia(models.Model):
             models.Index(fields=["fecha", "profesor"]),
         ]
         ordering = ["-fecha", "profesor__apellidos", "profesor__nombres"]
+
+    # =========================
+    # ✅ Helpers (profesional)
+    # =========================
+    @property
+    def tipo_label(self) -> str:
+        try:
+            return self.get_tipo_display()
+        except Exception:
+            return (self.tipo or "").strip()
+
+    @property
+    def archivo_url(self) -> str:
+        try:
+            return self.archivo.url if self.archivo else ""
+        except Exception:
+            return ""
 
     def __str__(self):
         return f"{self.profesor} - {self.fecha} ({self.tipo})"
