@@ -100,8 +100,11 @@ class Command(BaseCommand):
                 self.stdout.write(f"[SKIP] {email} -> sin registros en el rango")
                 continue
 
+            # ✅ En tu sistema:
+            # E = ENTRADA
+            # S = JUSTIFICACIÓN (NO "SALIDA")
             entradas = qs.filter(tipo="E").count()
-            salidas = qs.filter(tipo="S").count()
+            justificaciones = qs.filter(tipo="S").count()
 
             nombre = f"{(prof.apellidos or '').strip()} {(prof.nombres or '').strip()}".strip()
             subject = f"Reporte Asistencia (Lun-Vie) - {desde:%d/%m} al {hasta:%d/%m/%Y}"
@@ -115,7 +118,7 @@ class Command(BaseCommand):
                 "",
                 f"- Total registros: {total}",
                 f"- Entradas (E): {entradas}",
-                f"- Salidas (S): {salidas}",
+                f"- Justificaciones: {justificaciones}",
                 "",
                 f"Últimos {min(limite, total)} registros:",
                 "----------------------------------------",
@@ -123,8 +126,16 @@ class Command(BaseCommand):
 
             for a in qs[:limite]:
                 dt = timezone.localtime(a.fecha_hora).strftime("%d/%m/%Y %H:%M")
-                tipo = "ENTRADA" if a.tipo == "E" else "SALIDA"
-                body_lines.append(f"{dt} | {tipo}")
+
+                if a.tipo == "E":
+                    tipo_txt = "ENTRADA"
+                elif a.tipo == "S":
+                    tipo_txt = "JUSTIFICACIÓN"
+                else:
+                    # Por si en el futuro agregas más tipos
+                    tipo_txt = str(a.tipo)
+
+                body_lines.append(f"{dt} | {tipo_txt}")
 
             body_lines += ["", "Saludos."]
 
@@ -132,13 +143,21 @@ class Command(BaseCommand):
 
             if dry_run:
                 enviados += 1
-                self.stdout.write(self.style.WARNING(f"[DRY-RUN] to={email} total={total} E={entradas} S={salidas}"))
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"[DRY-RUN] to={email} total={total} E={entradas} JUST={justificaciones}"
+                    )
+                )
                 continue
 
             try:
                 self._brevo_send_email(email, subject, body)
                 enviados += 1
-                self.stdout.write(self.style.SUCCESS(f"[SEND] to={email} total={total} E={entradas} S={salidas}"))
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"[SEND] to={email} total={total} E={entradas} JUST={justificaciones}"
+                    )
+                )
             except Exception as e:
                 errores += 1
                 self.stderr.write(self.style.ERROR(f"[ERROR] Enviando a {email}: {e}"))
@@ -147,3 +166,4 @@ class Command(BaseCommand):
             f"[DONE] Enviados: {enviados}. Errores: {errores}. "
             f"Saltados (sin email): {saltados_sin_email}. Saltados (sin registros): {saltados_sin_registros}."
         ))
+

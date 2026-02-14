@@ -39,17 +39,28 @@ logger = logging.getLogger(__name__)
 
 
 # =========================================================
-# HELPERS DE ROLES (GRUPOS)
+# HELPERS DE ROLES (GRUPOS) ✅ FINAL
+# - Permite superuser siempre
+# - _in_any_group permite acceso si está en cualquiera de los grupos
 # =========================================================
 def _in_group(group_name: str):
     def check(user):
-        return user.is_authenticated and user.groups.filter(name=group_name).exists()
+        return (
+            user.is_authenticated
+            and (user.is_superuser or user.groups.filter(name=group_name).exists())
+        )
     return check
 
 
 def _in_any_group(*group_names: str):
     def check(user):
-        return user.is_authenticated and user.groups.filter(name__in=list(group_names)).exists()
+        return (
+            user.is_authenticated
+            and (
+                user.is_superuser
+                or user.groups.filter(name__in=list(group_names)).exists()
+            )
+        )
     return check
 
 
@@ -89,7 +100,7 @@ def _read_code_from_request(request) -> str:
 
 
 # =========================================================
-# POST LOGIN REDIRECT
+# POST LOGIN REDIRECT ✅ FINAL
 # =========================================================
 @login_required
 def post_login_redirect(request):
@@ -104,14 +115,18 @@ def post_login_redirect(request):
     if user.groups.filter(name="JUSTIFICACIONES").exists():
         return redirect("panel_justificaciones")
 
+    if user.is_superuser:
+        return redirect("historial_asistencias")
+
     logout(request)
     return redirect("login")
 
 
 # =========================================================
-# HISTORIAL (solo grupo HISTORIAL)  KPIs + PAGINACIÓN
+# HISTORIAL ✅ FINAL
+# ✅ AHORA PERMITE HISTORIAL O JUSTIFICACIONES (y superuser)
 # =========================================================
-@user_passes_test(_in_group("HISTORIAL"), login_url="login")
+@user_passes_test(_in_any_group("HISTORIAL", "JUSTIFICACIONES"), login_url="login")
 def historial_asistencias(request):
     q = request.GET.get("q", "").strip()
     desde = request.GET.get("desde", "").strip()
@@ -128,10 +143,13 @@ def historial_asistencias(request):
     if not fecha_just:
         fecha_just = (timezone.localdate() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-    # mostrar botón solo si pertenece al grupo
+    # mostrar botón solo si pertenece al grupo JUSTIFICACIONES (o superuser)
     puede_volver_just = (
         request.user.is_authenticated
-        and request.user.groups.filter(name="JUSTIFICACIONES").exists()
+        and (
+            request.user.is_superuser
+            or request.user.groups.filter(name="JUSTIFICACIONES").exists()
+        )
     )
 
     # 1) ASISTENCIAS (solo ENTRADA)
@@ -237,7 +255,7 @@ def historial_asistencias(request):
 
 
 # =========================================================
-# EXCEL (HISTORIAL o JUSTIFICACIONES)
+# EXCEL (HISTORIAL o JUSTIFICACIONES) ✅ FINAL
 # =========================================================
 @user_passes_test(_in_any_group("HISTORIAL", "JUSTIFICACIONES"), login_url="login")
 def exportar_reporte_excel(request):
@@ -640,8 +658,10 @@ def registro_manual(request):
 
 
 # =========================================================
-# PANEL JUSTIFICACIONES (GET)
+# PANEL JUSTIFICACIONES (GET) ✅ FINAL
 # URL: /asistencia/justificaciones/
+# - guarda just_fecha en session
+# - manda can_historial al template (para mostrar botón)
 # =========================================================
 @user_passes_test(_in_group("JUSTIFICACIONES"), login_url="login")
 @require_GET
@@ -651,13 +671,11 @@ def panel_justificaciones(request):
     fecha_str = (request.GET.get("fecha") or "").strip()
     q = (request.GET.get("q") or "").strip()
 
-    # por defecto: ayer (para justificar al dia siguiente)
     if not fecha_str:
         fecha = hoy - timezone.timedelta(days=1)
     else:
         fecha = parse_date(fecha_str) or hoy
 
-    # guardamos la fecha en session para el boton "volver" del historial
     request.session["just_fecha"] = fecha.strftime("%Y-%m-%d")
 
     profesores = Profesor.objects.all().order_by("apellidos", "nombres")
@@ -669,13 +687,11 @@ def panel_justificaciones(request):
             Q(nombres__icontains=q)
         )
 
-    # asistencia del dia SOLO ENTRADA (tipo E)
     asist_map = {
         a.profesor_id: a
         for a in Asistencia.objects.filter(fecha=fecha, tipo="E")
     }
 
-    # justificaciones del dia
     just_map = {
         j.profesor_id: j
         for j in JustificacionAsistencia.objects.filter(fecha=fecha)
@@ -699,10 +715,18 @@ def panel_justificaciones(request):
             "justificacion": j,
         })
 
+    # ✅ acá sí: mostrar botón a JUSTIFICACIONES también
+    can_historial = (
+        request.user.is_superuser
+        or request.user.groups.filter(name="HISTORIAL").exists()
+        or request.user.groups.filter(name="JUSTIFICACIONES").exists()
+    )
+
     return render(request, "asistencias/justificaciones.html", {
         "fecha": fecha,
         "q": q,
         "rows": rows,
+        "can_historial": can_historial,
     })
 
 
