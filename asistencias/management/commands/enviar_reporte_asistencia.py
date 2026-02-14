@@ -8,6 +8,8 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.staticfiles import finders
+from django.templatetags.static import static  # ✅ NUEVO
+
 
 from asistencias.models import Profesor, Asistencia
 
@@ -34,7 +36,6 @@ class Command(BaseCommand):
         Devuelve data URI base64 para embeber en el email.
         Si no encuentra el archivo, devuelve "" (sin logo).
         """
-        # Cambia aquí si tu logo se llama distinto
         static_path = "asistencias/img/uni_logo.png"
 
         try:
@@ -45,10 +46,25 @@ class Command(BaseCommand):
             with open(abs_path, "rb") as f:
                 b64 = base64.b64encode(f.read()).decode("utf-8")
 
-            # PNG
             return f"data:image/png;base64,{b64}"
         except Exception:
             return ""
+
+    # =========================
+    # ✅ NUEVO: Logo por URL público (Gmail-friendly)
+    # =========================
+    def _logo_public_url(self) -> str:
+        """
+        Devuelve un URL ABSOLUTO al logo en /static/... usando settings.PUBLIC_BASE_URL.
+        Esto evita el problema de Gmail con data:image/base64.
+        """
+        base = (getattr(settings, "PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
+        if not base:
+            return ""
+
+        # Tu logo está en asistencias/static/asistencias/img/uni_logo.png
+        rel = static("asistencias/img/uni_logo.png")  # -> /static/asistencias/img/uni_logo.png
+        return f"{base}{rel}"
 
     def _tipo_label(self, a: Asistencia) -> str:
         """
@@ -61,7 +77,6 @@ class Command(BaseCommand):
             return "ENTRADA"
 
         if a.tipo == "J":
-            # motivo por display (DM->Descanso médico, etc.)
             try:
                 motivo = a.get_motivo_display()
             except Exception:
@@ -124,8 +139,11 @@ class Command(BaseCommand):
         saltados_sin_email = 0
         saltados_sin_registros = 0
 
-        # ✅ logo embebido
+        # ✅ logo embebido (fallback)
         logo_uri = self._logo_data_uri()
+
+        # ✅ NUEVO: logo por URL público (recomendado)
+        logo_url = self._logo_public_url()
 
         for prof in profesores:
             if enviados >= max_emails:
@@ -137,8 +155,6 @@ class Command(BaseCommand):
                 saltados_sin_email += 1
                 continue
 
-            # ✅ IMPORTANTE:
-            # Solo consideramos Entradas (E) y Justificaciones (J)
             qs = (
                 Asistencia.objects
                 .filter(
@@ -209,7 +225,6 @@ class Command(BaseCommand):
             nombre_html = html.escape(nombre)
             rango_html = html.escape(f"{desde:%d/%m/%Y %H:%M} a {hasta:%d/%m/%Y %H:%M}")
 
-            # ✅ por defecto: NO mostrar Justificaciones si es 0
             mostrar_just_linea = False
 
             just_html_line = ""
@@ -221,21 +236,24 @@ class Command(BaseCommand):
                   </div>
                 """.strip()
 
+            # ✅ NO borro tu base64: solo priorizo URL público si existe
+            img_src = (logo_url or "").strip() or (logo_uri or "").strip()
+
             logo_html = ""
-            if logo_uri:
+            if img_src:
                 logo_html = f"""
                   <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-                    <img src="{logo_uri}" alt="Logo" style="height:52px;width:52px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,.92);padding:6px;" />
+                    <img src="{html.escape(img_src)}" alt="UNI"
+                         style="height:52px;width:52px;object-fit:contain;border-radius:12px;background:#ffffff;padding:6px;border:1px solid rgba(255,255,255,.35);" />
                     <div>
-                      <div style="font-size:14px;opacity:.92;font-weight:800;">Universidad Nacional de Ingeniería</div>
+                      <div style="font-size:14px;opacity:.92;font-weight:900;">Universidad Nacional de Ingeniería</div>
                       <div style="font-size:12px;opacity:.88;">Proyecto Manhattan • Control de Asistencia</div>
                     </div>
                   </div>
                 """.strip()
             else:
-                # fallback si no hay logo
                 logo_html = """
-                  <div style="font-size:14px;opacity:.92;font-weight:800;">Proyecto Manhattan</div>
+                  <div style="font-size:14px;opacity:.92;font-weight:900;">Proyecto Manhattan</div>
                 """.strip()
 
             body_html = f"""
@@ -296,7 +314,7 @@ class Command(BaseCommand):
                 </div>
 
                 <div style="text-align:center;color:#9ca3af;font-size:12px;margin-top:10px;">
-                  © {timezone.localtime(timezone.now()).strftime("%Y")} Proyecto Manhattan
+                  © {timezone.localtime(timezone.now()).strftime("%Y")} Tony Stark
                 </div>
               </div>
             </div>
@@ -305,7 +323,7 @@ class Command(BaseCommand):
             if dry_run:
                 enviados += 1
                 self.stdout.write(self.style.WARNING(
-                    f"[DRY-RUN] to={email_prof} total={total} E={entradas} J={justificaciones}"
+                    f"[DRY-RUN] to={email_prof} total={total} E={entradas} J={justificaciones} logo_url={'ok' if logo_url else 'no'}"
                 ))
                 continue
 
@@ -313,7 +331,7 @@ class Command(BaseCommand):
                 self._brevo_send_email(email_prof, subject, body_text, body_html)
                 enviados += 1
                 self.stdout.write(self.style.SUCCESS(
-                    f"[SEND] to={email_prof} total={total} E={entradas} J={justificaciones}"
+                    f"[SEND] to={email_prof} total={total} E={entradas} J={justificaciones} logo_url={'ok' if logo_url else 'no'}"
                 ))
             except Exception as e:
                 errores += 1

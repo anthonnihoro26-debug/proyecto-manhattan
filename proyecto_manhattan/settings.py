@@ -31,6 +31,12 @@ DEBUG = os.environ.get("DEBUG", "1") == "1"
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
+# ✅ NUEVO: URL pública base para construir links (logo en correos)
+if RENDER_EXTERNAL_HOSTNAME:
+    PUBLIC_BASE_URL = f"https://{RENDER_EXTERNAL_HOSTNAME}"
+else:
+    PUBLIC_BASE_URL = "http://127.0.0.1:8000"
+
 # =========================
 # HOSTS / CSRF
 # =========================
@@ -277,4 +283,3 @@ LOGGING = {
         "axes.backends": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
     },
 }
-
