@@ -7,10 +7,23 @@ from .models import Profesor, Asistencia, JustificacionAsistencia
 
 
 # =========================
+# ✅ CONFIG GLOBAL ADMIN
+# =========================
+admin.site.site_header = "Panel de Asistencias"
+admin.site.site_title = "Manhattan Admin"
+admin.site.index_title = "Administración del sistema"
+
+
+# =========================
 # ✅ PROFESOR
 # =========================
 @admin.register(Profesor)
 class ProfesorAdmin(admin.ModelAdmin):
+    # ✅ título de sección (si tu modelo no tiene verbose_name)
+    # (no rompe nada si ya lo tienes en models.py)
+    # verbose_name = "Profesor"
+    # verbose_name_plural = "Profesores"
+
     list_display = ("dni", "apellidos", "nombres", "condicion", "email")
     search_fields = ("dni", "apellidos", "nombres", "email")
     list_filter = ("condicion",)
@@ -19,6 +32,13 @@ class ProfesorAdmin(admin.ModelAdmin):
     # ✅ mejoras
     list_per_page = 25
     list_display_links = ("dni", "apellidos", "nombres")
+
+    # ✅ UX admin
+    actions_on_top = True
+    actions_on_bottom = True
+    save_on_top = True
+    show_full_result_count = False
+    empty_value_display = "—"
 
 
 # =========================
@@ -39,6 +59,19 @@ class AsistenciaAdmin(admin.ModelAdmin):
     list_display_links = ("profesor", "fecha_hora")
 
     actions = ["exportar_csv_asistencias"]
+
+    # ✅ UX admin
+    actions_on_top = True
+    actions_on_bottom = True
+    save_on_top = True
+    show_full_result_count = False
+    empty_value_display = "—"
+
+    # ✅ filtros laterales colapsables (Django 5.2+)
+    list_filter = (
+        ("tipo", admin.ChoicesFieldListFilter),
+        ("fecha", admin.DateFieldListFilter),
+    )
 
     def exportar_csv_asistencias(self, request, queryset):
         response = HttpResponse(content_type="text/csv")
@@ -78,9 +111,25 @@ class JustificacionAsistenciaAdmin(admin.ModelAdmin):
 
     actions = ["exportar_csv_justificaciones"]
 
+    # ✅ UX admin
+    actions_on_top = True
+    actions_on_bottom = True
+    save_on_top = True
+    show_full_result_count = False
+    empty_value_display = "—"
+
+    # ✅ filtros con mejor UI
+    list_filter = (
+        ("fecha", admin.DateFieldListFilter),
+        ("tipo", admin.ChoicesFieldListFilter),
+    )
+
     def ver_pdf(self, obj):
         if obj.archivo:
-            return format_html('<a href="{}" target="_blank" rel="noopener">📄 Ver PDF</a>', obj.archivo.url)
+            return format_html(
+                '<a class="button" href="{}" target="_blank" rel="noopener">📄 Ver PDF</a>',
+                obj.archivo.url
+            )
         return "—"
     ver_pdf.short_description = "PDF"
 

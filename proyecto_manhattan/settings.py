@@ -52,8 +52,6 @@ if RENDER_EXTERNAL_HOSTNAME:
 # APPS
 # =========================
 INSTALLED_APPS = [
-    "jazzmin",
-
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -160,6 +158,14 @@ STATICFILES_DIRS = []
 _static_dir = BASE_DIR / "static"
 if _static_dir.exists():
     STATICFILES_DIRS.append(_static_dir)
+
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+]
+
+# ✅ Para que WhiteNoise NO sea estricto
+WHITENOISE_MANIFEST_STRICT = False
 
 # =========================
 # MEDIA (LOCAL)
@@ -284,48 +290,4 @@ LOGGING = {
         "axes.signals": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
         "axes.backends": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
     },
-}
-
-# =========================
-# JAZZMIN (ADMIN)
-# =========================
-JAZZMIN_SETTINGS = {
-    "site_title": "Manhattan Admin",
-    "site_header": "Panel de Asistencias",
-    "site_brand": "Proyecto Manhattan",
-    "welcome_sign": "Bienvenido al panel",
-    "copyright": "Proyecto Manhattan",
-
-    # ✅ IMPORTANTE: esto carga tu JS para arreglar tabs/pestañas
-    "custom_js": [
-        "asistencias/js/jazzmin_tabs_fix.js",
-    ],
-
-    # (opcional) búsqueda global
-    "search_model": [
-        "asistencias.Profesor",
-        "asistencias.Asistencia",
-        "asistencias.JustificacionAsistencia",
-    ],
-
-    "topmenu_links": [
-        {"name": "Ver sitio", "url": "/", "new_window": True},
-        {"model": "auth.User"},
-        {"model": "auth.Group"},
-        {"app": "asistencias"},
-    ],
-}
-
-# ✅ COLORES CLAROS + PROFESIONAL
-JAZZMIN_UI_TWEAKS = {
-    "theme": "flatly",
-    "navbar": "navbar-white",
-    "sidebar": "sidebar-dark-primary",
-    "brand_colour": "navbar-primary",
-    "accent": "accent-primary",
-
-    "sidebar_fixed": True,
-    "navbar_fixed": True,
-    "footer_fixed": False,
-    "sidebar_nav_compact_style": True,
 }

@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/admin_pro.css' %}">
+{% endblock %}
+
+{% block branding %}
+  <div class="brand">
+    <span class="brand-dot">M</span>
+    <span class="brand-title">Proyecto Manhattan</span>
+    <span class="brand-sub">Admin</span>
+  </div>
+{% endblock %}

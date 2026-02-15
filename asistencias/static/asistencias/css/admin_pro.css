@@ -1,0 +1,80 @@
+/* Fondo general */
+body {
+  background: #f6f8fb !important;
+}
+
+/* Barra superior */
+#header {
+  background: #0b1220 !important;
+  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+}
+
+#header #site-name a,
+#header a:link,
+#header a:visited {
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+
+/* Branding */
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:6px 0;
+}
+.brand-dot{
+  width:34px; height:34px;
+  display:inline-flex;
+  align-items:center; justify-content:center;
+  border-radius:10px;
+  background:#2563eb;
+  color:#fff;
+  font-weight:800;
+  font-size:16px;
+}
+.brand-title{
+  color:#fff;
+  font-weight:700;
+  font-size:16px;
+  letter-spacing:.2px;
+}
+.brand-sub{
+  color:rgba(255,255,255,.70);
+  font-size:13px;
+  margin-left:6px;
+}
+
+/* Tarjetas / cajas */
+.module, .dashboard #content-main .module, .app-auth .module, .app-asistencias .module {
+  border-radius: 14px !important;
+  border: 1px solid #e7edf5 !important;
+  box-shadow: 0 10px 24px rgba(15,23,42,.06) !important;
+  overflow: hidden;
+}
+
+/* Botones pro */
+.button, input[type=submit], input[type=button], .submit-row input {
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  border: 1px solid rgba(0,0,0,.08) !important;
+}
+.button.default, input[type=submit].default {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+/* Tablas */
+#result_list {
+  border-radius: 14px !important;
+  overflow: hidden;
+  border: 1px solid #e7edf5 !important;
+}
+
+/* Links */
+a {
+  color: #2563eb;
+}
+a:hover {
+  color: #1d4ed8;
+}

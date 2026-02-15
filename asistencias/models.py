@@ -31,8 +31,7 @@ class Profesor(models.Model):
 class Asistencia(models.Model):
     TIPOS = (
         ("E", "Entrada"),
-        ("S", "Salida"),
-        ("J", "Justificación"),  # ✅ NUEVO
+        ("J", "Justificación"),  # ✅ SOLO ENTRADA Y JUSTIFICACIÓN
     )
 
     # ✅ mismos motivos que tu JustificacionAsistencia (2 letras)
@@ -51,7 +50,7 @@ class Asistencia(models.Model):
     # ✅ Fecha/hora exacta del registro (escaneo / registro manual / justificación)
     fecha_hora = models.DateTimeField("Fecha y hora", default=timezone.now, db_index=True)
 
-    # ✅ Entrada / salida / justificación
+    # ✅ Entrada / justificación
     tipo = models.CharField("Tipo", max_length=1, choices=TIPOS, default="E")
 
     # ✅ Solo si tipo="J"
@@ -72,7 +71,7 @@ class Asistencia(models.Model):
         verbose_name = "Asistencia"
         verbose_name_plural = "Asistencias"
         constraints = [
-            # ✅ NO permite 2 entradas/2 salidas/2 justificaciones el mismo día
+            # ✅ NO permite 2 entradas/2 justificaciones el mismo día
             models.UniqueConstraint(fields=["profesor", "fecha", "tipo"], name="uniq_profesor_fecha_tipo"),
         ]
         indexes = [
@@ -84,10 +83,6 @@ class Asistencia(models.Model):
     # ✅ Helpers (profesional)
     # =========================
     @property
-    def es_entrada(self) -> bool:
-        return self.tipo == "E"
-
-    @property
     def es_justificacion(self) -> bool:
         return self.tipo == "J"
 
@@ -97,8 +92,6 @@ class Asistencia(models.Model):
             return "ENTRADA"
         if self.tipo == "J":
             return "JUSTIFICACIÓN"
-        if self.tipo == "S":
-            return "SALIDA"
         return str(self.tipo or "").strip() or "REGISTRO"
 
     @property
@@ -124,16 +117,12 @@ class Asistencia(models.Model):
                 return f"JUSTIFICACIÓN ({mot}) - {det}"
             return f"JUSTIFICACIÓN ({mot})"
 
-        if self.tipo == "S":
-            return "SALIDA"
-
         return self.tipo_label_pro
 
     def __str__(self):
         if self.tipo == "J":
             return f"{self.profesor} - JUSTIFICADO({self.motivo}) - {self.fecha:%d/%m/%Y}"
-        tipo = "ENTRADA" if self.tipo == "E" else "SALIDA"
-        return f"{self.profesor} - {tipo} - {self.fecha_hora:%d/%m/%Y %H:%M}"
+        return f"{self.profesor} - ENTRADA - {self.fecha_hora:%d/%m/%Y %H:%M}"
 
 
 # =========================================================
