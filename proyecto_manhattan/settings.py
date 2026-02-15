@@ -183,26 +183,26 @@ if CLOUDINARY_URL:
         "SECURE": True,
     }
 
-    # ✅ MEDIA en Cloudinary / STATIC con NonStrict Manifest
     STORAGES = {
         "default": {
             "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
         },
         "staticfiles": {
-            "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
 else:
-    # ✅ LOCAL
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
         "staticfiles": {
-            "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
 
+# ✅ por si acaso (no rompe)
+WHITENOISE_MANIFEST_STRICT = False
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # =========================
