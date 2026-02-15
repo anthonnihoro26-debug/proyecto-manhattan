@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "asistencias",
     "axes",
 ]
@@ -159,6 +160,11 @@ _static_dir = BASE_DIR / "static"
 if _static_dir.exists():
     STATICFILES_DIRS.append(_static_dir)
 
+# ✅ FIX Render/Whitenoise:
+# Evita que collectstatic falle si un CSS referencia un .map que no existe (ej. bootswatch yeti)
+if RENDER_EXTERNAL_HOSTNAME:
+    WHITENOISE_MANIFEST_STRICT = False
+
 # =========================
 # MEDIA (LOCAL)
 # =========================
@@ -173,7 +179,6 @@ CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "").strip()
 if CLOUDINARY_URL:
     INSTALLED_APPS += ["cloudinary", "cloudinary_storage"]
 
-    # ✅ Fuerza a usar esa URL (y URLs seguras https)
     CLOUDINARY_STORAGE = {
         "CLOUDINARY_URL": CLOUDINARY_URL,
         "SECURE": True,
@@ -285,7 +290,6 @@ LOGGING = {
     },
 }
 
-
 # =========================
 # JAZZMIN (ADMIN BONITO)
 # =========================
@@ -296,15 +300,13 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Bienvenido al panel",
     "copyright": "Proyecto Manhattan",
 
-    # si quieres que el logo salga arriba (opcional):
-    # "site_logo": "img/logo-uni.png",  # va en static/img/logo-uni.png
-    # "login_logo": "img/logo-uni.png",
-
-    "search_model": ["asistencias.Profesor", "asistencias.Asistencia"],
+    # 🔎 búsqueda global
+    "search_model": ["asistencias.Profesor", "asistencias.Asistencia", "asistencias.JustificacionAsistencia"],
 
     "topmenu_links": [
         {"name": "Ver sitio", "url": "/", "new_window": True},
         {"model": "auth.User"},
+        {"model": "auth.Group"},
         {"app": "asistencias"},
     ],
 
@@ -315,14 +317,15 @@ JAZZMIN_SETTINGS = {
 
         "asistencias.asistencia": "fas fa-clipboard-check",
         "asistencias.profesor": "fas fa-chalkboard-teacher",
-        "asistencias.justificacionasistencias": "fas fa-file-signature",
+        # ✅ corregido: nombre real del modelo (singular)
+        "asistencias.justificacionasistencia": "fas fa-file-signature",
     },
 
     "order_with_respect_to": ["asistencias", "auth"],
 }
 
 JAZZMIN_UI_TWEAKS = {
-    "theme": "darkly",                 # prueba: "flatly", "darkly", "cosmo"
+    "theme": "darkly",  # prueba: "flatly", "cosmo"
     "navbar": "navbar-dark",
     "sidebar": "sidebar-dark-primary",
     "brand_colour": "navbar-primary",
