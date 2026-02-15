@@ -180,7 +180,7 @@ if CLOUDINARY_URL:
         "SECURE": True,
     }
 
-    # ✅ ESTO ES LO QUE DIJISTE QUE NO TE DA ERROR (sin manifest)
+    # ✅ ESTABLE EN RENDER (NO MANIFEST -> NO ERROR .map)
     STORAGES = {
         "default": {
             "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
@@ -241,7 +241,6 @@ EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "20"))
 # CRON / BREVO
 # =========================
 REPORT_TRIGGER_TOKEN = (os.environ.get("REPORT_TRIGGER_TOKEN") or "").strip()
-
 BREVO_API_KEY = (os.environ.get("BREVO_API_KEY") or "").strip()
 BREVO_SENDER_EMAIL = (os.environ.get("BREVO_SENDER_EMAIL") or DEFAULT_FROM_EMAIL).strip()
 BREVO_SENDER_NAME = (os.environ.get("BREVO_SENDER_NAME") or "Proyecto Manhattan").strip()
@@ -297,6 +296,12 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Bienvenido al panel",
     "copyright": "Proyecto Manhattan",
 
+    # ✅ IMPORTANTE: esto carga tu JS para arreglar tabs/pestañas
+    "custom_js": [
+        "asistencias/js/jazzmin_tabs_fix.js",
+    ],
+
+    # (opcional) búsqueda global
     "search_model": [
         "asistencias.Profesor",
         "asistencias.Asistencia",
@@ -309,27 +314,9 @@ JAZZMIN_SETTINGS = {
         {"model": "auth.Group"},
         {"app": "asistencias"},
     ],
-
-    "icons": {
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.group": "fas fa-users",
-
-        "asistencias.asistencia": "fas fa-clipboard-check",
-        "asistencias.profesor": "fas fa-chalkboard-teacher",
-        "asistencias.justificacionasistencia": "fas fa-file-signature",
-    },
-
-    "order_with_respect_to": ["asistencias", "auth"],
-
-    # ✅ arreglos visuales y de permisos
-    #"custom_css": "css/jazzmin_fixes.css",
-
-    # ✅ FIX tabs (Información personal / Permisos / Fechas importantes)
-    "custom_js": "js/jazzmin_tabs_fix.js",
 }
 
-# ✅ CLARO Y PROFESIONAL
+# ✅ COLORES CLAROS + PROFESIONAL
 JAZZMIN_UI_TWEAKS = {
     "theme": "flatly",
     "navbar": "navbar-white",
@@ -341,7 +328,4 @@ JAZZMIN_UI_TWEAKS = {
     "navbar_fixed": True,
     "footer_fixed": False,
     "sidebar_nav_compact_style": True,
-
-    "sidebar_nav_child_indent": True,
-    "sidebar_nav_flat_style": False,
 }
