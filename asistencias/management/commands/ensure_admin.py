@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 
 class Command(BaseCommand):
-    help = "Crea/actualiza superusuario con variables DJANGO_SUPERUSER_*"
+    help = "Crea/actualiza superusuario usando variables DJANGO_SUPERUSER_*"
 
     def handle(self, *args, **options):
         User = get_user_model()
@@ -13,12 +13,12 @@ class Command(BaseCommand):
         password = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
 
         if not username or not password:
-            self.stdout.write("Faltan DJANGO_SUPERUSER_USERNAME o DJANGO_SUPERUSER_PASSWORD")
+            self.stdout.write(self.style.WARNING("Faltan DJANGO_SUPERUSER_USERNAME o DJANGO_SUPERUSER_PASSWORD"))
             return
 
         user, created = User.objects.get_or_create(username=username, defaults={"email": email})
 
-        # SIEMPRE actualiza contraseña (para que tu variable sí funcione)
+        # Siempre asegurar permisos y actualizar password
         user.email = email
         user.is_staff = True
         user.is_superuser = True
@@ -26,6 +26,6 @@ class Command(BaseCommand):
         user.save()
 
         if created:
-            self.stdout.write(f"Superusuario '{username}' CREADO/ACTUALIZADO.")
+            self.stdout.write(self.style.SUCCESS(f"Superusuario '{username}' creado."))
         else:
-            self.stdout.write(f"Superusuario '{username}' YA EXISTÍA, contraseña ACTUALIZADA.")
+            self.stdout.write(self.style.SUCCESS(f"Superusuario '{username}' actualizado (password/permisos)."))

@@ -52,6 +52,8 @@ if RENDER_EXTERNAL_HOSTNAME:
 # APPS
 # =========================
 INSTALLED_APPS = [
+    "admin_interface",
+    "colorfield",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
