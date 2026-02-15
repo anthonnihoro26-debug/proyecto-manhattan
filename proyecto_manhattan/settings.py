@@ -121,9 +121,7 @@ if USE_SQLITE:
     }
 else:
     if not DATABASE_URL:
-        raise RuntimeError(
-            "DATABASE_URL is not defined. Define DATABASE_URL (PostgreSQL) or set USE_SQLITE=1."
-        )
+        raise RuntimeError("DATABASE_URL is not defined. Define DATABASE_URL (PostgreSQL) or set USE_SQLITE=1.")
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
@@ -161,9 +159,6 @@ _static_dir = BASE_DIR / "static"
 if _static_dir.exists():
     STATICFILES_DIRS.append(_static_dir)
 
-# ✅ CLAVE: evita que collectstatic falle por .map faltantes (bootswatch/jazzmin)
-WHITENOISE_MANIFEST_STRICT = False
-
 # =========================
 # MEDIA (LOCAL)
 # =========================
@@ -188,7 +183,8 @@ if CLOUDINARY_URL:
             "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+            # ✅ ESTE es el fix que evita el fallo de bootswatch .map
+            "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
         },
     }
 else:
@@ -197,12 +193,10 @@ else:
             "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+            "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
         },
     }
 
-# ✅ por si acaso (no rompe)
-WHITENOISE_MANIFEST_STRICT = False
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # =========================
@@ -226,7 +220,6 @@ AXES_RESET_ON_SUCCESS = True
 AXES_LOCKOUT_CALLABLE = "asistencias.axes.lockout"
 AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
 
-# ⚠️ warnings deprecados en logs (no rompen)
 AXES_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 AXES_PROXY_ORDER = "left-most"
 
@@ -277,7 +270,7 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
 
 # =========================
-# LOGGING
+# LOGGING (silencia axes)
 # =========================
 LOGGING = {
     "version": 1,
@@ -293,7 +286,7 @@ LOGGING = {
 }
 
 # =========================
-# JAZZMIN (ADMIN)
+# JAZZMIN (ADMIN BONITO + FIX TABS)
 # =========================
 JAZZMIN_SETTINGS = {
     "site_title": "Manhattan Admin",
@@ -319,7 +312,6 @@ JAZZMIN_SETTINGS = {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.group": "fas fa-users",
-
         "asistencias.asistencia": "fas fa-clipboard-check",
         "asistencias.profesor": "fas fa-chalkboard-teacher",
         "asistencias.justificacionasistencia": "fas fa-file-signature",
@@ -327,14 +319,17 @@ JAZZMIN_SETTINGS = {
 
     "order_with_respect_to": ["asistencias", "auth"],
 
-    # ✅ tu CSS para arreglar permisos invisibles
+    # ✅ CSS para detalles visuales (si quieres)
     "custom_css": "css/jazzmin_fixes.css",
+
+    # ✅ JS para que las pestañas funcionen SI O SI
+    "custom_js": "js/jazzmin_tabs_fix.js",
 }
 
-# ✅ Tema claro profesional (mejor que darkly)
+# ✅ LOOK CLARO Y PROFESIONAL
 JAZZMIN_UI_TWEAKS = {
     "theme": "flatly",
-    "navbar": "navbar-white navbar-light",
+    "navbar": "navbar-white",
     "sidebar": "sidebar-light-primary",
     "brand_colour": "navbar-primary",
     "accent": "accent-primary",
@@ -347,4 +342,3 @@ JAZZMIN_UI_TWEAKS = {
     "sidebar_nav_child_indent": True,
     "sidebar_nav_flat_style": False,
 }
-

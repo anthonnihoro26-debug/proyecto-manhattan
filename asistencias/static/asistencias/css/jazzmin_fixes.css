@@ -1,26 +1,17 @@
-/* === FIX: Permisos (select box) invisibles en tema oscuro === */
-.selector select,
-.selector select option,
-select[multiple],
-select[multiple] option {
-  color: #111 !important;
-  background: #fff !important;
+/* asistencias/static/css/jazzmin_fixes.css */
+
+/* Un look más limpio */
+.content-wrapper {
+  background: #f5f7fb !important;
 }
 
-/* Filtro de la izquierda/derecha */
-.selector .selector-filter input {
-  color: #111 !important;
-  background: #fff !important;
-  border: 1px solid rgba(0,0,0,.2) !important;
+/* Tabs más claros */
+.nav-tabs .nav-link {
+  border-radius: 10px 10px 0 0;
+  font-weight: 600;
 }
 
-/* Encabezados del widget */
-.selector .selector-available h2,
-.selector .selector-chosen h2 {
-  color: #e5e7eb !important;
-}
-
-/* Botones entre cajas */
-.selector .selector-chooser li a {
-  filter: brightness(1.2);
+/* Botones */
+.btn, .btn-primary, .btn-success, .btn-danger, .btn-info {
+  border-radius: 12px !important;
 }
