@@ -42,3 +42,7 @@ class MediaCloudinaryStorageAuto(MediaCloudinaryStorage):
             secure=True,
         )
         return url
+from whitenoise.storage import CompressedManifestStaticFilesStorage
+
+class NonStrictCompressedManifestStaticFilesStorage(CompressedManifestStaticFilesStorage):
+    manifest_strict = False
