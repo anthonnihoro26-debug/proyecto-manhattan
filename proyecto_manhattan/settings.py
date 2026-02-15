@@ -52,8 +52,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 # APPS
 # =========================
 INSTALLED_APPS = [
-    "admin_interface",
-    "colorfield",
+    "jazzmin",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -284,4 +283,52 @@ LOGGING = {
         "axes.signals": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
         "axes.backends": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
     },
+}
+
+
+# =========================
+# JAZZMIN (ADMIN BONITO)
+# =========================
+JAZZMIN_SETTINGS = {
+    "site_title": "Manhattan Admin",
+    "site_header": "Panel de Asistencias",
+    "site_brand": "Proyecto Manhattan",
+    "welcome_sign": "Bienvenido al panel",
+    "copyright": "Proyecto Manhattan",
+
+    # si quieres que el logo salga arriba (opcional):
+    # "site_logo": "img/logo-uni.png",  # va en static/img/logo-uni.png
+    # "login_logo": "img/logo-uni.png",
+
+    "search_model": ["asistencias.Profesor", "asistencias.Asistencia"],
+
+    "topmenu_links": [
+        {"name": "Ver sitio", "url": "/", "new_window": True},
+        {"model": "auth.User"},
+        {"app": "asistencias"},
+    ],
+
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.group": "fas fa-users",
+
+        "asistencias.asistencia": "fas fa-clipboard-check",
+        "asistencias.profesor": "fas fa-chalkboard-teacher",
+        "asistencias.justificacionasistencias": "fas fa-file-signature",
+    },
+
+    "order_with_respect_to": ["asistencias", "auth"],
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "darkly",                 # prueba: "flatly", "darkly", "cosmo"
+    "navbar": "navbar-dark",
+    "sidebar": "sidebar-dark-primary",
+    "brand_colour": "navbar-primary",
+    "accent": "accent-primary",
+    "sidebar_fixed": True,
+    "navbar_fixed": True,
+    "footer_fixed": False,
+    "sidebar_nav_compact_style": True,
 }

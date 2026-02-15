@@ -4,14 +4,14 @@ from django.conf import settings
 
 
 class Profesor(models.Model):
-    codigo = models.CharField(max_length=20, blank=True, null=True)
-    dni = models.CharField(max_length=8, unique=True)
-    apellidos = models.CharField(max_length=120)
-    nombres = models.CharField(max_length=120)
-    condicion = models.CharField(max_length=20)
+    codigo = models.CharField("Código", max_length=20, blank=True, null=True)
+    dni = models.CharField("DNI", max_length=8, unique=True)
+    apellidos = models.CharField("Apellidos", max_length=120)
+    nombres = models.CharField("Nombres", max_length=120)
+    condicion = models.CharField("Condición", max_length=20)
 
     # ✅ correo para enviar reportes
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField("Correo", blank=True, null=True)
 
     @property
     def nombre_completo(self):
@@ -21,6 +21,11 @@ class Profesor(models.Model):
 
     def __str__(self):
         return f"{self.apellidos} {self.nombres}"
+
+    class Meta:
+        verbose_name = "Profesor"
+        verbose_name_plural = "Profesores"
+        ordering = ["apellidos", "nombres"]
 
 
 class Asistencia(models.Model):
@@ -38,31 +43,34 @@ class Asistencia(models.Model):
         ("O", "Otro"),
     )
 
-    profesor = models.ForeignKey(Profesor, on_delete=models.CASCADE)
+    profesor = models.ForeignKey("Profesor", on_delete=models.CASCADE, verbose_name="Profesor")
 
     # ✅ Día “normalizado”
-    fecha = models.DateField(db_index=True, default=timezone.localdate)
+    fecha = models.DateField("Fecha", db_index=True, default=timezone.localdate)
 
     # ✅ Fecha/hora exacta del registro (escaneo / registro manual / justificación)
-    fecha_hora = models.DateTimeField(default=timezone.now, db_index=True)
+    fecha_hora = models.DateTimeField("Fecha y hora", default=timezone.now, db_index=True)
 
     # ✅ Entrada / salida / justificación
-    tipo = models.CharField(max_length=1, choices=TIPOS, default="E")
+    tipo = models.CharField("Tipo", max_length=1, choices=TIPOS, default="E")
 
     # ✅ Solo si tipo="J"
-    motivo = models.CharField(max_length=2, choices=MOTIVOS, blank=True, default="")
-    detalle = models.CharField(max_length=255, blank=True, default="")
+    motivo = models.CharField("Motivo", max_length=2, choices=MOTIVOS, blank=True, default="")
+    detalle = models.CharField("Detalle", max_length=255, blank=True, default="")
 
     # ✅ Auditoría
     registrado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True, blank=True,
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
+        verbose_name="Registrado por"
     )
-    ip = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.CharField(max_length=255, blank=True, default="")
+    ip = models.GenericIPAddressField("IP", null=True, blank=True)
+    user_agent = models.CharField("User agent", max_length=255, blank=True, default="")
 
     class Meta:
+        verbose_name = "Asistencia"
+        verbose_name_plural = "Asistencias"
         constraints = [
             # ✅ NO permite 2 entradas/2 salidas/2 justificaciones el mismo día
             models.UniqueConstraint(fields=["profesor", "fecha", "tipo"], name="uniq_profesor_fecha_tipo"),
@@ -70,6 +78,7 @@ class Asistencia(models.Model):
         indexes = [
             models.Index(fields=["profesor", "fecha"]),
         ]
+        ordering = ["-fecha_hora"]
 
     # =========================
     # ✅ Helpers (profesional)
@@ -142,15 +151,17 @@ class JustificacionAsistencia(models.Model):
     profesor = models.ForeignKey(
         "Profesor",
         on_delete=models.CASCADE,
-        related_name="justificaciones"
+        related_name="justificaciones",
+        verbose_name="Profesor"
     )
-    fecha = models.DateField(db_index=True)
+    fecha = models.DateField("Fecha", db_index=True)
 
-    tipo = models.CharField(max_length=2, choices=TIPO_CHOICES, default="DM")
-    detalle = models.CharField(max_length=255, blank=True, default="")
+    tipo = models.CharField("Tipo", max_length=2, choices=TIPO_CHOICES, default="DM")
+    detalle = models.CharField("Detalle", max_length=255, blank=True, default="")
 
     # ✅ PDF de sustento (descanso médico, permiso, etc.)
     archivo = models.FileField(
+        "Archivo (PDF)",
         upload_to="justificaciones/%Y/%m/",
         null=True,
         blank=True
@@ -160,19 +171,23 @@ class JustificacionAsistencia(models.Model):
         settings.AUTH_USER_MODEL,
         null=True, blank=True,
         on_delete=models.SET_NULL,
-        related_name="justificaciones_creadas"
+        related_name="justificaciones_creadas",
+        verbose_name="Creado por"
     )
-    creado_en = models.DateTimeField(auto_now_add=True)
+    creado_en = models.DateTimeField("Creado en", auto_now_add=True)
 
     actualizado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True, blank=True,
         on_delete=models.SET_NULL,
-        related_name="justificaciones_actualizadas"
+        related_name="justificaciones_actualizadas",
+        verbose_name="Actualizado por"
     )
-    actualizado_en = models.DateTimeField(auto_now=True)
+    actualizado_en = models.DateTimeField("Actualizado en", auto_now=True)
 
     class Meta:
+        verbose_name = "Justificación"
+        verbose_name_plural = "Justificaciones"
         constraints = [
             models.UniqueConstraint(fields=["profesor", "fecha"], name="uniq_justificacion_profesor_fecha")
         ]
