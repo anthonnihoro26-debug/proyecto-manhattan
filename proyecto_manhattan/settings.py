@@ -31,7 +31,7 @@ DEBUG = os.environ.get("DEBUG", "1") == "1"
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
-# ✅ URL pública base (para links en correos, logos, etc.)
+# ✅ URL pública base (por si construyes links en emails)
 if RENDER_EXTERNAL_HOSTNAME:
     PUBLIC_BASE_URL = f"https://{RENDER_EXTERNAL_HOSTNAME}"
 else:
@@ -121,7 +121,9 @@ if USE_SQLITE:
     }
 else:
     if not DATABASE_URL:
-        raise RuntimeError("DATABASE_URL is not defined. Define DATABASE_URL (PostgreSQL) or set USE_SQLITE=1.")
+        raise RuntimeError(
+            "DATABASE_URL is not defined. Define DATABASE_URL (PostgreSQL) or set USE_SQLITE=1."
+        )
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
@@ -178,13 +180,13 @@ if CLOUDINARY_URL:
         "SECURE": True,
     }
 
+    # ✅ ESTO ES LO QUE DIJISTE QUE NO TE DA ERROR (sin manifest)
     STORAGES = {
         "default": {
             "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
         },
         "staticfiles": {
-            # ✅ ESTE es el fix que evita el fallo de bootswatch .map
-            "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
 else:
@@ -193,7 +195,7 @@ else:
             "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
         "staticfiles": {
-            "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
 
@@ -270,7 +272,7 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
 
 # =========================
-# LOGGING (silencia axes)
+# LOGGING (silenciar axes)
 # =========================
 LOGGING = {
     "version": 1,
@@ -286,7 +288,7 @@ LOGGING = {
 }
 
 # =========================
-# JAZZMIN (ADMIN BONITO + FIX TABS)
+# JAZZMIN (ADMIN)
 # =========================
 JAZZMIN_SETTINGS = {
     "site_title": "Manhattan Admin",
@@ -312,6 +314,7 @@ JAZZMIN_SETTINGS = {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.group": "fas fa-users",
+
         "asistencias.asistencia": "fas fa-clipboard-check",
         "asistencias.profesor": "fas fa-chalkboard-teacher",
         "asistencias.justificacionasistencia": "fas fa-file-signature",
@@ -319,18 +322,18 @@ JAZZMIN_SETTINGS = {
 
     "order_with_respect_to": ["asistencias", "auth"],
 
-    # ✅ CSS para detalles visuales (si quieres)
+    # ✅ arreglos visuales y de permisos
     "custom_css": "css/jazzmin_fixes.css",
 
-    # ✅ JS para que las pestañas funcionen SI O SI
+    # ✅ FIX tabs (Información personal / Permisos / Fechas importantes)
     "custom_js": "js/jazzmin_tabs_fix.js",
 }
 
-# ✅ LOOK CLARO Y PROFESIONAL
+# ✅ CLARO Y PROFESIONAL
 JAZZMIN_UI_TWEAKS = {
     "theme": "flatly",
     "navbar": "navbar-white",
-    "sidebar": "sidebar-light-primary",
+    "sidebar": "sidebar-dark-primary",
     "brand_colour": "navbar-primary",
     "accent": "accent-primary",
 

@@ -2,7 +2,6 @@
 from cloudinary_storage.storage import MediaCloudinaryStorage
 from cloudinary.utils import cloudinary_url
 
-from whitenoise.storage import CompressedManifestStaticFilesStorage
 from whitenoise.storage import MissingFileError
 
 
@@ -43,24 +42,3 @@ class MediaCloudinaryStorageAuto(MediaCloudinaryStorage):
         )
         return url
 
-
-class NonStrictCompressedManifestStaticFilesStorage(CompressedManifestStaticFilesStorage):
-    """
-    ✅ Arregla el deploy en Render:
-    - Ignora faltantes de *.css.map referenciados por bootswatch
-    """
-    manifest_strict = False
-
-    def post_process(self, paths, dry_run=False, **options):
-        try:
-            yield from super().post_process(paths, dry_run=dry_run, **options)
-        except MissingFileError as e:
-            msg = str(e)
-
-            # ✅ Ignorar sourcemaps faltantes (.css.map) que rompen el build
-            if ".css.map" in msg or "bootstrap.min.css.map" in msg:
-                # seguimos sin tumbar el deploy
-                return
-
-            # si es otra cosa, sí levantamos el error
-            raise
