@@ -183,23 +183,21 @@ if CLOUDINARY_URL:
     }
 
     STORAGES = {
-    "default": {
-        "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
-    },
-    "staticfiles": {
-        "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
-    },
-
+        "default": {
+            "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
     }
 else:
-   STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
-    },
-
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
     }
 
 # ✅ por si acaso (no rompe)
