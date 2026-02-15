@@ -1,15 +1,17 @@
-{% extends "admin/base_site.html" %}
+{% extends "admin/base.html" %}
 {% load static %}
 
-{% block extrahead %}
+{% block title %}Manhattan Admin{% endblock %}
+
+{% block extrastyle %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'css/admin_pro.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin_custom.css' %}">
 {% endblock %}
 
 {% block branding %}
-  <div class="brand">
-    <span class="brand-dot">M</span>
-    <span class="brand-title">Proyecto Manhattan</span>
-    <span class="brand-sub">Admin</span>
-  </div>
+  <h1 id="site-name">
+    <a href="{% url 'admin:index' %}">Panel de Asistencias</a>
+  </h1>
 {% endblock %}
+
+{% block nav-global %}{% endblock %}

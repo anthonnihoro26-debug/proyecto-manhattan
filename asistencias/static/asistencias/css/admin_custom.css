@@ -1,0 +1,143 @@
+/* =========================================================
+   ADMIN CUSTOM (Django Admin) - PRO LOOK
+   Compatible con Django 5.x
+   ========================================================= */
+
+/* Paleta (clara + corporativa) */
+:root {
+  --p-primary: #1f4fd7;
+  --p-primary-2: #163aa0;
+  --p-bg: #f6f8fc;
+  --p-card: #ffffff;
+  --p-text: #0f172a;
+  --p-muted: #64748b;
+  --p-border: #e6eaf2;
+  --p-shadow: 0 14px 40px rgba(2, 8, 23, 0.08);
+  --p-radius: 16px;
+}
+
+/* Fondo general */
+body {
+  background: var(--p-bg) !important;
+  color: var(--p-text) !important;
+}
+
+/* Top header */
+#header {
+  background: linear-gradient(90deg, var(--p-primary), var(--p-primary-2)) !important;
+  border-bottom: 0 !important;
+  box-shadow: var(--p-shadow) !important;
+}
+#header a:link, #header a:visited {
+  color: #fff !important;
+}
+#branding #site-name a {
+  font-weight: 800 !important;
+  letter-spacing: .2px;
+}
+
+/* Barra de breadcrumbs */
+div.breadcrumbs {
+  background: rgba(255,255,255,.10) !important;
+  color: rgba(255,255,255,.92) !important;
+  border: 0 !important;
+}
+
+/* Contenedores principales (cajas) */
+#content, .content, .dashboard #content {
+  padding: 22px !important;
+}
+.module, .inline-group, fieldset, .aligned, .app-auth.module, .app-asistencias.module {
+  background: var(--p-card) !important;
+  border: 1px solid var(--p-border) !important;
+  border-radius: var(--p-radius) !important;
+  box-shadow: var(--p-shadow) !important;
+  overflow: hidden;
+}
+
+/* Tablas del changelist */
+#changelist .results, #result_list {
+  border-radius: var(--p-radius) !important;
+  overflow: hidden;
+  border: 1px solid var(--p-border) !important;
+}
+#result_list thead th {
+  background: #f1f5ff !important;
+  color: #0b1b4a !important;
+  border-bottom: 1px solid var(--p-border) !important;
+}
+#result_list tbody tr:hover {
+  background: #f7faff !important;
+}
+
+/* Botones (guardar, añadir, etc.) */
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+  background: var(--p-primary) !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  box-shadow: 0 10px 24px rgba(31, 79, 215, .20) !important;
+}
+.button:hover, input[type=submit]:hover, a.button:hover {
+  filter: brightness(.95);
+}
+
+/* Botón “Eliminar” (rojo elegante) */
+.deletelink, .submit-row a.deletelink {
+  background: #dc2626 !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  border: 0 !important;
+}
+
+/* Inputs */
+input[type=text], input[type=password], input[type=email], input[type=number],
+textarea, select {
+  border-radius: 12px !important;
+  border: 1px solid var(--p-border) !important;
+  padding: 10px 12px !important;
+  background: #fff !important;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  border-color: rgba(31,79,215,.45) !important;
+  box-shadow: 0 0 0 4px rgba(31,79,215,.12) !important;
+}
+
+/* Sidebar */
+#nav-sidebar {
+  background: #0b1220 !important;
+  border-right: 0 !important;
+}
+#nav-sidebar .module caption,
+#nav-sidebar .module h2 {
+  color: rgba(255,255,255,.75) !important;
+}
+#nav-sidebar a {
+  color: rgba(255,255,255,.86) !important;
+}
+#nav-sidebar a:hover {
+  background: rgba(255,255,255,.08) !important;
+  border-radius: 12px !important;
+}
+#nav-sidebar .current-model > a,
+#nav-sidebar .current-app > a {
+  background: rgba(31,79,215,.35) !important;
+  border-radius: 12px !important;
+}
+
+/* Mensajes */
+ul.messagelist li {
+  border-radius: 14px !important;
+  border: 1px solid var(--p-border) !important;
+  box-shadow: var(--p-shadow) !important;
+}
+
+/* Footer */
+#footer {
+  color: var(--p-muted) !important;
+}
+

@@ -15,9 +15,6 @@ import os
 from datetime import timedelta
 import dj_database_url
 
-# =========================
-# Load .env only in local
-# =========================
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -31,15 +28,11 @@ DEBUG = os.environ.get("DEBUG", "1") == "1"
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
-# ✅ URL pública base (por si construyes links en emails)
 if RENDER_EXTERNAL_HOSTNAME:
     PUBLIC_BASE_URL = f"https://{RENDER_EXTERNAL_HOSTNAME}"
 else:
     PUBLIC_BASE_URL = "http://127.0.0.1:8000"
 
-# =========================
-# HOSTS / CSRF
-# =========================
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
@@ -48,9 +41,6 @@ CSRF_TRUSTED_ORIGINS = []
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
-# =========================
-# APPS
-# =========================
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -63,9 +53,6 @@ INSTALLED_APPS = [
     "axes",
 ]
 
-# =========================
-# MIDDLEWARE
-# =========================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -83,9 +70,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "proyecto_manhattan.urls"
 
-# =========================
-# TEMPLATES
-# =========================
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -104,24 +88,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "proyecto_manhattan.wsgi.application"
 
-# =========================
-# DATABASE
-# =========================
 USE_SQLITE = os.environ.get("USE_SQLITE", "0") == "1"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if USE_SQLITE:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
+    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
 else:
     if not DATABASE_URL:
-        raise RuntimeError(
-            "DATABASE_URL is not defined. Define DATABASE_URL (PostgreSQL) or set USE_SQLITE=1."
-        )
+        raise RuntimeError("DATABASE_URL is not defined. Define DATABASE_URL (PostgreSQL) or set USE_SQLITE=1.")
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
@@ -130,9 +104,6 @@ else:
         )
     }
 
-# =========================
-# PASSWORD VALIDATION
-# =========================
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 10}},
@@ -140,17 +111,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# =========================
-# I18N
-# =========================
 LANGUAGE_CODE = "es-pe"
 TIME_ZONE = "America/Lima"
 USE_I18N = True
 USE_TZ = True
 
-# =========================
-# STATIC
-# =========================
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -164,59 +129,33 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
 
-# ✅ Para que WhiteNoise NO sea estricto
 WHITENOISE_MANIFEST_STRICT = False
 
-# =========================
-# MEDIA (LOCAL)
-# =========================
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# =========================
-# CLOUDINARY (PROD)
-# =========================
 CLOUDINARY_URL = os.environ.get("CLOUDINARY_URL", "").strip()
-
 if CLOUDINARY_URL:
     INSTALLED_APPS += ["cloudinary", "cloudinary_storage"]
+    CLOUDINARY_STORAGE = {"CLOUDINARY_URL": CLOUDINARY_URL, "SECURE": True}
 
-    CLOUDINARY_STORAGE = {
-        "CLOUDINARY_URL": CLOUDINARY_URL,
-        "SECURE": True,
-    }
-
-    # ✅ ESTABLE EN RENDER (NO MANIFEST -> NO ERROR .map)
-    STORAGES = {
-        "default": {
-            "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
-        },
-        "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-        },
-    }
-else:
-    STORAGES = {
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
-        },
-        "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-        },
-    }
+STORAGES = {
+    "default": {
+        "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
+    } if CLOUDINARY_URL else {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# =========================
-# LOGIN / LOGOUT
-# =========================
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "post_login"
 LOGOUT_REDIRECT_URL = "login"
 
-# =========================
-# AXES
-# =========================
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend",
     "django.contrib.auth.backends.ModelBackend",
@@ -227,13 +166,9 @@ AXES_COOLOFF_TIME = timedelta(minutes=15)
 AXES_RESET_ON_SUCCESS = True
 AXES_LOCKOUT_CALLABLE = "asistencias.axes.lockout"
 AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
-
 AXES_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 AXES_PROXY_ORDER = "left-most"
 
-# =========================
-# EMAIL
-# =========================
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
@@ -243,42 +178,29 @@ EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "20"))
 
-# =========================
-# CRON / BREVO
-# =========================
 REPORT_TRIGGER_TOKEN = (os.environ.get("REPORT_TRIGGER_TOKEN") or "").strip()
 BREVO_API_KEY = (os.environ.get("BREVO_API_KEY") or "").strip()
 BREVO_SENDER_EMAIL = (os.environ.get("BREVO_SENDER_EMAIL") or DEFAULT_FROM_EMAIL).strip()
 BREVO_SENDER_NAME = (os.environ.get("BREVO_SENDER_NAME") or "Proyecto Manhattan").strip()
 
-# =========================
-# COOKIES / SECURITY (PROD)
-# =========================
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
-
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     CSRF_COOKIE_SAMESITE = "Lax"
-
     X_FRAME_OPTIONS = "DENY"
     SECURE_CONTENT_TYPE_NOSNIFF = True
     REFERRER_POLICY = "strict-origin-when-cross-origin"
-
     SECURE_HSTS_SECONDS = 60
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# =========================
-# LOGGING (silenciar axes)
-# =========================
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
