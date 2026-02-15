@@ -1,23 +1,22 @@
 # asistencias/storage_backends.py
 from cloudinary_storage.storage import MediaCloudinaryStorage
 from cloudinary.utils import cloudinary_url
+from whitenoise.storage import CompressedManifestStaticFilesStorage
 
 
 class MediaCloudinaryStorageAuto(MediaCloudinaryStorage):
     """
     ✅ Sube con resource_type='auto'
-    ✅ Entrega:
-      - PDFs: como IMAGE (image/upload) porque RAW te está fallando
-      - Imágenes: como IMAGE normal
+    ✅ Entrega PDFs como IMAGE (image/upload) porque RAW te fallaba
+    ✅ Imágenes normal (image/upload)
     """
     resource_type = "auto"
 
     def _looks_like_pdf(self, name: str) -> bool:
-        n = (name or "").lower()
+        n = (name or "").lower().strip()
         if n.endswith(".pdf"):
             return True
-        # si guardas PDFs dentro de esta carpeta, también lo tratamos como PDF
-        if "media/justificaciones/" in n or "justificaciones/" in n:
+        if "justificaciones/" in n:
             return True
         return False
 
@@ -25,24 +24,28 @@ class MediaCloudinaryStorageAuto(MediaCloudinaryStorage):
         if not name:
             return ""
 
-        # ✅ PDF -> forzamos image/upload y format=pdf
+        # ✅ PDF -> image/upload + format=pdf
         if self._looks_like_pdf(name):
             url, _ = cloudinary_url(
                 name,
-                resource_type="image",  # 👈 IMPORTANTE: NO raw
+                resource_type="image",  # ✅ NO raw
                 secure=True,
-                format="pdf",           # 👈 fuerza .pdf al final
+                format="pdf",
             )
             return url
 
-        # ✅ resto (imágenes) normal
+        # ✅ Imágenes -> normal
         url, _ = cloudinary_url(
             name,
             resource_type="image",
             secure=True,
         )
         return url
-from whitenoise.storage import CompressedManifestStaticFilesStorage
+
 
 class NonStrictCompressedManifestStaticFilesStorage(CompressedManifestStaticFilesStorage):
+    """
+    ✅ Evita que collectstatic falle cuando un CSS referencia .map que no existe
+    (bootswatch/jazzmin a veces referencian .css.map y no viene el archivo)
+    """
     manifest_strict = False

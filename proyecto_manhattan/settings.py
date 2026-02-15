@@ -31,7 +31,7 @@ DEBUG = os.environ.get("DEBUG", "1") == "1"
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
-# ✅ NUEVO: URL pública base para construir links (logo en correos)
+# ✅ URL pública base (para links en correos, logos, etc.)
 if RENDER_EXTERNAL_HOSTNAME:
     PUBLIC_BASE_URL = f"https://{RENDER_EXTERNAL_HOSTNAME}"
 else:
@@ -53,6 +53,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 # =========================
 INSTALLED_APPS = [
     "jazzmin",
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -160,7 +161,7 @@ _static_dir = BASE_DIR / "static"
 if _static_dir.exists():
     STATICFILES_DIRS.append(_static_dir)
 
-# ✅ FIX: evita error por .map faltante en bootswatch
+# ✅ CLAVE: evita que collectstatic falle por .map faltantes (bootswatch/jazzmin)
 WHITENOISE_MANIFEST_STRICT = False
 
 # =========================
@@ -182,26 +183,25 @@ if CLOUDINARY_URL:
         "SECURE": True,
     }
 
+    # ✅ MEDIA en Cloudinary / STATIC con NonStrict Manifest
     STORAGES = {
         "default": {
             "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+            "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
         },
     }
 else:
+    # ✅ LOCAL
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+            "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
         },
     }
-
-# ✅ por si acaso (no rompe)
-WHITENOISE_MANIFEST_STRICT = False
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -226,6 +226,7 @@ AXES_RESET_ON_SUCCESS = True
 AXES_LOCKOUT_CALLABLE = "asistencias.axes.lockout"
 AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
 
+# ⚠️ warnings deprecados en logs (no rompen)
 AXES_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
 AXES_PROXY_ORDER = "left-most"
 
@@ -292,10 +293,7 @@ LOGGING = {
 }
 
 # =========================
-# JAZZMIN (ADMIN BONITO)
-# =========================
-# =========================
-# JAZZMIN (ADMIN BONITO)
+# JAZZMIN (ADMIN)
 # =========================
 JAZZMIN_SETTINGS = {
     "site_title": "Manhattan Admin",
@@ -304,7 +302,6 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Bienvenido al panel",
     "copyright": "Proyecto Manhattan",
 
-    # 🔎 búsqueda global
     "search_model": [
         "asistencias.Profesor",
         "asistencias.Asistencia",
@@ -330,15 +327,15 @@ JAZZMIN_SETTINGS = {
 
     "order_with_respect_to": ["asistencias", "auth"],
 
-    # ✅ FIX de permisos invisibles (archivo: asistencias/static/css/jazzmin_fixes.css)
+    # ✅ tu CSS para arreglar permisos invisibles
     "custom_css": "css/jazzmin_fixes.css",
 }
 
-# ✅ LOOK CLARO Y PROFESIONAL
+# ✅ Tema claro profesional (mejor que darkly)
 JAZZMIN_UI_TWEAKS = {
-    "theme": "flatly",              # claro, limpio, corporativo
-    "navbar": "navbar-white",       # barra superior blanca
-    "sidebar": "sidebar-dark-primary",
+    "theme": "flatly",
+    "navbar": "navbar-white navbar-light",
+    "sidebar": "sidebar-light-primary",
     "brand_colour": "navbar-primary",
     "accent": "accent-primary",
 
@@ -347,7 +344,7 @@ JAZZMIN_UI_TWEAKS = {
     "footer_fixed": False,
     "sidebar_nav_compact_style": True,
 
-    # extras (opcional, ayudan a que se vea pro)
     "sidebar_nav_child_indent": True,
     "sidebar_nav_flat_style": False,
 }
+
