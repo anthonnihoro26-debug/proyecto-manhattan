@@ -294,6 +294,9 @@ LOGGING = {
 # =========================
 # JAZZMIN (ADMIN BONITO)
 # =========================
+# =========================
+# JAZZMIN (ADMIN BONITO)
+# =========================
 JAZZMIN_SETTINGS = {
     "site_title": "Manhattan Admin",
     "site_header": "Panel de Asistencias",
@@ -301,8 +304,15 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Bienvenido al panel",
     "copyright": "Proyecto Manhattan",
 
+    # ✅ FIX CSS para que se vean permisos en tema oscuro
+    "custom_css": "css/jazzmin_fixes.css",
+
     # 🔎 búsqueda global
-    "search_model": ["asistencias.Profesor", "asistencias.Asistencia", "asistencias.JustificacionAsistencia"],
+    "search_model": [
+        "asistencias.Profesor",
+        "asistencias.Asistencia",
+        "asistencias.JustificacionAsistencia",
+    ],
 
     "topmenu_links": [
         {"name": "Ver sitio", "url": "/", "new_window": True},
@@ -318,7 +328,6 @@ JAZZMIN_SETTINGS = {
 
         "asistencias.asistencia": "fas fa-clipboard-check",
         "asistencias.profesor": "fas fa-chalkboard-teacher",
-        # ✅ corregido: nombre real del modelo (singular)
         "asistencias.justificacionasistencia": "fas fa-file-signature",
     },
 
@@ -335,8 +344,4 @@ JAZZMIN_UI_TWEAKS = {
     "navbar_fixed": True,
     "footer_fixed": False,
     "sidebar_nav_compact_style": True,
-}
-JAZZMIN_SETTINGS = {
-    # ... lo tuyo ...
-    "custom_css": "css/jazzmin_fixes.css",
 }
