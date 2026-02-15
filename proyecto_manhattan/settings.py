@@ -160,10 +160,8 @@ _static_dir = BASE_DIR / "static"
 if _static_dir.exists():
     STATICFILES_DIRS.append(_static_dir)
 
-# ✅ FIX Render/Whitenoise:
-# Evita que collectstatic falle si un CSS referencia un .map que no existe (ej. bootswatch yeti)
-if RENDER_EXTERNAL_HOSTNAME:
-    WHITENOISE_MANIFEST_STRICT = False
+# ✅ FIX: evita error por .map faltante en bootswatch
+WHITENOISE_MANIFEST_STRICT = False
 
 # =========================
 # MEDIA (LOCAL)
