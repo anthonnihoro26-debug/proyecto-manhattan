@@ -336,3 +336,7 @@ JAZZMIN_UI_TWEAKS = {
     "footer_fixed": False,
     "sidebar_nav_compact_style": True,
 }
+JAZZMIN_SETTINGS = {
+    # ... lo tuyo ...
+    "custom_css": "css/jazzmin_fixes.css",
+}

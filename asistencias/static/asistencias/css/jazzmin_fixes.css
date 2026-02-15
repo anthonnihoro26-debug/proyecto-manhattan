@@ -1,0 +1,54 @@
+/* ============ FIX: permisos en Grupos/Usuarios (Jazzmin + tema oscuro) ============ */
+
+/* Widgets de permisos (FilteredSelectMultiple) */
+.selector select,
+.selector-available select,
+.selector-chosen select {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+.selector select option,
+.selector-available select option,
+.selector-chosen select option {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+/* Cuando Jazzmin está en dark mode / body oscuro */
+body[class*="dark"] .selector select,
+body[class*="dark"] .selector-available select,
+body[class*="dark"] .selector-chosen select,
+body.theme-dark .selector select,
+body.theme-dark .selector-available select,
+body.theme-dark .selector-chosen select {
+  background: #0f172a !important;
+  color: #e5e7eb !important;
+}
+
+body[class*="dark"] .selector select option,
+body[class*="dark"] .selector-available select option,
+body[class*="dark"] .selector-chosen select option,
+body.theme-dark .selector select option,
+body.theme-dark .selector-available select option,
+body.theme-dark .selector-chosen select option {
+  background: #0f172a !important;
+  color: #e5e7eb !important;
+}
+
+/* Inputs del filtro (la cajita "Filtro") */
+.selector .selector-filter input {
+  background: transparent !important;
+  color: inherit !important;
+  border: 1px solid rgba(148, 163, 184, .35) !important;
+}
+
+/* Botones escoger/eliminar */
+.selector .selector-chooser li a {
+  filter: brightness(1.2);
+}
+
+/* ============ FIX: tabs (Usuarios/Grupos) se vean bien ============ */
+.nav-tabs .nav-link {
+  cursor: pointer !important;
+}
