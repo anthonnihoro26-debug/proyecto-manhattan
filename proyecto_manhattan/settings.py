@@ -183,21 +183,23 @@ if CLOUDINARY_URL:
     }
 
     STORAGES = {
-        "default": {
-            "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
-        },
-        "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-        },
+    "default": {
+        "BACKEND": "asistencias.storage_backends.MediaCloudinaryStorageAuto",
+    },
+    "staticfiles": {
+        "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
+    },
+
     }
 else:
-    STORAGES = {
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
-        },
-        "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-        },
+   STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "asistencias.storage_backends.NonStrictCompressedManifestStaticFilesStorage",
+    },
+
     }
 
 # ✅ por si acaso (no rompe)
@@ -304,9 +306,6 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Bienvenido al panel",
     "copyright": "Proyecto Manhattan",
 
-    # ✅ FIX CSS para que se vean permisos en tema oscuro
-    "custom_css": "css/jazzmin_fixes.css",
-
     # 🔎 búsqueda global
     "search_model": [
         "asistencias.Profesor",
@@ -332,16 +331,25 @@ JAZZMIN_SETTINGS = {
     },
 
     "order_with_respect_to": ["asistencias", "auth"],
+
+    # ✅ FIX de permisos invisibles (archivo: asistencias/static/css/jazzmin_fixes.css)
+    "custom_css": "css/jazzmin_fixes.css",
 }
 
+# ✅ LOOK CLARO Y PROFESIONAL
 JAZZMIN_UI_TWEAKS = {
-    "theme": "darkly",  # prueba: "flatly", "cosmo"
-    "navbar": "navbar-dark",
+    "theme": "flatly",              # claro, limpio, corporativo
+    "navbar": "navbar-white",       # barra superior blanca
     "sidebar": "sidebar-dark-primary",
     "brand_colour": "navbar-primary",
     "accent": "accent-primary",
+
     "sidebar_fixed": True,
     "navbar_fixed": True,
     "footer_fixed": False,
     "sidebar_nav_compact_style": True,
+
+    # extras (opcional, ayudan a que se vea pro)
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_flat_style": False,
 }
