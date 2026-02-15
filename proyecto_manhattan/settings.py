@@ -323,7 +323,7 @@ JAZZMIN_SETTINGS = {
     "order_with_respect_to": ["asistencias", "auth"],
 
     # ✅ arreglos visuales y de permisos
-    "custom_css": "css/jazzmin_fixes.css",
+    #"custom_css": "css/jazzmin_fixes.css",
 
     # ✅ FIX tabs (Información personal / Permisos / Fechas importantes)
     "custom_js": "js/jazzmin_tabs_fix.js",
