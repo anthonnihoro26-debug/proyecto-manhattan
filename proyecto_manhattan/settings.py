@@ -186,6 +186,24 @@ BREVO_SENDER_NAME = (os.environ.get("BREVO_SENDER_NAME") or "Proyecto Manhattan"
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 
+# =========================
+# ✅ MENSAJES (para Toasts bonitos)
+# =========================
+from django.contrib.messages import constants as messages  # noqa: E402
+
+MESSAGE_TAGS = {
+    messages.DEBUG: "secondary",
+    messages.INFO: "info",
+    messages.SUCCESS: "success",
+    messages.WARNING: "warning",
+    messages.ERROR: "danger",   # ✅ clave para Bootstrap (rojo bonito)
+}
+
+MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
+
+# =========================
+# ✅ PRODUCCIÓN
+# =========================
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True

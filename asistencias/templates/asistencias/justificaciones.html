@@ -208,7 +208,7 @@
       gap:8px;
     }
 
-    /* ✅ resumen */
+    /* resumen */
     .summary{
       padding: 0 22px 12px;
       display:grid;
@@ -259,13 +259,26 @@
       border-radius: 16px;
       padding: 12px;
     }
-    .action-row{
+
+    /* ✅ FIX DEFINITIVO: 2 columnas (tipo/detalle) + botón abajo (fila completa) */
+    .action-grid{
       display:grid;
-      grid-template-columns: 220px 1fr;
+      grid-template-columns: 1fr 1fr;
       gap:10px;
-      align-items:center;
+      align-items:end;
     }
-    .action-row + .action-row{ margin-top: 10px; }
+    .action-grid .ag-btn{
+      grid-column: 1 / -1;
+    }
+
+    /* ✅ PDF: una sola columna */
+    .action-grid-2{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      align-items:end;
+      margin-top:10px;
+    }
 
     .file-help{
       font-size: 12px;
@@ -277,8 +290,8 @@
       flex-wrap:wrap;
       align-items:center;
     }
-    .file-help a{ text-decoration:none; }
 
+    /* ✅ botón: una sola línea, pero ya no se corta porque ocupa toda la fila */
     .btn-just{
       border-radius: 14px;
       font-weight: 950;
@@ -291,8 +304,35 @@
       white-space: nowrap;
     }
 
+    .locked{
+      background: #ffffff;
+      border: 1px dashed rgba(15,23,42,.18);
+      border-radius: 14px;
+      padding: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .locked .hint{
+      font-weight: 900;
+      color:#0f172a;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .locked small{
+      display:block;
+      color: rgba(15,23,42,.65);
+      font-weight: 850;
+      margin-top:2px;
+    }
+
+    /* móviles */
     @media (max-width: 992px){
-      .action-row{ grid-template-columns: 1fr; }
+      .action-grid{ grid-template-columns: 1fr; }
+      .action-grid .ag-btn{ grid-column:auto; }
     }
 
     @media (max-width: 576px){
@@ -354,7 +394,6 @@
         </div>
       </div>
 
-      <!-- ✅ RESUMEN (nuevo) -->
       {% if resumen %}
         <div class="summary">
           <div class="sum-card">
@@ -381,19 +420,6 @@
       {% endif %}
 
       <div class="filters">
-        {% if messages %}
-          {% for message in messages %}
-            <div class="alert
-              {% if message.tags == 'success' %}alert-success
-              {% elif message.tags == 'error' %}alert-danger
-              {% elif message.tags == 'warning' %}alert-warning
-              {% else %}alert-info{% endif %}
-              mb-2" style="border-radius:14px; font-weight:850;">
-              {{ message }}
-            </div>
-          {% endfor %}
-        {% endif %}
-
         <div class="filter-card">
           <form method="get" class="row g-2 align-items-end">
             <div class="col-12 col-md-3">
@@ -423,6 +449,7 @@
               <tr>
                 <th>Docente</th>
                 <th style="width:260px;">Estado</th>
+                <!-- ✅ NO agrandar mucho para que no se rompa el overlay -->
                 <th style="min-width:720px;">Acción</th>
               </tr>
             </thead>
@@ -432,11 +459,7 @@
                 <tr>
                   <td>
                     <div class="fw-bold">{{ r.profesor.apellidos }}, {{ r.profesor.nombres }}</div>
-                    <div class="text-muted small">
-                      DNI: {{ r.profesor.dni }}
-                      <span class="ms-2">Código: {{ r.profesor.codigo }}</span>
-                      <span class="ms-2">Condición: {{ r.profesor.condicion }}</span>
-                    </div>
+
                     {% if r.estado_detalle %}
                       <div class="text-muted small" style="margin-top:4px;">
                         <i class="bi bi-info-circle"></i> {{ r.estado_detalle }}
@@ -456,51 +479,95 @@
 
                   <td>
                     <div class="action-box">
-                      <form method="post"
-                            action="{% url 'set_justificacion' %}"
-                            enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
-                        <input type="hidden" name="profesor_id" value="{{ r.profesor.id }}">
 
-                        <div class="action-row">
-                          <select name="tipo" class="form-select form-select-sm">
-                            <option value="DM" {% if r.justificacion and r.justificacion.tipo == "DM" %}selected{% endif %}>Descanso médico (DM)</option>
-                            <option value="C"  {% if r.justificacion and r.justificacion.tipo == "C" %}selected{% endif %}>Comisión / Encargo (C)</option>
-                            <option value="P"  {% if r.justificacion and r.justificacion.tipo == "P" %}selected{% endif %}>Permiso (P)</option>
-                            <option value="O"  {% if r.justificacion and r.justificacion.tipo == "O" %}selected{% endif %}>Otro (O)</option>
-                          </select>
-
-                          <input name="detalle"
-                                 class="form-control form-control-sm"
-                                 value="{% if r.justificacion %}{{ r.justificacion.detalle }}{% endif %}"
-                                 placeholder="Detalle (opcional)">
+                      {% if r.estado_key == "ASISTIO" %}
+                        <div class="locked">
+                          <div>
+                            <div class="hint"><i class="bi bi-shield-check"></i> Acción no disponible</div>
+                            <small>Este docente ya registró asistencia de entrada en la fecha seleccionada.</small>
+                          </div>
+                          <button class="btn btn-outline-success btn-just" disabled>
+                            <i class="bi bi-check2-circle"></i> Asistencia registrada
+                          </button>
                         </div>
 
-                        <div class="action-row">
+                      {% elif r.justificacion %}
+                        <div class="locked">
                           <div>
-                            <input type="file"
-                                   name="archivo"
-                                   accept="application/pdf"
-                                   class="form-control form-control-sm">
+                            <div class="hint"><i class="bi bi-lock-fill"></i> Justificación ya registrada</div>
+                            <small>
+                              Tipo: <strong>{{ r.justificacion.tipo_label }}</strong>
+                              {% if r.justificacion.detalle %} • {{ r.justificacion.detalle }}{% endif %}
+                            </small>
+                          </div>
 
-                            <div class="file-help">
-                              <span>PDF opcional (descanso médico, permiso, etc.)</span>
+                          <div class="d-flex gap-2 flex-wrap">
+                            {% if r.justificacion.archivo_url %}
+  <a class="btn btn-outline-primary btn-just" target="_blank" href="{{ r.justificacion.archivo_url }}">
+    <i class="bi bi-file-earmark-pdf"></i> Ver PDF
+  </a>
+{% else %}
+  <button class="btn btn-outline-secondary btn-just" type="button" disabled title="No se adjuntó PDF">
+    <i class="bi bi-file-earmark-pdf"></i> Ver PDF (no adjunto)
+  </button>
+{% endif %}
 
-                              {% if r.justificacion and r.justificacion.archivo %}
-                                <a href="{{ r.justificacion.archivo.url }}" target="_blank" style="font-weight:950;">
-                                  <i class="bi bi-file-earmark-pdf"></i> Ver PDF
-                                </a>
-                              {% endif %}
+                            <button class="btn btn-outline-secondary btn-just" disabled title="Solo se puede editar en el Admin">
+                              <i class="bi bi-check2-circle"></i> Guardado
+                            </button>
+                          </div>
+                        </div>
+
+                      {% else %}
+                        <form method="post"
+                              action="{% url 'set_justificacion' %}"
+                              enctype="multipart/form-data">
+                          {% csrf_token %}
+                          <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+                          <input type="hidden" name="profesor_id" value="{{ r.profesor.id }}">
+                          <input type="hidden" name="accion" value="set">
+
+                          <div class="action-grid">
+                            <div>
+                              <label class="form-label mb-1">Tipo</label>
+                              <select name="tipo" class="form-select form-select-sm" required>
+                                <option value="DM">Descanso médico (DM)</option>
+                                <option value="C">Comisión / Encargo (C)</option>
+                                <option value="P">Permiso (P)</option>
+                                <option value="O">Otro (O)</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label class="form-label mb-1">Detalle</label>
+                              <input name="detalle"
+                                     class="form-control form-control-sm"
+                                     placeholder="Ej: Comisión Académica 2026-1 / Por dolor fuerte de cabeza">
+                            </div>
+
+                            <!-- ✅ botón abajo ocupando toda la fila -->
+                            <div class="ag-btn">
+                              <button class="btn btn-success btn-sm btn-just" type="submit">
+                                <i class="bi bi-check2-circle"></i> Guardar justificación
+                              </button>
                             </div>
                           </div>
 
-                          <button class="btn btn-success btn-sm btn-just"
-                                  name="accion" value="set" type="submit">
-                            <i class="bi bi-check2-circle"></i> Guardar justificación
-                          </button>
-                        </div>
-                      </form>
+                          <div class="action-grid-2">
+                            <div>
+                              <label class="form-label mb-1">PDF (opcional)</label>
+                              <input type="file"
+                                     name="archivo"
+                                     accept="application/pdf"
+                                     class="form-control form-control-sm">
+                              <div class="file-help">
+                                <span><i class="bi bi-info-circle"></i> Adjunta un sustento si aplica (máx. 10 MB).</span>
+                              </div>
+                            </div>
+                          </div>
+                        </form>
+                      {% endif %}
+
                     </div>
                   </td>
                 </tr>
@@ -521,7 +588,29 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000;">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="toast align-items-center text-bg-{{ message.tags|default:'info' }} border-0 mb-2"
+             role="alert" aria-live="assertive" aria-atomic="true"
+             data-bs-delay="4000">
+          <div class="d-flex">
+            <div class="toast-body fw-semibold">
+              {{ message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <script>
+    document.querySelectorAll('.toast').forEach(t => new bootstrap.Toast(t).show());
+  </script>
+
 </body>
 </html>
-
-

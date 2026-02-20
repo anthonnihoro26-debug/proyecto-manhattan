@@ -4,10 +4,10 @@ import re
 import logging
 from datetime import timedelta
 from io import BytesIO, StringIO
-
+from django.db import IntegrityError
 from PIL import Image as PILImage
 from datetime import datetime, time
-
+from openpyxl.utils import get_column_letter
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
@@ -260,14 +260,34 @@ def historial_asistencias(request):
 @user_passes_test(_in_any_group("HISTORIAL", "JUSTIFICACIONES"), login_url="login")
 def exportar_reporte_excel(request):
     q = (request.GET.get("q") or "").strip()
-    condicion = (request.GET.get("condicion") or "").strip()
-    desde = (request.GET.get("desde") or "").strip()
-    hasta = (request.GET.get("hasta") or "").strip()
+    condicion = (request.GET.get("condicion") or "").strip().upper()
+    desde_str = (request.GET.get("desde") or "").strip()
+    hasta_str = (request.GET.get("hasta") or "").strip()
 
-    fecha_eval = parse_date(desde) if desde else None
-    if not fecha_eval:
-        fecha_eval = timezone.localdate()
+    hoy = timezone.localdate()
+    desde = parse_date(desde_str) if desde_str else None
+    hasta = parse_date(hasta_str) if hasta_str else None
 
+    # ✅ Defaults: si no mandan fechas, usa hoy
+    if not desde:
+        desde = hoy
+    if not hasta:
+        hasta = hoy
+
+    # ✅ si vienen invertidas
+    if desde > hasta:
+        desde, hasta = hasta, desde
+
+    # ✅ Generar lista de días
+    days = []
+    cur = desde
+    while cur <= hasta:
+        days.append(cur)
+        cur += timedelta(days=1)
+
+    # =========================
+    # ✅ Filtrar profesores
+    # =========================
     profesores = Profesor.objects.all().order_by("apellidos", "nombres")
 
     if q:
@@ -278,27 +298,74 @@ def exportar_reporte_excel(request):
             Q(nombres__icontains=q)
         )
 
-    if condicion:
+    if condicion in ("N", "C"):
         profesores = profesores.filter(condicion__iexact=condicion)
 
-    asistencias_del_dia = (
+    profesores = list(profesores)
+    prof_ids = [p.id for p in profesores]
+
+    # =========================
+    # ✅ Traer ENTRADAS del rango (E) (primera hora por día)
+    # =========================
+    entradas = (
         Asistencia.objects
-        .filter(fecha=fecha_eval, tipo="E")
-        .values("profesor_id")
+        .filter(profesor_id__in=prof_ids, fecha__range=(desde, hasta), tipo="E")
+        .values("profesor_id", "fecha")
         .annotate(primera_hora=Min("fecha_hora"))
     )
-    asistio_map = {x["profesor_id"]: x["primera_hora"] for x in asistencias_del_dia}
+    entrada_map = {(x["profesor_id"], x["fecha"]): x["primera_hora"] for x in entradas}
 
-    justificados_del_dia = (
+    # =========================
+    # ✅ Justificaciones del rango (tabla JustificacionAsistencia)
+    # =========================
+    justificados = (
         JustificacionAsistencia.objects
-        .filter(fecha=fecha_eval)
-        .values("profesor_id", "tipo")
+        .filter(profesor_id__in=prof_ids, fecha__range=(desde, hasta))
+        .values("profesor_id", "fecha", "tipo", "detalle")
     )
-    just_map = {x["profesor_id"]: x["tipo"] for x in justificados_del_dia}
 
+    MOTIVOS_LABEL = {
+        "DM": "Descanso médico",
+        "C": "Comisión / Encargo",
+        "P": "Permiso",
+        "O": "Otro",
+    }
+    just_map = {}
+    for j in justificados:
+        key = (j["profesor_id"], j["fecha"])
+        t = (j.get("tipo") or "").strip()
+        det = (j.get("detalle") or "").strip()
+        label = MOTIVOS_LABEL.get(t, t or "Justificación")
+        just_map[key] = f"JUSTIFICADO ({label})" + (f" - {det}" if det else "")
+
+    # =========================
+    # ✅ Si NO hay JustificacionAsistencia, puede existir Asistencia tipo="J"
+    # (respaldo)
+    # =========================
+    asist_j = (
+        Asistencia.objects
+        .filter(profesor_id__in=prof_ids, fecha__range=(desde, hasta), tipo="J")
+        .values("profesor_id", "fecha", "motivo", "detalle")
+    )
+    asist_j_map = {}
+    for a in asist_j:
+        key = (a["profesor_id"], a["fecha"])
+        mot = (a.get("motivo") or "").strip()
+        det = (a.get("detalle") or "").strip()
+        label = {
+            "DM": "Descanso médico",
+            "C": "Comisión / Encargo",
+            "P": "Permiso",
+            "O": "Otro",
+        }.get(mot, mot or "Justificación")
+        asist_j_map[key] = f"JUSTIFICADO ({label})" + (f" - {det}" if det else "")
+
+    # =========================
+    # ✅ Crear Excel (MATRIZ POR DÍA)
+    # =========================
     wb = Workbook()
     ws: Worksheet = wb.active
-    ws.title = "Reporte"
+    ws.title = "Asistencia"
 
     navy = "0B1F3B"
     blue = "2563EB"
@@ -311,15 +378,20 @@ def exportar_reporte_excel(request):
     thin = Side(style="thin", color="CBD5E1")
     border_all = Border(left=thin, right=thin, top=thin, bottom=thin)
 
+    # Cantidad de columnas:
+    # 4 columnas base + len(days) columnas de días + 3 columnas totales
+    base_cols = 4
+    n_days = len(days)
+    total_cols = 3
+    total_columns = base_cols + n_days + total_cols
+    last_col_letter = get_column_letter(total_columns)
+
+    # Fondo suave arriba
     for r in (1, 2):
-        for c in range(1, 8):
+        for c in range(1, total_columns + 1):
             ws.cell(row=r, column=c).fill = PatternFill("solid", fgColor=gray_bg)
 
-    ws.row_dimensions[1].height = 34
-    ws.row_dimensions[2].height = 20
-    ws.row_dimensions[3].height = 10
-    ws.column_dimensions["A"].width = 16
-
+    # Logo UNI (igual que tú)
     logo_path = finders.find("asistencias/img/uni_logo.png")
     if logo_path:
         with PILImage.open(logo_path) as im:
@@ -338,9 +410,10 @@ def exportar_reporte_excel(request):
         ws.row_dimensions[3].height = 10
         ws.column_dimensions["A"].width = 18
 
-    titulo = f"REPORTE DE ASISTENCIA — {fecha_eval.strftime('%d/%m/%Y')}"
+    # Título
+    titulo = f"REPORTE DE ASISTENCIA — {desde.strftime('%d/%m/%Y')} al {hasta.strftime('%d/%m/%Y')}"
     ws["B1"] = titulo
-    ws.merge_cells("B1:G1")
+    ws.merge_cells(f"B1:{last_col_letter}1")
     ws["B1"].font = Font(bold=True, size=16, color=navy)
     ws["B1"].alignment = Alignment(vertical="center")
 
@@ -349,19 +422,27 @@ def exportar_reporte_excel(request):
         filtros_txt.append(f"Búsqueda: {q}")
     if condicion:
         filtros_txt.append(f"Condición: {condicion.upper()}")
-    if desde:
-        filtros_txt.append(f"Desde: {desde}")
-    if hasta:
-        filtros_txt.append(f"Hasta: {hasta}")
+    filtros_txt.append(f"Desde: {desde.strftime('%Y-%m-%d')}")
+    filtros_txt.append(f"Hasta: {hasta.strftime('%Y-%m-%d')}")
+    filtros_txt.append(f"Docentes: {len(profesores)}")
+    filtros_txt.append(f"Días: {n_days}")
 
-    ws["B2"] = " | ".join(filtros_txt) if filtros_txt else "Filtros: (sin filtros)"
-    ws.merge_cells("B2:G2")
+    ws["B2"] = " | ".join(filtros_txt)
+    ws.merge_cells(f"B2:{last_col_letter}2")
     ws["B2"].font = Font(size=11, color="334155")
     ws["B2"].alignment = Alignment(vertical="center")
 
-    headers = ["DNI", "Código", "Docente", "Condición", "Estado", "Hora"]
-
     ws.append([])
+    # Header row
+    headers = ["DNI", "Código", "Docente", "Condición"]
+
+    # Días como columnas
+    for d in days:
+        headers.append(d.strftime("%d/%m"))
+
+    # Totales
+    headers += ["Asistió", "Just.", "Faltó"]
+
     ws.append([str(h) for h in headers])
     header_row = ws.max_row
 
@@ -372,26 +453,19 @@ def exportar_reporte_excel(request):
         c = ws.cell(row=header_row, column=col_idx)
         c.fill = header_fill
         c.font = header_font
-        c.alignment = Alignment(horizontal="center", vertical="center")
+        c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         c.border = border_all
 
     ws.row_dimensions[header_row].height = 22
     data_start = header_row + 1
 
+    # =========================
+    # ✅ Llenar datos
+    # =========================
     for p in profesores:
-        dt = asistio_map.get(p.id)
-        jt = just_map.get(p.id)
-
-        if dt:
-            dt_local = timezone.localtime(dt)
-            estado = "ASISTIÓ"
-            hora = dt_local.strftime("%H:%M")
-        elif jt:
-            estado = f"JUSTIFICADO ({jt})"
-            hora = ""
-        else:
-            estado = "FALTÓ"
-            hora = ""
+        asistio_count = 0
+        just_count = 0
+        falta_count = 0
 
         docente = f"{(p.apellidos or '').strip()}, {(p.nombres or '').strip()}".strip().strip(",")
 
@@ -400,36 +474,69 @@ def exportar_reporte_excel(request):
             str(p.codigo or ""),
             str(docente),
             str((p.condicion or "").upper()),
-            str(estado),
-            str(hora),
         ]
+
+        # Celdas por día
+        for d in days:
+            key = (p.id, d)
+
+            dt = entrada_map.get(key)
+            if dt:
+                dt_local = timezone.localtime(dt)
+                val = f"ASISTIÓ ({dt_local.strftime('%H:%M')})"
+                asistio_count += 1
+            else:
+                # prioridad: JustificacionAsistencia, luego Asistencia tipo J, sino FALTA
+                jtxt = just_map.get(key) or asist_j_map.get(key)
+                if jtxt:
+                    val = jtxt
+                    just_count += 1
+                else:
+                    val = "FALTÓ"
+                    falta_count += 1
+
+            row.append(val)
+
+        # Totales
+        row += [asistio_count, just_count, falta_count]
+
         ws.append(row)
         r = ws.max_row
 
+        # Bordes y alineación
         for col in range(1, len(headers) + 1):
             cell = ws.cell(row=r, column=col)
             cell.border = border_all
-            cell.alignment = Alignment(vertical="center")
+            cell.alignment = Alignment(vertical="center", wrap_text=True)
 
+        # Centrar condición
         ws.cell(row=r, column=4).alignment = Alignment(horizontal="center", vertical="center")
 
-        estado_cell = ws.cell(row=r, column=5)
-        estado_cell.font = Font(bold=True, color=text_dark)
-        estado_cell.alignment = Alignment(horizontal="center", vertical="center")
+        # Pintar celdas por día
+        day_start_col = 5
+        day_end_col = 4 + n_days
+        for col in range(day_start_col, day_end_col + 1):
+            cell = ws.cell(row=r, column=col)
+            txt = (cell.value or "")
+            cell.font = Font(bold=True, color=text_dark)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-        if estado.startswith("ASISTIÓ"):
-            estado_cell.fill = PatternFill("solid", fgColor=ok_bg)
-        elif estado.startswith("JUSTIFICADO"):
-            estado_cell.fill = PatternFill("solid", fgColor=info_bg)
-        else:
-            estado_cell.fill = PatternFill("solid", fgColor=bad_bg)
+            if str(txt).startswith("ASISTIÓ"):
+                cell.fill = PatternFill("solid", fgColor=ok_bg)
+            elif str(txt).startswith("JUSTIFICADO"):
+                cell.fill = PatternFill("solid", fgColor=info_bg)
+            else:
+                cell.fill = PatternFill("solid", fgColor=bad_bg)
 
-        ws.cell(row=r, column=6).alignment = Alignment(horizontal="center", vertical="center")
+        # Totales centrados
+        tot_start = 5 + n_days
+        for col in range(tot_start, tot_start + 3):
+            ws.cell(row=r, column=col).alignment = Alignment(horizontal="center", vertical="center")
 
     last_row = ws.max_row
     if last_row >= data_start:
-        table_ref = f"A{header_row}:F{last_row}"
-        table = Table(displayName="TablaReporte", ref=table_ref)
+        table_ref = f"A{header_row}:{last_col_letter}{last_row}"
+        table = Table(displayName="TablaReporteAsistencia", ref=table_ref)
         table.tableStyleInfo = TableStyleInfo(
             name="TableStyleMedium9",
             showFirstColumn=False,
@@ -439,13 +546,38 @@ def exportar_reporte_excel(request):
         )
         ws.add_table(table)
 
-    ws.freeze_panes = f"A{data_start}"
+    # ✅ Freeze panes: deja fijos DNI/Código/Docente/Condición + header
+    ws.freeze_panes = f"E{data_start}"
 
-    widths = {"A": 14, "B": 14, "C": 40, "D": 12, "E": 22, "F": 10}
-    for col, w in widths.items():
-        ws.column_dimensions[col].width = w
+    # ✅ Anchos de columnas
+    ws.column_dimensions["A"].width = 14
+    ws.column_dimensions["B"].width = 14
+    ws.column_dimensions["C"].width = 40
+    ws.column_dimensions["D"].width = 12
 
-    filename = f"reporte_asistencia_{fecha_eval.strftime('%Y-%m-%d')}.xlsx"
+    # días
+    for i in range(n_days):
+        ws.column_dimensions[get_column_letter(5 + i)].width = 16
+
+    # totales
+    ws.column_dimensions[get_column_letter(5 + n_days)].width = 10
+    ws.column_dimensions[get_column_letter(6 + n_days)].width = 10
+    ws.column_dimensions[get_column_letter(7 + n_days)].width = 10
+
+    # ✅ Hoja de leyenda (pro)
+    ws2 = wb.create_sheet("Leyenda")
+    ws2["A1"] = "Leyenda"
+    ws2["A1"].font = Font(bold=True, size=14)
+    ws2["A3"] = "ASISTIÓ (HH:MM) = entrada registrada"
+    ws2["A4"] = "JUSTIFICADO (...) = ausencia justificada"
+    ws2["A5"] = "FALTÓ = no hay entrada ni justificación"
+    for r in range(3, 6):
+        ws2[f"A{r}"].font = Font(size=11)
+
+    # =========================
+    # ✅ Response
+    # =========================
+    filename = f"reporte_asistencia_{desde.strftime('%Y-%m-%d')}_a_{hasta.strftime('%Y-%m-%d')}.xlsx"
     bio = BytesIO()
     wb.save(bio)
     bio.seek(0)
@@ -579,83 +711,85 @@ def trigger_reporte_asistencia(request):
 # =========================================================
 @user_passes_test(_in_group("HISTORIAL"), login_url="login")
 def registro_manual(request):
-    profesor = None
-    fecha_hora_str = timezone.localtime(timezone.now()).strftime("%d/%m/%Y %H:%M:%S")
+    """
+    Template: asistencias/registro_manual.html
+    - POST accion=buscar   -> busca por dni y muestra confirmación
+    - POST accion=aceptar  -> registra ENTRADA y REDIRIGE al historial
+    """
 
-    if request.method == "POST":
-        accion = (request.POST.get("accion") or "").strip().lower()
-        raw_dni = (request.POST.get("dni") or "").strip()
+    # ✅ GET: muestra formulario
+    if request.method == "GET":
+        return render(request, "asistencias/registro_manual.html")
 
-        dni = _extract_dni(raw_dni)
+    # ✅ POST
+    accion = (request.POST.get("accion") or "").strip().lower()
+
+    # -------------------------
+    # 1) BUSCAR DOCENTE
+    # -------------------------
+    if accion == "buscar":
+        dni = (request.POST.get("dni") or "").strip()
+
         if not (dni.isdigit() and len(dni) == 8):
-            messages.error(request, "DNI inválido (debe ser 8 dígitos).")
-            return render(request, "asistencias/registro_manual.html", {
-                "profesor": None,
-                "fecha_hora_str": fecha_hora_str,
-            })
+            messages.error(request, "DNI inválido (debe tener 8 dígitos).")
+            return render(request, "asistencias/registro_manual.html")
 
-        if accion == "buscar":
-            try:
-                profesor = Profesor.objects.get(dni=dni)
-                messages.info(request, "Docente encontrado. Verifica y confirma para registrar.")
-            except Profesor.DoesNotExist:
-                messages.error(request, f"No se encontró docente con DNI {dni}.")
-                profesor = None
+        profesor = Profesor.objects.filter(dni=dni).first()
+        if not profesor:
+            messages.error(request, "No se encontró un docente con ese DNI.")
+            return render(request, "asistencias/registro_manual.html")
 
-        elif accion == "aceptar":
-            try:
-                profesor = Profesor.objects.get(dni=dni)
-            except Profesor.DoesNotExist:
-                messages.error(request, f"No se encontró docente con DNI {dni}.")
-                profesor = None
-            else:
-                hoy = timezone.localdate()
-                now = timezone.now()
+        ahora_local = timezone.localtime(timezone.now())
+        ctx = {
+            "profesor": profesor,
+            "fecha_hora_str": ahora_local.strftime("%d/%m/%Y %H:%M:%S"),
+        }
+        return render(request, "asistencias/registro_manual.html", ctx)
 
-                ip = _get_client_ip(request)
-                ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
+    # -------------------------
+    # 2) CONFIRMAR Y REGISTRAR
+    # -------------------------
+    if accion == "aceptar":
+        dni = (request.POST.get("dni") or "").strip()
 
-                with transaction.atomic():
-                    qs = (
-                        Asistencia.objects
-                        .select_for_update()
-                        .filter(profesor=profesor, fecha=hoy, tipo="E")
-                        .order_by("fecha_hora")
-                    )
+        if not (dni.isdigit() and len(dni) == 8):
+            messages.error(request, "DNI inválido.")
+            return redirect("registro_manual")
 
-                    if qs.exists():
-                        ya = qs.first()
-                        ya_local = timezone.localtime(ya.fecha_hora).strftime("%H:%M")
-                        messages.warning(
-                            request,
-                            f"⚠️ Ya registró ENTRADA hoy ({ya_local}): {profesor.apellidos} {profesor.nombres}"
-                        )
-                    else:
-                        Asistencia.objects.create(
-                            profesor=profesor,
-                            fecha=hoy,
-                            fecha_hora=now,
-                            tipo="E",
-                            registrado_por=request.user,
-                            ip=ip,
-                            user_agent=ua,
-                        )
-                        messages.success(
-                            request,
-                            f"✅ ENTRADA registrada: {profesor.apellidos} {profesor.nombres}"
-                        )
+        profesor = Profesor.objects.filter(dni=dni).first()
+        if not profesor:
+            messages.error(request, "El docente no existe o no fue encontrado.")
+            return redirect("registro_manual")
 
-                fecha_hora_str = timezone.localtime(timezone.now()).strftime("%d/%m/%Y %H:%M:%S")
+        fecha = timezone.localdate()
+        ahora = timezone.now()
 
-        else:
-            messages.error(request, "Acción inválida.")
-            profesor = None
+        # ✅ Si ya existe ENTRADA hoy, manda al historial igual
+        if Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="E").exists():
+            messages.warning(request, "Ese docente ya tiene ENTRADA registrada hoy.")
+            return redirect("historial_asistencias")
 
-    return render(request, "asistencias/registro_manual.html", {
-        "profesor": profesor,
-        "fecha_hora_str": fecha_hora_str,
-    })
+        # ✅ Crear ENTRADA (según tu modelo)
+        try:
+            Asistencia.objects.create(
+                profesor=profesor,
+                fecha=fecha,
+                fecha_hora=ahora,
+                tipo="E",
+                registrado_por=request.user,
+                ip=_get_client_ip(request),
+                user_agent=(request.META.get("HTTP_USER_AGENT", "") or "")[:255],
+            )
+        except IntegrityError:
+            # Por si dos usuarios confirman al mismo tiempo (constraint uniq_profesor_fecha_tipo)
+            messages.warning(request, "Ese docente ya tiene ENTRADA registrada hoy.")
+            return redirect("historial_asistencias")
 
+        messages.success(request, "✅ Asistencia registrada correctamente.")
+        return redirect("historial_asistencias")  # ✅ AQUÍ TE REGRESA AL HISTORIAL
+
+    messages.error(request, "Acción no válida.")
+    return redirect("registro_manual")
 
 # =========================================================
 # PANEL JUSTIFICACIONES (GET) ✅ FINAL
@@ -770,7 +904,6 @@ def set_justificacion(request):
     detalle = (request.POST.get("detalle") or "").strip()
     archivo = request.FILES.get("archivo")  # PDF opcional
 
-    # ✅ redirect seguro a la misma pantalla
     redirect_url = (f"/asistencia/justificaciones/?fecha={fecha_str}" if fecha_str else "/asistencia/justificaciones/")
 
     if accion != "set":
@@ -780,7 +913,7 @@ def set_justificacion(request):
     fecha = parse_date(fecha_str)
     if not fecha:
         messages.error(request, "Fecha inválida.")
-        return redirect("/asistencia/justificaciones/")
+        return redirect(redirect_url)
 
     try:
         profesor = Profesor.objects.get(id=profesor_id)
@@ -792,57 +925,47 @@ def set_justificacion(request):
     ip = _get_client_ip(request)
     ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
 
-    # si ya asistio ese dia, no justificar
+    # ✅ Si ya asistió ese día, no justificar
     if Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="E").exists():
-        messages.warning(request, "Ya tiene ASISTENCIA ese día. No se registró justificación.")
+        messages.warning(request, "🛑 Ya tiene ASISTENCIA ese día. No se registró justificación.")
         return redirect(redirect_url)
 
-    # validacion basica PDF
+    # ✅ Si ya existe justificación ese día: BLOQUEAR EN LA WEB (Admin sí puede editar)
+    if JustificacionAsistencia.objects.filter(profesor=profesor, fecha=fecha).exists():
+        messages.warning(request, "✅ Este docente ya fue justificado en esta fecha. (Solo se puede editar en el Admin).")
+        return redirect(redirect_url)
+
+    # ✅ Validación PDF
     if archivo:
         nombre = (archivo.name or "").lower()
         ctype = (getattr(archivo, "content_type", "") or "").lower()
+
         if not nombre.endswith(".pdf"):
             messages.error(request, "El archivo debe terminar en .pdf")
             return redirect(redirect_url)
+
         if ctype and ctype != "application/pdf":
             messages.error(request, "El archivo debe ser application/pdf")
             return redirect(redirect_url)
+
         if getattr(archivo, "size", 0) > 10 * 1024 * 1024:
-            messages.error(request, "El PDF es muy pesado (max 10 MB).")
+            messages.error(request, "El PDF es muy pesado (máx. 10 MB).")
             return redirect(redirect_url)
 
     try:
         with transaction.atomic():
-            obj, created = JustificacionAsistencia.objects.update_or_create(
+            # ✅ CREAR (NO actualizar) -> evita editar desde la página
+            JustificacionAsistencia.objects.create(
                 profesor=profesor,
                 fecha=fecha,
-                defaults={
-                    "tipo": tipo_ok,
-                    "detalle": detalle,
-                    "actualizado_por": request.user,
-                }
+                tipo=tipo_ok,
+                detalle=detalle,
+                archivo=archivo,
+                creado_por=request.user,
+                actualizado_por=request.user,
             )
 
-            # ✅ asegurar creado_por si es nuevo
-            if created and not obj.creado_por:
-                obj.creado_por = request.user
-                obj.save(update_fields=["creado_por"])
-
-            # guardar nuevo PDF y borrar anterior sin usar .path (compatible con Cloudinary)
-            if archivo:
-                old_name = obj.archivo.name if obj.archivo else None
-
-                obj.archivo = archivo
-                obj.actualizado_por = request.user
-                obj.save(update_fields=["archivo", "actualizado_por", "actualizado_en"])
-
-                if old_name and old_name != obj.archivo.name:
-                    try:
-                        obj.archivo.storage.delete(old_name)
-                    except Exception:
-                        pass
-
-            # para que salga en historial como evento (tipo="J")
+            # ✅ Evento en historial como tipo="J"
             Asistencia.objects.update_or_create(
                 profesor=profesor,
                 fecha=fecha,
@@ -857,7 +980,12 @@ def set_justificacion(request):
                 }
             )
 
-        messages.success(request, "Justificación guardada correctamente.")
+        messages.success(request, "✅ Justificación guardada correctamente.")
+        return redirect(redirect_url)
+
+    except IntegrityError:
+        # ✅ Por doble clic / concurrencia (UniqueConstraint)
+        messages.warning(request, "✅ Ya existía una justificación para ese docente en esa fecha.")
         return redirect(redirect_url)
 
     except Exception as e:

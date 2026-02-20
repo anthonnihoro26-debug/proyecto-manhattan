@@ -483,6 +483,86 @@
       .brand h1{ font-size: 15px; }
       .userpill{ display:none; }
     }
+
+    /* =======================================================
+       ✅ TOAST / MENSAJES flotantes (4 segundos)
+       ======================================================= */
+    .toast-wrap{
+      position: fixed;
+      top: 86px;
+      right: 18px;
+      z-index: 9999;
+      display: grid;
+      gap: 10px;
+      max-width: 420px;
+    }
+
+    .toastx{
+      display: grid;
+      grid-template-columns: 34px 1fr 28px;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      box-shadow: 0 16px 38px rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      animation: toastIn .18s ease-out;
+      border: 1px solid rgba(255,255,255,.25);
+      font-weight: 850;
+    }
+
+    .toastx-icon{
+      width: 34px; height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: rgba(255,255,255,.18);
+      font-size: 18px;
+      color: #0f172a;
+    }
+
+    .toastx-text{
+      color: #0f172a;
+      line-height: 1.2;
+    }
+
+    .toastx-close{
+      border: 0;
+      background: transparent;
+      color: rgba(15,23,42,.65);
+      padding: 6px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .toastx-close:hover{ background: rgba(255,255,255,.22); }
+
+    .toastx-success{
+      background: rgba(34,197,94,.18);
+      border-color: rgba(34,197,94,.35);
+    }
+    .toastx-warning{
+      background: rgba(245,158,11,.18);
+      border-color: rgba(245,158,11,.35);
+    }
+    .toastx-error{
+      background: rgba(239,68,68,.18);
+      border-color: rgba(239,68,68,.35);
+    }
+    .toastx-info{
+      background: rgba(59,130,246,.18);
+      border-color: rgba(59,130,246,.35);
+    }
+
+    .toastx-hide{
+      opacity: 0;
+      transform: translateY(-6px);
+      transition: opacity .28s ease, transform .28s ease;
+    }
+
+    @keyframes toastIn{
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 
@@ -515,6 +595,41 @@
       </div>
     </div>
   </div>
+
+  <!-- =======================================================
+       ✅ MENSAJES (TOAST) - aparece 4s y se oculta solo
+       ======================================================= -->
+  {% if messages %}
+    <div id="toastWrap" class="toast-wrap">
+      {% for message in messages %}
+        <div class="toastx
+          {% if message.tags == 'success' %} toastx-success
+          {% elif message.tags == 'warning' %} toastx-warning
+          {% elif message.tags == 'error' %} toastx-error
+          {% else %} toastx-info {% endif %}
+        " role="alert">
+
+          <div class="toastx-icon">
+            {% if message.tags == 'success' %}
+              <i class="bi bi-check-circle-fill"></i>
+            {% elif message.tags == 'warning' %}
+              <i class="bi bi-exclamation-triangle-fill"></i>
+            {% elif message.tags == 'error' %}
+              <i class="bi bi-x-circle-fill"></i>
+            {% else %}
+              <i class="bi bi-info-circle-fill"></i>
+            {% endif %}
+          </div>
+
+          <div class="toastx-text">{{ message }}</div>
+
+          <button type="button" class="toastx-close" aria-label="Cerrar" onclick="this.parentElement.remove()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
 
   <div class="page">
     <div class="cardx">
@@ -558,258 +673,287 @@
           {% endif %}
 
           <a class="btnx btnx-success"
-             title="Exporta el reporte con los filtros actuales"
-             href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}">
-            <i class="bi bi-file-earmark-excel"></i>
-            <span>
-              Exportar Excel
-              <span class="subtxt">Con filtros aplicados</span>
+   title="Exporta una MATRIZ por días: filas = docentes, columnas = cada día del filtro. Cada celda muestra ASISTIÓ / JUSTIFICADO / FALTÓ."
+   href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}">
+  <i class="bi bi-file-earmark-excel"></i>
+  <span>
+    Exportar Excel
+    <span class="subtxt">Matriz por días</span>
+  </span>
+</a>
+
+<!-- ✅ Mini resumen del export (debajo del botón) -->
+<div style="margin-top:6px; font-size:12px; font-weight:900; color:rgba(15,23,42,.65); display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+  <span class="doc-chip" style="margin:0;">
+    <i class="bi bi-calendar-range"></i>
+    {% if desde %}{{ desde }}{% else %}hoy{% endif %} — {% if hasta %}{{ hasta }}{% else %}hoy{% endif %}
+  </span>
+
+  {% if condicion %}
+    <span class="doc-chip" style="margin:0;">
+      <i class="bi bi-person-badge"></i> Condición: {{ condicion|upper }}
+    </span>
+  {% endif %}
+
+  {% if q %}
+    <span class="doc-chip" style="margin:0;">
+      <i class="bi bi-search"></i> "{{ q }}"
+    </span>
+  {% endif %}
+</div>
+</div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="k-title"><i class="bi bi-list-check"></i> Total registros</div>
+    <div class="k-val">{{ total_registros }}</div>
+  </div>
+  <div class="kpi">
+    <div class="k-title"><i class="bi bi-people"></i> Docentes únicos</div>
+    <div class="k-val">{{ docentes_unicos }}</div>
+  </div>
+  <div class="kpi">
+    <div class="k-title"><i class="bi bi-person-badge"></i> Registros condición N</div>
+    <div class="k-val">{{ registros_n }}</div>
+  </div>
+  <div class="kpi">
+    <div class="k-title"><i class="bi bi-person-badge-fill"></i> Registros condición C</div>
+    <div class="k-val">{{ registros_c }}</div>
+  </div>
+</div>
+
+<div class="active-filters">
+  {% if q %}
+    <span class="pill"><i class="bi bi-search"></i> <span class="muted">Búsqueda:</span> {{ q }}</span>
+  {% endif %}
+  {% if desde %}
+    <span class="pill"><i class="bi bi-calendar-event"></i> <span class="muted">Desde:</span> <span class="mono">{{ desde }}</span></span>
+  {% endif %}
+  {% if hasta %}
+    <span class="pill"><i class="bi bi-calendar-check"></i> <span class="muted">Hasta:</span> <span class="mono">{{ hasta }}</span></span>
+  {% endif %}
+  {% if condicion %}
+    <span class="pill"><i class="bi bi-person-badge"></i> <span class="muted">Condición:</span> {{ condicion|upper }}</span>
+  {% endif %}
+  <span class="pill"><i class="bi bi-eye"></i> <span class="muted">Mostrar:</span> {{ ps }} / pág</span>
+
+  {% if q or desde or hasta or condicion %}
+    <span class="pill"><i class="bi bi-funnel"></i> Filtros activos</span>
+  {% endif %}
+</div>
+
+<div class="filters">
+  <div class="filter-card">
+    <form method="get">
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-lg-5">
+          <label class="form-label">Búsqueda</label>
+          <div class="input-group">
+            <span class="input-group-text" style="border-radius:14px 0 0 14px; border:1px solid rgba(15,23,42,0.14); border-right:0; background:#fff;">
+              <i class="bi bi-search"></i>
             </span>
+            <input type="text" name="q" class="form-control"
+                   style="border-radius:0 14px 14px 0 !important;"
+                   placeholder="Código / Apellidos / Nombres"
+                   value="{{ q }}">
+          </div>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <label class="form-label">Desde</label>
+          <input type="date" name="desde" class="form-control" value="{{ desde }}">
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <label class="form-label">Hasta</label>
+          <input type="date" name="hasta" class="form-control" value="{{ hasta }}">
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <label class="form-label">Condición</label>
+          <select name="condicion" class="form-select">
+            <option value="" {% if not condicion %}selected{% endif %}>Todas</option>
+            <option value="N" {% if condicion == "N" or condicion == "n" %}selected{% endif %}>N</option>
+            <option value="C" {% if condicion == "C" or condicion == "c" %}selected{% endif %}>C</option>
+          </select>
+        </div>
+
+        <div class="col-6 col-lg-1">
+          <label class="form-label">Mostrar</label>
+          <select name="ps" class="form-select">
+            <option value="25" {% if ps == 25 %}selected{% endif %}>25</option>
+            <option value="50" {% if ps == 50 %}selected{% endif %}>50</option>
+            <option value="100" {% if ps == 100 %}selected{% endif %}>100</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-lg-2 d-grid">
+          <button class="btn-apply" type="submit">
+            <i class="bi bi-funnel-fill"></i> Aplicar
+          </button>
+        </div>
+
+        <div class="col-12 d-flex justify-content-end">
+          <a class="btn-clear" href="{% url 'historial_asistencias' %}">
+            <i class="bi bi-x-circle"></i> Limpiar filtros
           </a>
         </div>
       </div>
+    </form>
+  </div>
+</div>
 
-      <div class="kpi-grid">
-        <div class="kpi">
-          <div class="k-title"><i class="bi bi-list-check"></i> Total registros</div>
-          <div class="k-val">{{ total_registros }}</div>
-        </div>
-        <div class="kpi">
-          <div class="k-title"><i class="bi bi-people"></i> Docentes únicos</div>
-          <div class="k-val">{{ docentes_unicos }}</div>
-        </div>
-        <div class="kpi">
-          <div class="k-title"><i class="bi bi-person-badge"></i> Registros condición N</div>
-          <div class="k-val">{{ registros_n }}</div>
-        </div>
-        <div class="kpi">
-          <div class="k-title"><i class="bi bi-person-badge-fill"></i> Registros condición C</div>
-          <div class="k-val">{{ registros_c }}</div>
-        </div>
-      </div>
+<div class="table-wrap">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th style="width:60px;">#</th>
+          <th>Docente</th>
+          <th style="width:220px;">Condición</th>
+          <th style="width:220px;">Estado</th>
+          <th style="width:230px;">Fecha y hora</th>
+        </tr>
+      </thead>
 
-      <div class="active-filters">
-        {% if q %}
-          <span class="pill"><i class="bi bi-search"></i> <span class="muted">Búsqueda:</span> {{ q }}</span>
-        {% endif %}
-        {% if desde %}
-          <span class="pill"><i class="bi bi-calendar-event"></i> <span class="muted">Desde:</span> <span class="mono">{{ desde }}</span></span>
-        {% endif %}
-        {% if hasta %}
-          <span class="pill"><i class="bi bi-calendar-check"></i> <span class="muted">Hasta:</span> <span class="mono">{{ hasta }}</span></span>
-        {% endif %}
-        {% if condicion %}
-          <span class="pill"><i class="bi bi-person-badge"></i> <span class="muted">Condición:</span> {{ condicion|upper }}</span>
-        {% endif %}
-        <span class="pill"><i class="bi bi-eye"></i> <span class="muted">Mostrar:</span> {{ ps }} / pág</span>
+      <tbody>
+        {% for a in items %}
+          <tr>
+            <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
 
-        {% if q or desde or hasta or condicion %}
-          <span class="pill"><i class="bi bi-funnel"></i> Filtros activos</span>
-        {% endif %}
-      </div>
+            <td>
+              <div class="doc-name">{{ a.profesor.apellidos }}, {{ a.profesor.nombres }}</div>
+              <div class="doc-sub">
+                <span class="doc-chip"><i class="bi bi-hash"></i> Código: {{ a.profesor.codigo }}</span>
+              </div>
+            </td>
 
-      <div class="filters">
-        <div class="filter-card">
-          <form method="get">
-            <div class="row g-3 align-items-end">
-              <div class="col-12 col-lg-5">
-                <label class="form-label">Búsqueda</label>
-                <div class="input-group">
-                  <span class="input-group-text" style="border-radius:14px 0 0 14px; border:1px solid rgba(15,23,42,0.14); border-right:0; background:#fff;">
-                    <i class="bi bi-search"></i>
-                  </span>
-                  <input type="text" name="q" class="form-control"
-                         style="border-radius:0 14px 14px 0 !important;"
-                         placeholder="Código / Apellidos / Nombres"
-                         value="{{ q }}">
+            <td>
+              {% if a.profesor.condicion == "N" %}
+                <span class="badge-cond cond-n">
+                  <i class="bi bi-check-circle-fill"></i> N • Nombrado
+                </span>
+              {% elif a.profesor.condicion == "C" %}
+                <span class="badge-cond cond-c">
+                  <i class="bi bi-briefcase-fill"></i> C • Contratado
+                </span>
+              {% else %}
+                <span class="badge-cond cond-otro">
+                  <i class="bi bi-info-circle-fill"></i> {{ a.profesor.condicion }}
+                </span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if "ASISTIÓ" in a.estado %}
+                <span class="badge-cond st-asistio">
+                  <i class="bi bi-check2-circle"></i> ASISTIÓ
+                </span>
+              {% elif "JUSTIFICADO" in a.estado %}
+                <span class="badge-cond st-just">
+                  <i class="bi bi-shield-check"></i> {{ a.estado }}
+                </span>
+                {% if a.detalle %}
+                  <div class="date-sub" style="margin-top:6px;">
+                    <i class="bi bi-card-text"></i> {{ a.detalle }}
+                  </div>
+                {% endif %}
+              {% else %}
+                <span class="badge-cond cond-otro">
+                  <i class="bi bi-info-circle"></i> {{ a.estado }}
+                </span>
+              {% endif %}
+            </td>
+
+            <td>
+              <div class="date-main">
+                <i class="bi bi-clock-history" style="color:rgba(15,23,42,.55);"></i>
+                {{ a.fecha_hora|date:"d/m/Y H:i" }}
+              </div>
+              <div class="date-sub">
+                Hace {{ a.fecha_hora|timesince }}
+              </div>
+            </td>
+          </tr>
+
+        {% empty %}
+          <tr>
+            <td colspan="5">
+              <div class="empty-wrap">
+                <div class="empty-ico">
+                  <i class="bi bi-inbox" style="font-size:26px;color:rgba(37,99,235,.85);"></i>
                 </div>
-              </div>
-
-              <div class="col-6 col-lg-2">
-                <label class="form-label">Desde</label>
-                <input type="date" name="desde" class="form-control" value="{{ desde }}">
-              </div>
-
-              <div class="col-6 col-lg-2">
-                <label class="form-label">Hasta</label>
-                <input type="date" name="hasta" class="form-control" value="{{ hasta }}">
-              </div>
-
-              <div class="col-6 col-lg-2">
-                <label class="form-label">Condición</label>
-                <select name="condicion" class="form-select">
-                  <option value="" {% if not condicion %}selected{% endif %}>Todas</option>
-                  <option value="N" {% if condicion == "N" or condicion == "n" %}selected{% endif %}>N</option>
-                  <option value="C" {% if condicion == "C" or condicion == "c" %}selected{% endif %}>C</option>
-                </select>
-              </div>
-
-              <div class="col-6 col-lg-1">
-                <label class="form-label">Mostrar</label>
-                <select name="ps" class="form-select">
-                  <option value="25" {% if ps == 25 %}selected{% endif %}>25</option>
-                  <option value="50" {% if ps == 50 %}selected{% endif %}>50</option>
-                  <option value="100" {% if ps == 100 %}selected{% endif %}>100</option>
-                </select>
-              </div>
-
-              <div class="col-12 col-lg-2 d-grid">
-                <button class="btn-apply" type="submit">
-                  <i class="bi bi-funnel-fill"></i> Aplicar
-                </button>
-              </div>
-
-              <div class="col-12 d-flex justify-content-end">
-                <a class="btn-clear" href="{% url 'historial_asistencias' %}">
-                  <i class="bi bi-x-circle"></i> Limpiar filtros
+                <div class="empty-title">No hay registros con esos filtros</div>
+                <div class="empty-sub">
+                  Prueba cambiando la búsqueda, la condición o el rango de fechas.
+                </div>
+                <a class="btn-clear mt-2" href="{% url 'historial_asistencias' %}">
+                  <i class="bi bi-arrow-counterclockwise"></i> Quitar filtros
                 </a>
               </div>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead>
-              <tr>
-                <th style="width:60px;">#</th>
-                <th>Docente</th>
-                <th style="width:220px;">Condición</th>
-                <th style="width:220px;">Estado</th>
-                <th style="width:230px;">Fecha y hora</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {% for a in items %}
-                <tr>
-                  <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
-
-                  <td>
-                    <div class="doc-name">{{ a.profesor.apellidos }}, {{ a.profesor.nombres }}</div>
-                    <div class="doc-sub">
-                      <span class="doc-chip"><i class="bi bi-hash"></i> Código: {{ a.profesor.codigo }}</span>
-                    </div>
-                  </td>
-
-                  <td>
-                    {% if a.profesor.condicion == "N" %}
-                      <span class="badge-cond cond-n">
-                        <i class="bi bi-check-circle-fill"></i> N • Nombrado
-                      </span>
-                    {% elif a.profesor.condicion == "C" %}
-                      <span class="badge-cond cond-c">
-                        <i class="bi bi-briefcase-fill"></i> C • Contratado
-                      </span>
-                    {% else %}
-                      <span class="badge-cond cond-otro">
-                        <i class="bi bi-info-circle-fill"></i> {{ a.profesor.condicion }}
-                      </span>
-                    {% endif %}
-                  </td>
-
-                  <!-- ✅ ESTADO (ASISTIÓ / JUSTIFICADO) -->
-                  <td>
-                    {% if "ASISTIÓ" in a.estado %}
-                      <span class="badge-cond st-asistio">
-                        <i class="bi bi-check2-circle"></i> ASISTIÓ
-                      </span>
-                    {% elif "JUSTIFICADO" in a.estado %}
-                      <span class="badge-cond st-just">
-                        <i class="bi bi-shield-check"></i> {{ a.estado }}
-                      </span>
-                      {% if a.detalle %}
-                        <div class="date-sub" style="margin-top:6px;">
-                          <i class="bi bi-card-text"></i> {{ a.detalle }}
-                        </div>
-                      {% endif %}
-                    {% else %}
-                      <span class="badge-cond cond-otro">
-                        <i class="bi bi-info-circle"></i> {{ a.estado }}
-                      </span>
-                    {% endif %}
-                  </td>
-
-                  <td>
-                    <div class="date-main">
-                      <i class="bi bi-clock-history" style="color:rgba(15,23,42,.55);"></i>
-                      {{ a.fecha_hora|date:"d/m/Y H:i" }}
-                    </div>
-                    <div class="date-sub">
-                      Hace {{ a.fecha_hora|timesince }}
-                    </div>
-                  </td>
-                </tr>
-
-              {% empty %}
-                <tr>
-                  <td colspan="5">
-                    <div class="empty-wrap">
-                      <div class="empty-ico">
-                        <i class="bi bi-inbox" style="font-size:26px;color:rgba(37,99,235,.85);"></i>
-                      </div>
-                      <div class="empty-title">No hay registros con esos filtros</div>
-                      <div class="empty-sub">
-                        Prueba cambiando la búsqueda, la condición o el rango de fechas.
-                      </div>
-                      <a class="btn-clear mt-2" href="{% url 'historial_asistencias' %}">
-                        <i class="bi bi-arrow-counterclockwise"></i> Quitar filtros
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="footer-row">
-        <div class="d-flex gap-2 flex-wrap">
-          <span class="total">
-            <i class="bi bi-list-check"></i> Total: {{ total_registros }} registros
-          </span>
-
-          <span class="pinfo">
-            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-          </span>
-        </div>
-
-        <div class="pager">
-          <a class="pbtn {% if not page_obj.has_previous %}disabled{% endif %}"
-             href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page=1">
-            <i class="bi bi-skip-backward-fill"></i> Inicio
-          </a>
-
-          {% if page_obj.has_previous %}
-            <a class="pbtn"
-               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.previous_page_number }}">
-              <i class="bi bi-chevron-left"></i> Anterior
-            </a>
-          {% else %}
-            <span class="pbtn disabled"><i class="bi bi-chevron-left"></i> Anterior</span>
-          {% endif %}
-
-          {% if page_obj.has_next %}
-            <a class="pbtn"
-               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.next_page_number }}">
-              Siguiente <i class="bi bi-chevron-right"></i>
-            </a>
-          {% else %}
-            <span class="pbtn disabled">Siguiente <i class="bi bi-chevron-right"></i></span>
-          {% endif %}
-
-          <a class="pbtn {% if not page_obj.has_next %}disabled{% endif %}"
-             href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.paginator.num_pages }}">
-            Fin <i class="bi bi-skip-forward-fill"></i>
-          </a>
-        </div>
-      </div>
-
-    </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
+</div>
+
+<div class="footer-row">
+  <div class="d-flex gap-2 flex-wrap">
+    <span class="total">
+      <i class="bi bi-list-check"></i> Total: {{ total_registros }} registros
+    </span>
+
+    <span class="pinfo">
+      Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+    </span>
+  </div>
+
+  <div class="pager">
+    <a class="pbtn {% if not page_obj.has_previous %}disabled{% endif %}"
+       href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page=1">
+      <i class="bi bi-skip-backward-fill"></i> Inicio
+    </a>
+
+    {% if page_obj.has_previous %}
+      <a class="pbtn"
+         href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.previous_page_number }}">
+        <i class="bi bi-chevron-left"></i> Anterior
+      </a>
+    {% else %}
+      <span class="pbtn disabled"><i class="bi bi-chevron-left"></i> Anterior</span>
+    {% endif %}
+
+    {% if page_obj.has_next %}
+      <a class="pbtn"
+         href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.next_page_number }}">
+        Siguiente <i class="bi bi-chevron-right"></i>
+      </a>
+    {% else %}
+      <span class="pbtn disabled">Siguiente <i class="bi bi-chevron-right"></i></span>
+    {% endif %}
+
+    <a class="pbtn {% if not page_obj.has_next %}disabled{% endif %}"
+       href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.paginator.num_pages }}">
+      Fin <i class="bi bi-skip-forward-fill"></i>
+    </a>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+  // ✅ Auto-ocultar toast en 4 segundos
+  const wrap = document.getElementById("toastWrap");
+  if (wrap) {
+    setTimeout(() => {
+      [...wrap.children].forEach((t) => t.classList.add("toastx-hide"));
+      setTimeout(() => wrap.remove(), 350);
+    }, 4000);
+  }
+</script>
 </body>
 </html>
-
