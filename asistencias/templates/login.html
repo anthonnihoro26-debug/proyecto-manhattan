@@ -1700,19 +1700,54 @@
     }
 
   // =========================================================
-  // GEOLOCALIZACIÓN SILENCIOSA (sin loader extra visual)
+  // GEOLOCALIZACIÓN REQUERIDA (permiso primero + login estricto)
   // =========================================================
   function setGeoHidden(name, value) {
     const el = document.getElementById(name);
     if (el) el.value = (value ?? "") + "";
   }
 
-  async function capturarGeoSilenciosa() {
-    // Guardar info del dispositivo (NO IMEI)
+  function getGeoStatus() {
+    return (document.getElementById("geo_status")?.value || "").trim();
+  }
+
+  function getGeoLat() {
+    return (document.getElementById("geo_lat")?.value || "").trim();
+  }
+
+  function getGeoLng() {
+    return (document.getElementById("geo_lng")?.value || "").trim();
+  }
+
+  function geoEstaOk() {
+    return getGeoStatus() === "ok" && getGeoLat() !== "" && getGeoLng() !== "";
+  }
+
+  function mensajeSegunGeoStatus() {
+    const geoStatus = getGeoStatus();
+    let msg = "Debes permitir la ubicación para ingresar al sistema.";
+
+    if (geoStatus === "denegado") {
+      msg = "Permiso de ubicación denegado. Debes habilitarlo para ingresar.";
+    } else if (geoStatus === "timeout") {
+      msg = "No se pudo obtener la ubicación a tiempo. Intenta nuevamente.";
+    } else if (geoStatus === "no_soportado") {
+      msg = "Tu navegador no soporta geolocalización. Usa otro navegador/dispositivo.";
+    } else if (geoStatus === "no_disponible") {
+      msg = "Ubicación no disponible. Activa GPS / ubicación del dispositivo.";
+    } else if (geoStatus === "error_geo") {
+      msg = "No se pudo validar tu ubicación. Intenta nuevamente.";
+    }
+
+    return msg;
+  }
+
+  async function capturarGeoRequerida() {
+    // Siempre guardar info del dispositivo (NO IMEI)
     setGeoHidden("device_info", navigator.userAgent || "desconocido");
     setGeoHidden("geo_time", new Date().toISOString());
 
-    // defaults
+    // reset previo
     setGeoHidden("geo_lat", "");
     setGeoHidden("geo_lng", "");
     setGeoHidden("geo_acc", "");
@@ -1721,17 +1756,17 @@
 
     if (!("geolocation" in navigator)) {
       setGeoHidden("geo_status", "no_soportado");
-      return;
+      throw new Error("no_soportado");
     }
 
-    // Estado del permiso (si el navegador lo soporta)
+    // Consultar permiso si el navegador soporta Permissions API
     try {
       if (navigator.permissions && navigator.permissions.query) {
         const perm = await navigator.permissions.query({ name: "geolocation" });
         setGeoHidden("geo_perm_state", perm.state || "");
       }
     } catch (e) {
-      // no bloquea
+      // ignorar
     }
 
     try {
@@ -1741,7 +1776,7 @@
           reject,
           {
             enableHighAccuracy: true,
-            timeout: 10000,
+            timeout: 12000,
             maximumAge: 0
           }
         );
@@ -1751,9 +1786,10 @@
       setGeoHidden("geo_lng", pos?.coords?.longitude ?? "");
       setGeoHidden("geo_acc", pos?.coords?.accuracy ?? "");
       setGeoHidden("geo_status", "ok");
+      setGeoHidden("geo_perm_state", "granted");
       setGeoHidden("geo_time", new Date(pos.timestamp || Date.now()).toISOString());
+      return true;
     } catch (err) {
-      // No bloquear login, solo registrar estado
       let status = "error_geo";
       if (err && typeof err.code !== "undefined") {
         if (err.code === 1) status = "denegado";
@@ -1761,19 +1797,50 @@
         else if (err.code === 3) status = "timeout";
       }
       setGeoHidden("geo_status", status);
+      if (status === "denegado") setGeoHidden("geo_perm_state", "denied");
+      throw err || new Error(status);
     }
   }
 
-    // =========================================================
-  // SUBMIT LOGIN (STRICT: requiere ubicación OK para enviar)
+  // =========================================================
+  // PRE-PEDIR PERMISO DE UBICACIÓN
+  // Se dispara al primer click / tecla / touch en la página
+  // (más compatible que intentar al cargar)
+  // =========================================================
+  let __geoPrefetchDone = false;
+  let __geoPrefetchRunning = false;
+
+  async function preSolicitarUbicacion() {
+    if (__geoPrefetchDone || __geoPrefetchRunning || geoEstaOk()) return;
+
+    __geoPrefetchRunning = true;
+    try {
+      await capturarGeoRequerida();
+    } catch (e) {
+      // No mostramos alert aquí para no molestar; se bloqueará en submit si no acepta.
+      console.warn("Pre-permiso de ubicación no concedido todavía:", e);
+    } finally {
+      __geoPrefetchRunning = false;
+      __geoPrefetchDone = true;
+    }
+  }
+
+  ["click", "touchstart", "keydown"].forEach(evt => {
+    window.addEventListener(evt, preSolicitarUbicacion, { once: true, passive: true });
+  });
+
+  // También cuando enfoquen usuario o contraseña
+  usernameInput?.addEventListener("focus", preSolicitarUbicacion, { once: true });
+  pass?.addEventListener("focus", preSolicitarUbicacion, { once: true });
+
+  // =========================================================
+  // SUBMIT LOGIN (estricto: sin ubicación OK no envía)
   // =========================================================
   if (loginForm && btnLogin) {
     let __geoSubmitInProgress = false;
 
     loginForm.addEventListener("submit", async function(e){
-      if (__geoSubmitInProgress) {
-        return; // submit real luego
-      }
+      if (__geoSubmitInProgress) return;
 
       if (btnLogin.disabled) {
         e.preventDefault();
@@ -1786,7 +1853,6 @@
         return;
       }
 
-      // Interceptar para capturar geolocalización antes del login
       e.preventDefault();
 
       updateWelcomeChip();
@@ -1802,39 +1868,24 @@
       }, 900);
 
       try {
-        await capturarGeoSilenciosa();
+        // Si aún no hay ubicación OK, volver a intentar (aquí puede salir prompt)
+        if (!geoEstaOk()) {
+          await capturarGeoRequerida();
+        }
         setOverlayProgress(Math.max(fakeProgressValue, 48));
       } catch (err) {
-        console.warn("Geo silenciosa falló:", err);
+        console.warn("Geo requerida falló:", err);
       }
 
-      // ✅ Validación estricta: SIN ubicación OK, NO entra
-      const geoStatus = (document.getElementById("geo_status")?.value || "").trim();
-      const geoLat = (document.getElementById("geo_lat")?.value || "").trim();
-      const geoLng = (document.getElementById("geo_lng")?.value || "").trim();
-
-      const geoOk = geoStatus === "ok" && geoLat !== "" && geoLng !== "";
-
-      if (!geoOk) {
+      // Bloqueo estricto
+      if (!geoEstaOk()) {
         hideOverlay();
         setLoginButtonIdle();
-
-        let msg = "Debes permitir la ubicación para ingresar al sistema.";
-        if (geoStatus === "denegado") {
-          msg = "Permiso de ubicación denegado. Debes habilitarlo para ingresar.";
-        } else if (geoStatus === "timeout") {
-          msg = "No se pudo obtener la ubicación a tiempo. Intenta nuevamente.";
-        } else if (geoStatus === "no_soportado") {
-          msg = "Tu navegador no soporta geolocalización. Usa otro navegador/dispositivo.";
-        } else if (geoStatus === "no_disponible") {
-          msg = "Ubicación no disponible. Activa GPS / ubicación del dispositivo.";
-        }
-
-        alert(msg);
-        return; // ❌ no enviar form
+        alert(mensajeSegunGeoStatus());
+        return; // NO envía login
       }
 
-      // ✅ Todo OK: enviar login
+      // Solo aquí se envía el form (usuario válido se valida en servidor)
       __geoSubmitInProgress = true;
       loginForm.submit();
     });

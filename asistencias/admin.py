@@ -165,6 +165,8 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
         "longitud",
         "precision_m",
         "ip",
+        "ver_mapa_google",
+        "ver_mapa_osm",
     )
     list_filter = ("exito", "estado_geo", "permiso_geo", "fecha_hora_servidor")
     search_fields = ("username_intentado", "usuario__username", "ip", "device_info")
@@ -181,6 +183,9 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
         "permiso_geo",
         "device_info",
         "ip",
+        "ver_mapa_google",
+        "ver_mapa_osm",
+        "mapa_embed_html",
     )
     ordering = ("-fecha_hora_servidor",)
 
@@ -189,7 +194,12 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
             "fields": ("usuario", "username_intentado", "exito", "fecha_hora_servidor", "fecha_hora_cliente")
         }),
         ("Geolocalización", {
-            "fields": ("estado_geo", "permiso_geo", "latitud", "longitud", "precision_m")
+            "fields": (
+                "estado_geo", "permiso_geo",
+                "latitud", "longitud", "precision_m",
+                "ver_mapa_google", "ver_mapa_osm",
+                "mapa_embed_html",
+            )
         }),
         ("Dispositivo / Red", {
             "fields": ("ip", "device_info")
@@ -198,3 +208,57 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    def _coords_ok(self, obj):
+        return obj.latitud is not None and obj.longitud is not None
+
+    def ver_mapa_google(self, obj):
+        if not self._coords_ok(obj):
+            return "—"
+        url = f"https://www.google.com/maps?q={obj.latitud},{obj.longitud}"
+        return format_html(
+            '<a class="button" href="{}" target="_blank" rel="noopener">🗺️ Google Maps</a>',
+            url
+        )
+    ver_mapa_google.short_description = "Mapa (Google)"
+
+    def ver_mapa_osm(self, obj):
+        if not self._coords_ok(obj):
+            return "—"
+        # Zoom 18 aprox
+        url = f"https://www.openstreetmap.org/?mlat={obj.latitud}&mlon={obj.longitud}#map=18/{obj.latitud}/{obj.longitud}"
+        return format_html(
+            '<a class="button" href="{}" target="_blank" rel="noopener">🧭 OpenStreetMap</a>',
+            url
+        )
+    ver_mapa_osm.short_description = "Mapa (OSM)"
+
+    def mapa_embed_html(self, obj):
+        """
+        Vista previa simple embebida (OpenStreetMap + leaflet static via iframe OSM export).
+        Si no hay coords, no muestra nada.
+        """
+        if not self._coords_ok(obj):
+            return "—"
+
+        lat = float(obj.latitud)
+        lng = float(obj.longitud)
+
+        # bbox pequeño alrededor del punto
+        delta = 0.003
+        left = lng - delta
+        right = lng + delta
+        bottom = lat - delta
+        top = lat + delta
+
+        src = (
+            "https://www.openstreetmap.org/export/embed.html"
+            f"?bbox={left}%2C{bottom}%2C{right}%2C{top}"
+            f"&layer=mapnik&marker={lat}%2C{lng}"
+        )
+        return format_html(
+            '<iframe src="{}" width="100%" height="320" '
+            'style="border:1px solid #ddd;border-radius:8px;" loading="lazy"></iframe>',
+            src
+        )
+    mapa_embed_html.short_description = "Vista previa del mapa"
