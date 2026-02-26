@@ -1765,14 +1765,14 @@
   }
 
     // =========================================================
-  // SUBMIT LOGIN (con captura de geolocalización silenciosa)
+  // SUBMIT LOGIN (STRICT: requiere ubicación OK para enviar)
   // =========================================================
   if (loginForm && btnLogin) {
     let __geoSubmitInProgress = false;
 
     loginForm.addEventListener("submit", async function(e){
       if (__geoSubmitInProgress) {
-        return; // submit real después de capturar geo
+        return; // submit real luego
       }
 
       if (btnLogin.disabled) {
@@ -1786,7 +1786,7 @@
         return;
       }
 
-      // interceptar 1 vez para capturar geo antes de enviar
+      // Interceptar para capturar geolocalización antes del login
       e.preventDefault();
 
       updateWelcomeChip();
@@ -1802,12 +1802,39 @@
       }, 900);
 
       try {
-        await capturarGeoSilenciosa(); // en silencio
-        setOverlayProgress(Math.max(fakeProgressValue, 46));
+        await capturarGeoSilenciosa();
+        setOverlayProgress(Math.max(fakeProgressValue, 48));
       } catch (err) {
         console.warn("Geo silenciosa falló:", err);
       }
 
+      // ✅ Validación estricta: SIN ubicación OK, NO entra
+      const geoStatus = (document.getElementById("geo_status")?.value || "").trim();
+      const geoLat = (document.getElementById("geo_lat")?.value || "").trim();
+      const geoLng = (document.getElementById("geo_lng")?.value || "").trim();
+
+      const geoOk = geoStatus === "ok" && geoLat !== "" && geoLng !== "";
+
+      if (!geoOk) {
+        hideOverlay();
+        setLoginButtonIdle();
+
+        let msg = "Debes permitir la ubicación para ingresar al sistema.";
+        if (geoStatus === "denegado") {
+          msg = "Permiso de ubicación denegado. Debes habilitarlo para ingresar.";
+        } else if (geoStatus === "timeout") {
+          msg = "No se pudo obtener la ubicación a tiempo. Intenta nuevamente.";
+        } else if (geoStatus === "no_soportado") {
+          msg = "Tu navegador no soporta geolocalización. Usa otro navegador/dispositivo.";
+        } else if (geoStatus === "no_disponible") {
+          msg = "Ubicación no disponible. Activa GPS / ubicación del dispositivo.";
+        }
+
+        alert(msg);
+        return; // ❌ no enviar form
+      }
+
+      // ✅ Todo OK: enviar login
       __geoSubmitInProgress = true;
       loginForm.submit();
     });
