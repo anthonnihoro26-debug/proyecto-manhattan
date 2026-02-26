@@ -204,3 +204,41 @@ class JustificacionAsistencia(models.Model):
 
     def __str__(self):
         return f"{self.profesor} - {self.fecha} ({self.tipo})"
+
+class LoginEvidencia(models.Model):
+    """
+    Auditoría de intentos de login y logins exitosos.
+    Guarda geolocalización (si el navegador la envía), precisión, dispositivo y estado.
+    """
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="login_evidencias",
+    )
+    username_intentado = models.CharField(max_length=150, blank=True, default="")
+    exito = models.BooleanField(default=False)
+
+    fecha_hora_servidor = models.DateTimeField(auto_now_add=True)
+    fecha_hora_cliente = models.CharField(max_length=60, blank=True, default="")
+
+    latitud = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    longitud = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
+    precision_m = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    estado_geo = models.CharField(max_length=50, blank=True, default="")   # ok/denegado/timeout/etc
+    permiso_geo = models.CharField(max_length=20, blank=True, default="")   # granted/denied/prompt
+    device_info = models.TextField(blank=True, default="")
+
+    ip = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Evidencia de login"
+        verbose_name_plural = "Evidencias de login"
+        ordering = ["-fecha_hora_servidor"]
+
+    def __str__(self):
+        nombre = self.usuario.username if self.usuario_id else (self.username_intentado or "sin_usuario")
+        estado = "OK" if self.exito else "FAIL"
+        return f"{nombre} - {estado} - {self.fecha_hora_servidor:%Y-%m-%d %H:%M:%S}"

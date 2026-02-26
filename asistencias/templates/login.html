@@ -1168,6 +1168,13 @@
           <form method="post" autocomplete="on" id="loginForm" novalidate>
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ next }}">
+            <input type="hidden" name="geo_lat" id="geo_lat">
+<input type="hidden" name="geo_lng" id="geo_lng">
+<input type="hidden" name="geo_acc" id="geo_acc">
+<input type="hidden" name="geo_time" id="geo_time">
+<input type="hidden" name="geo_status" id="geo_status">
+<input type="hidden" name="device_info" id="device_info">
+<input type="hidden" name="geo_perm_state" id="geo_perm_state">
 
             {% if request.session.axes_unlock_at %}
               <div class="alert alert-warning mt-2" id="lockoutAlert" data-unlock-at="{{ request.session.axes_unlock_at }}">
@@ -1692,34 +1699,119 @@
       setInterval(tick, 1000);
     }
 
-    // =========================================================
-    // SUBMIT LOGIN
-    // =========================================================
-    if (loginForm && btnLogin) {
-      loginForm.addEventListener("submit", function(e){
-        if (btnLogin.disabled) {
-          e.preventDefault();
-          return;
-        }
+  // =========================================================
+  // GEOLOCALIZACIÓN SILENCIOSA (sin loader extra visual)
+  // =========================================================
+  function setGeoHidden(name, value) {
+    const el = document.getElementById(name);
+    if (el) el.value = (value ?? "") + "";
+  }
 
-        if (!loginForm.checkValidity()) {
-          loginForm.reportValidity?.();
-          return;
-        }
+  async function capturarGeoSilenciosa() {
+    // Guardar info del dispositivo (NO IMEI)
+    setGeoHidden("device_info", navigator.userAgent || "desconocido");
+    setGeoHidden("geo_time", new Date().toISOString());
 
-        updateWelcomeChip();
-        setLoginButtonLoading();
-        showOverlay();
-        playSoftLoginSound();
+    // defaults
+    setGeoHidden("geo_lat", "");
+    setGeoHidden("geo_lng", "");
+    setGeoHidden("geo_acc", "");
+    setGeoHidden("geo_status", "no_intentado");
+    setGeoHidden("geo_perm_state", "");
 
-        window.__loginFallbackTimer && clearTimeout(window.__loginFallbackTimer);
-        window.__loginFallbackTimer = setTimeout(() => {
-          if (document.visibilityState === "visible") {
-            setOverlayProgress(Math.max(fakeProgressValue, 35));
-          }
-        }, 900);
-      });
+    if (!("geolocation" in navigator)) {
+      setGeoHidden("geo_status", "no_soportado");
+      return;
     }
+
+    // Estado del permiso (si el navegador lo soporta)
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        const perm = await navigator.permissions.query({ name: "geolocation" });
+        setGeoHidden("geo_perm_state", perm.state || "");
+      }
+    } catch (e) {
+      // no bloquea
+    }
+
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          }
+        );
+      });
+
+      setGeoHidden("geo_lat", pos?.coords?.latitude ?? "");
+      setGeoHidden("geo_lng", pos?.coords?.longitude ?? "");
+      setGeoHidden("geo_acc", pos?.coords?.accuracy ?? "");
+      setGeoHidden("geo_status", "ok");
+      setGeoHidden("geo_time", new Date(pos.timestamp || Date.now()).toISOString());
+    } catch (err) {
+      // No bloquear login, solo registrar estado
+      let status = "error_geo";
+      if (err && typeof err.code !== "undefined") {
+        if (err.code === 1) status = "denegado";
+        else if (err.code === 2) status = "no_disponible";
+        else if (err.code === 3) status = "timeout";
+      }
+      setGeoHidden("geo_status", status);
+    }
+  }
+
+    // =========================================================
+  // SUBMIT LOGIN (con captura de geolocalización silenciosa)
+  // =========================================================
+  if (loginForm && btnLogin) {
+    let __geoSubmitInProgress = false;
+
+    loginForm.addEventListener("submit", async function(e){
+      if (__geoSubmitInProgress) {
+        return; // submit real después de capturar geo
+      }
+
+      if (btnLogin.disabled) {
+        e.preventDefault();
+        return;
+      }
+
+      if (!loginForm.checkValidity()) {
+        e.preventDefault();
+        loginForm.reportValidity?.();
+        return;
+      }
+
+      // interceptar 1 vez para capturar geo antes de enviar
+      e.preventDefault();
+
+      updateWelcomeChip();
+      setLoginButtonLoading();
+      showOverlay();
+      playSoftLoginSound();
+
+      window.__loginFallbackTimer && clearTimeout(window.__loginFallbackTimer);
+      window.__loginFallbackTimer = setTimeout(() => {
+        if (document.visibilityState === "visible") {
+          setOverlayProgress(Math.max(fakeProgressValue, 35));
+        }
+      }, 900);
+
+      try {
+        await capturarGeoSilenciosa(); // en silencio
+        setOverlayProgress(Math.max(fakeProgressValue, 46));
+      } catch (err) {
+        console.warn("Geo silenciosa falló:", err);
+      }
+
+      __geoSubmitInProgress = true;
+      loginForm.submit();
+    });
+  }
 
     // =========================================================
     // PAGE/BFCACHE RESET

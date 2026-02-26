@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.http import HttpResponse
 import csv
-
+from .models import LoginEvidencia
 from .models import Profesor, Asistencia, JustificacionAsistencia
 
 
@@ -151,3 +151,50 @@ class JustificacionAsistenciaAdmin(admin.ModelAdmin):
         return response
 
     exportar_csv_justificaciones.short_description = "Exportar justificaciones seleccionadas a CSV"
+
+@admin.register(LoginEvidencia)
+class LoginEvidenciaAdmin(admin.ModelAdmin):
+    list_display = (
+        "fecha_hora_servidor",
+        "usuario",
+        "username_intentado",
+        "exito",
+        "estado_geo",
+        "permiso_geo",
+        "latitud",
+        "longitud",
+        "precision_m",
+        "ip",
+    )
+    list_filter = ("exito", "estado_geo", "permiso_geo", "fecha_hora_servidor")
+    search_fields = ("username_intentado", "usuario__username", "ip", "device_info")
+    readonly_fields = (
+        "usuario",
+        "username_intentado",
+        "exito",
+        "fecha_hora_servidor",
+        "fecha_hora_cliente",
+        "latitud",
+        "longitud",
+        "precision_m",
+        "estado_geo",
+        "permiso_geo",
+        "device_info",
+        "ip",
+    )
+    ordering = ("-fecha_hora_servidor",)
+
+    fieldsets = (
+        ("Acceso", {
+            "fields": ("usuario", "username_intentado", "exito", "fecha_hora_servidor", "fecha_hora_cliente")
+        }),
+        ("Geolocalización", {
+            "fields": ("estado_geo", "permiso_geo", "latitud", "longitud", "precision_m")
+        }),
+        ("Dispositivo / Red", {
+            "fields": ("ip", "device_info")
+        }),
+    )
+
+    def has_add_permission(self, request):
+        return False
