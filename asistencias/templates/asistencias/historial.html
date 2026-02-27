@@ -11,47 +11,135 @@
 
   <style>
     :root{
-      --bg1:#0b1020;
-      --bg2:#2b1fff;
-      --card:#ffffff;
+      /* 🎓 Paleta UNI */
+      --uni-red:#a61d22;
+      --uni-red-2:#c62828;
+      --uni-red-3:#8b1519;
+      --uni-cream:#f5f1e8;
+      --uni-cream-2:#efe8da;
+      --uni-gold:#c9a227;
+
+      --bg-dark:#190c0f;
+      --bg-dark-2:#2a1015;
+      --ink:#171717;
       --muted:#6b7280;
-      --primary:#2563eb;
-      --primary2:#4f46e5;
-      --success:#16a34a;
+
+      --card: rgba(255,255,255,.90);
+      --line: rgba(17,24,39,.10);
+
+      --success:#138a43;
+      --success-2:#16a34a;
+      --info:#1d4ed8;
+      --violet:#7c3aed;
       --danger:#dc2626;
-      --shadow: 0 22px 55px rgba(0,0,0,.22);
+
       --radius: 22px;
-      --stroke: rgba(15, 23, 42, 0.10);
+      --shadow: 0 24px 60px rgba(0,0,0,.20);
+      --shadow-soft: 0 14px 34px rgba(0,0,0,.10);
+    }
+
+    *{ box-sizing:border-box; }
+
+    html, body{
+      margin:0;
+      min-height:100%;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg-dark);
     }
 
     body{
-      margin:0;
-      min-height:100vh;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      position: relative;
+      overflow-x: hidden;
       background:
-        radial-gradient(1200px 700px at 10% 10%, rgba(79,70,229,.52), transparent 55%),
-        radial-gradient(900px 600px at 90% 20%, rgba(37,99,235,.42), transparent 60%),
-        radial-gradient(900px 700px at 50% 100%, rgba(168,85,247,.25), transparent 60%),
-        linear-gradient(135deg, #0b1020, #2a165f);
-      color:#111827;
+        radial-gradient(1100px 600px at 8% 8%, rgba(198,40,40,.18), transparent 60%),
+        radial-gradient(900px 540px at 88% 14%, rgba(201,162,39,.10), transparent 60%),
+        radial-gradient(1000px 700px at 50% 100%, rgba(166,29,34,.10), transparent 60%),
+        linear-gradient(145deg, #14090c 0%, #210d12 35%, #2a1015 100%);
     }
 
+    /* ✅ Canvas partículas visible */
+    #uniParticles{
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2 !important; /* encima del fondo/orbes */
+      pointer-events: none;
+      opacity: 1 !important;
+      mix-blend-mode: screen;
+      filter: saturate(1.15) brightness(1.08);
+    }
+
+    /* Orbes */
+    .bg-orb{
+      position: fixed;
+      border-radius: 999px;
+      filter: blur(40px);
+      z-index: 0 !important;
+      pointer-events: none;
+      opacity: .28;
+    }
+    .orb-1{
+      width: 260px; height: 260px;
+      left: -60px; top: 110px;
+      background: rgba(198,40,40,.65);
+      animation: floatOrb1 16s ease-in-out infinite;
+    }
+    .orb-2{
+      width: 220px; height: 220px;
+      right: -50px; top: 220px;
+      background: rgba(201,162,39,.42);
+      animation: floatOrb2 18s ease-in-out infinite;
+    }
+    .orb-3{
+      width: 320px; height: 320px;
+      right: 10%; bottom: -80px;
+      background: rgba(166,29,34,.35);
+      animation: floatOrb3 20s ease-in-out infinite;
+    }
+
+    @keyframes floatOrb1{
+      0%,100%{ transform: translate3d(0,0,0); }
+      50%{ transform: translate3d(14px,-16px,0); }
+    }
+    @keyframes floatOrb2{
+      0%,100%{ transform: translate3d(0,0,0); }
+      50%{ transform: translate3d(-16px,10px,0); }
+    }
+    @keyframes floatOrb3{
+      0%,100%{ transform: translate3d(0,0,0); }
+      50%{ transform: translate3d(18px,-10px,0); }
+    }
+
+    /* ---------- TOPBAR ---------- */
     .topbar{
       position: sticky;
       top: 0;
-      z-index: 50;
-      background: rgba(255,255,255,0.80);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(17,24,39,.08);
+      z-index: 60;
+      background: linear-gradient(180deg, rgba(247,244,237,.92), rgba(244,239,230,.88));
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(166,29,34,.10);
+      box-shadow: 0 8px 24px rgba(0,0,0,.08);
     }
+    .topbar::after{
+      content:"";
+      display:block;
+      height: 4px;
+      background: linear-gradient(90deg, var(--uni-red-3), var(--uni-red), var(--uni-gold), var(--uni-red));
+      opacity:.95;
+    }
+
     .topbar-inner{
-      max-width: 1180px;
+      max-width: 1320px;
       margin: 0 auto;
-      padding: 14px 16px;
+      padding: 12px 16px;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:14px;
+      position: relative;
+      z-index: 2;
     }
 
     .brand{
@@ -60,20 +148,40 @@
       gap:12px;
       min-width: 260px;
     }
+    .uni-badge{
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+    .uni-logo{
+      width: 46px;
+      height: 46px;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 12px rgba(166,29,34,.14));
+    }
+
     .brand h1{
-      font-size: 18px;
-      line-height: 1.1;
+      font-size: 17px;
+      line-height: 1.08;
       margin: 0;
       font-weight: 950;
-      color:#0f172a;
-      letter-spacing: .2px;
+      color:#111827;
+      letter-spacing: .12px;
     }
     .brand small{
       display:block;
       font-size: 12px;
-      color: var(--muted);
+      color: #6b7280;
       font-weight: 800;
-      margin-top: 2px;
+      margin-top: 3px;
     }
 
     .userbox{
@@ -87,13 +195,14 @@
       display:inline-flex;
       align-items:center;
       gap:8px;
-      padding: 9px 12px;
+      padding: 10px 13px;
       border-radius: 999px;
-      background: rgba(17,24,39,0.05);
-      border: 1px solid rgba(17,24,39,0.08);
+      background: rgba(255,255,255,.75);
+      border: 1px solid rgba(166,29,34,.10);
       color:#111827;
-      font-weight: 850;
+      font-weight: 900;
       font-size: 13px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.06);
     }
 
     .btnx{
@@ -105,17 +214,33 @@
       align-items:center;
       gap:8px;
       text-decoration:none;
-      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease, filter .12s ease;
       box-shadow: 0 12px 26px rgba(0,0,0,.10);
       user-select:none;
       white-space: nowrap;
+      position: relative;
+      overflow: hidden;
     }
-    .btnx:hover{ transform: translateY(-1px); box-shadow: 0 16px 34px rgba(0,0,0,.14); }
-    .btnx:active{ transform: translateY(0px); opacity:.92; }
-    .btnx-success{ background: linear-gradient(135deg, #16a34a, #22c55e); color:#fff; }
-    .btnx-danger{ background: linear-gradient(135deg, #dc2626, #ef4444); color:#fff; }
-    .btnx-primary{ background: linear-gradient(135deg, var(--primary), var(--primary2)); color:#fff; }
+    .btnx:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 16px 34px rgba(0,0,0,.14);
+      filter: saturate(1.03);
+    }
+    .btnx:active{ transform: translateY(0px); opacity:.94; }
+    .btnx::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.18) 40%, transparent 70%);
+      transform: translateX(-120%);
+      transition: transform .6s ease;
+      pointer-events:none;
+    }
+    .btnx:hover::before{ transform: translateX(120%); }
 
+    .btnx-success{ background: linear-gradient(135deg, #138a43, #16a34a); color:#fff; }
+    .btnx-danger{ background: linear-gradient(135deg, #bf1f24, #e53935); color:#fff; }
+    .btnx-primary{ background: linear-gradient(135deg, var(--uni-red), #d73636); color:#fff; }
     .btnx .subtxt{
       display:block;
       font-size: 11px;
@@ -125,39 +250,43 @@
       letter-spacing: .2px;
     }
 
+    /* ---------- LAYOUT ---------- */
     .page{
-      max-width: 1180px;
+      position: relative;
+      z-index: 3; /* ✅ encima del canvas */
+      max-width: 1320px;
       margin: 0 auto;
-      padding: 24px 16px 40px;
+      padding: 22px 16px 42px;
     }
-
-    .uni-badge{
-      background: transparent !important;
-      border: 0 !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-      border-radius: 0 !important;
-      width: 44px;
-      height: 44px;
+    .layout-grid{
       display: grid;
-      place-items: center;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 16px;
+      align-items: start;
     }
-    .uni-logo{
-      width: 44px;
-      height: 44px;
-      display: block;
-      object-fit: contain;
-      filter: drop-shadow(0 6px 10px rgba(0,0,0,.10));
+    @media (max-width: 1180px){
+      .layout-grid{ grid-template-columns: 1fr; }
     }
 
     .cardx{
-      background: rgba(255,255,255,0.92);
+      background: linear-gradient(180deg, rgba(247,244,237,.90), rgba(243,239,230,.86));
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255,255,255,0.35);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      overflow:hidden;
+      overflow: hidden;
+      position: relative;
     }
+    .cardx::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--uni-red-3), var(--uni-red), var(--uni-gold), var(--uni-red));
+      opacity: .95;
+      z-index: 0;
+    }
+    .cardx > *{ position: relative; z-index: 1; }
 
     .cardx-head{
       padding: 22px 22px 12px;
@@ -172,68 +301,266 @@
       margin:0;
       font-weight: 950;
       font-size: 32px;
-      letter-spacing: -0.6px;
-      color: #0f172a;
+      letter-spacing: -0.7px;
+      color: #1f2937;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      line-height: 1.05;
+    }
+    .title i{
+      color: var(--uni-red);
+      background: rgba(166,29,34,.08);
+      border: 1px solid rgba(166,29,34,.14);
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+    }
+    .subtitle{
+      margin: 6px 0 0;
+      color: #6b7280;
+      font-weight: 800;
+    }
+
+    .privacy-note{
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(31,41,55,.72);
+      font-weight: 850;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(17,24,39,.07);
+      width: fit-content;
+      border-radius: 999px;
+      padding: 7px 11px;
+    }
+    .privacy-note i{ color: var(--uni-red); }
+
+    /* Sidebar nuevo (sin bloque largo tipo foto) */
+    .side-panel{
+      position: sticky;
+      top: 92px;
+      background: linear-gradient(180deg, rgba(247,244,237,.92), rgba(242,236,226,.88));
+      border: 1px solid rgba(255,255,255,.34);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+    .side-panel::before{
+      content:"";
+      display:block;
+      height:4px;
+      background: linear-gradient(90deg, var(--uni-red), var(--uni-gold), var(--uni-red));
+    }
+
+    .side-head{
+      padding: 16px 16px 10px;
       display:flex;
       align-items:center;
       gap:10px;
     }
-    .subtitle{
-      margin: 6px 0 0;
-      color: var(--muted);
+    .side-head .ico{
+      width: 40px; height: 40px;
+      border-radius: 14px;
+      display:grid; place-items:center;
+      background: rgba(166,29,34,.09);
+      border: 1px solid rgba(166,29,34,.15);
+      color: var(--uni-red);
+      font-size: 20px;
+      flex: 0 0 auto;
+    }
+    .side-head h3{
+      margin:0;
+      font-size: 15px;
+      font-weight: 950;
+      color: #1f2937;
+      line-height: 1.15;
+    }
+    .side-head p{
+      margin:2px 0 0;
+      font-size: 12px;
+      color:#6b7280;
       font-weight: 800;
     }
 
+    .side-body{ padding: 6px 16px 16px; }
+
+    .status-box{
+      border-radius: 16px;
+      background: rgba(255,255,255,.66);
+      border: 1px solid rgba(17,24,39,.08);
+      padding: 12px;
+      box-shadow: 0 8px 18px rgba(0,0,0,.05);
+      display:grid;
+      gap:10px;
+    }
+    .status-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      font-size: 12px;
+      font-weight: 900;
+      color:#374151;
+    }
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius:999px;
+      padding: 6px 10px;
+      font-size:11px;
+      font-weight:950;
+      border:1px solid rgba(17,24,39,.08);
+      background: rgba(255,255,255,.75);
+      color:#1f2937;
+    }
+    .status-pill.ok{
+      background: rgba(34,197,94,.14);
+      border-color: rgba(34,197,94,.20);
+      color:#14532d;
+    }
+    .status-pill.sec{
+      background: rgba(59,130,246,.12);
+      border-color: rgba(59,130,246,.18);
+      color:#1e3a8a;
+    }
+
+    .quick-grid{
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px;
+    }
+    .quick-card{
+      border-radius: 12px;
+      background: rgba(255,255,255,.56);
+      border: 1px solid rgba(17,24,39,.06);
+      padding: 10px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.04);
+    }
+    .quick-card .k{
+      font-size:11px;
+      font-weight:900;
+      color: rgba(31,41,55,.60);
+      margin-bottom: 3px;
+    }
+    .quick-card .v{
+      font-size:13px;
+      font-weight:950;
+      color:#1f2937;
+      line-height:1.2;
+    }
+
+    .side-list{
+      margin: 12px 0 0;
+      padding: 0;
+      list-style: none;
+      display:grid;
+      gap:8px;
+    }
+    .side-list li{
+      display:flex;
+      align-items:flex-start;
+      gap:8px;
+      border-radius: 12px;
+      padding: 9px 10px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(17,24,39,.06);
+      font-size: 12px;
+      color:#374151;
+      font-weight: 800;
+    }
+    .side-list i{
+      color: var(--uni-red);
+      margin-top: 1px;
+    }
+
+    .side-mini{
+      margin-top: 12px;
+      border-radius: 14px;
+      padding: 10px;
+      background: linear-gradient(135deg, rgba(166,29,34,.08), rgba(201,162,39,.08));
+      border: 1px dashed rgba(166,29,34,.18);
+      font-size: 11.5px;
+      color:#4b5563;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    /* ---------- FILTERS / KPIs ---------- */
     .filters{ padding: 0 22px 20px; }
 
     .filter-card{
-      background: rgba(15, 23, 42, 0.03);
-      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: rgba(255,255,255,.58);
+      border: 1px solid rgba(17,24,39,.08);
       border-radius: 18px;
       padding: 16px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
     }
 
     .form-label{
       font-weight: 950;
-      color:#0f172a;
+      color:#1f2937;
       font-size: 13px;
-      letter-spacing: .2px;
+      letter-spacing: .18px;
     }
 
     .form-control, .form-select{
       border-radius: 14px !important;
       padding: 11px 12px;
-      border: 1px solid rgba(15, 23, 42, 0.14);
+      border: 1px solid rgba(17,24,39,0.14);
       font-weight: 850;
+      background: rgba(255,255,255,.92);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
     }
-    .form-control::placeholder{ font-weight: 750; color: rgba(107,114,128,.9); }
+    .form-control:focus, .form-select:focus{
+      border-color: rgba(166,29,34,.35);
+      box-shadow: 0 0 0 .18rem rgba(166,29,34,.10);
+    }
+    .form-control::placeholder{ font-weight: 750; color: rgba(107,114,128,.95); }
 
     .btn-apply{
       border-radius: 14px;
       padding: 11px 12px;
       font-weight: 950;
-      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      background: linear-gradient(135deg, var(--uni-red), #d73636);
       border:0;
       color:#fff;
-      box-shadow: 0 14px 30px rgba(37,99,235,.22);
+      box-shadow: 0 14px 30px rgba(166,29,34,.22);
       height: 100%;
       display:flex;
       align-items:center;
       justify-content:center;
       gap:8px;
+      transition: transform .12s ease, box-shadow .12s ease;
     }
+    .btn-apply:hover{ transform: translateY(-1px); box-shadow: 0 18px 34px rgba(166,29,34,.28); }
 
     .btn-clear{
       border-radius: 14px;
       padding: 10px 12px;
       font-weight: 950;
-      background: rgba(255,255,255,0.85);
-      border: 1px solid rgba(15,23,42,0.12);
-      color:#0f172a;
+      background: rgba(255,255,255,0.82);
+      border: 1px solid rgba(17,24,39,0.12);
+      color:#1f2937;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       gap:8px;
+      transition: .12s ease;
+    }
+    .btn-clear:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.94);
+      border-color: rgba(166,29,34,.15);
+      color: var(--uni-red);
     }
 
     .kpi-grid{
@@ -247,25 +574,36 @@
 
     .kpi{
       border-radius: 18px;
-      background: rgba(255,255,255,0.88);
-      border: 1px solid rgba(15,23,42,0.10);
+      background: rgba(255,255,255,0.80);
+      border: 1px solid rgba(17,24,39,0.08);
       padding: 14px;
-      box-shadow: 0 14px 30px rgba(0,0,0,.08);
+      box-shadow: 0 14px 30px rgba(0,0,0,.07);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi::after{
+      content:"";
+      position:absolute;
+      top:0; left:0; right:0;
+      height: 3px;
+      background: linear-gradient(90deg, rgba(166,29,34,.85), rgba(201,162,39,.85));
+      opacity:.9;
     }
     .kpi .k-title{
       font-size: 12px;
-      color: rgba(15,23,42,.62);
+      color: rgba(31,41,55,.68);
       font-weight: 900;
       margin-bottom: 6px;
       display:flex;
       align-items:center;
       gap:8px;
     }
+    .kpi .k-title i{ color: var(--uni-red); }
     .kpi .k-val{
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 950;
-      color:#0f172a;
-      letter-spacing: -0.3px;
+      color:#111827;
+      letter-spacing: -0.35px;
     }
 
     .active-filters{
@@ -281,30 +619,54 @@
       gap:7px;
       padding: 8px 10px;
       border-radius: 999px;
-      background: rgba(15,23,42,0.04);
-      border: 1px solid rgba(15,23,42,0.10);
-      color: #0f172a;
+      background: rgba(255,255,255,.62);
+      border: 1px solid rgba(17,24,39,.09);
+      color: #1f2937;
       font-weight: 900;
       font-size: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.04);
     }
-    .pill .muted{ color: rgba(15,23,42,.62); font-weight: 900; }
+    .pill i{ color: var(--uni-red); }
+    .pill .muted{ color: rgba(31,41,55,.65); font-weight: 900; }
     .pill .mono{ font-variant-numeric: tabular-nums; }
 
+    .doc-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.64);
+      border: 1px solid rgba(17,24,39,0.09);
+      color:#1f2937;
+      font-weight: 900;
+      font-size: 12px;
+      width: fit-content;
+      box-shadow: 0 6px 16px rgba(0,0,0,.04);
+    }
+    .doc-chip i{ color: var(--uni-red); }
+
+    /* ---------- TABLE ---------- */
     .table-wrap{
       margin: 0 22px 16px;
       border-radius: 18px;
       overflow:hidden;
-      border: 1px solid var(--stroke);
-      background: #fff;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.92);
+      box-shadow: var(--shadow-soft);
     }
+    .table{ margin-bottom: 0; }
 
     .table thead th{
-      background: rgba(15,23,42,0.03);
-      color:#0f172a;
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(243,239,230,.92));
+      color:#1f2937;
       font-weight: 950;
-      border-bottom: 1px solid rgba(15,23,42,0.10);
+      border-bottom: 1px solid rgba(17,24,39,0.09);
       padding: 14px 14px;
       white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
 
     .table tbody td{
@@ -312,34 +674,22 @@
       vertical-align: middle;
       font-weight: 850;
       color:#111827;
-      border-top: 1px solid rgba(15,23,42,0.06);
+      border-top: 1px solid rgba(17,24,39,0.05);
+      background-clip: padding-box;
     }
+    .table tbody tr{ transition: background-color .12s ease; }
+    .table tbody tr:hover{ background: rgba(166,29,34,0.03); }
 
-    .table tbody tr:hover{ background: rgba(37,99,235,0.04); }
-
-    .doc-name{ font-weight: 950; color:#0f172a; }
+    .doc-name{ font-weight: 950; color:#111827; }
     .doc-sub{
-      margin-top: 2px;
+      margin-top: 4px;
       font-size: 12px;
       font-weight: 850;
-      color: rgba(15,23,42,.65);
+      color: rgba(31,41,55,.70);
       display:flex;
       align-items:center;
       gap:8px;
       flex-wrap:wrap;
-    }
-    .doc-chip{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.04);
-      border: 1px solid rgba(15,23,42,0.10);
-      color:#0f172a;
-      font-weight: 900;
-      font-size: 12px;
-      width: fit-content;
     }
 
     .badge-cond{
@@ -353,20 +703,20 @@
       border-radius: 999px;
       color:#fff;
       font-weight: 950;
-      font-size: 13px;
+      font-size: 12.5px;
       letter-spacing: .1px;
       white-space: nowrap;
+      box-shadow: 0 10px 22px rgba(0,0,0,.10);
     }
-    .cond-n{ background: linear-gradient(135deg,#16a34a,#22c55e); }
+    .cond-n{ background: linear-gradient(135deg,#138a43,#16a34a); }
     .cond-c{ background: linear-gradient(135deg,#2563eb,#4f46e5); }
     .cond-otro{ background: linear-gradient(135deg,#64748b,#475569); }
-
-    .st-asistio{ background: linear-gradient(135deg,#16a34a,#22c55e); }
+    .st-asistio{ background: linear-gradient(135deg,#138a43,#16a34a); }
     .st-just{ background: linear-gradient(135deg,#7c3aed,#a855f7); }
 
     .date-main{
       font-weight: 950;
-      color:#0f172a;
+      color:#111827;
       display:flex;
       align-items:center;
       gap:8px;
@@ -376,9 +726,10 @@
       margin-top: 2px;
       font-size: 12px;
       font-weight: 850;
-      color: rgba(15,23,42,.65);
+      color: rgba(31,41,55,.65);
     }
 
+    /* ---------- FOOTER / PAGER ---------- */
     .footer-row{
       padding: 0 22px 22px;
       display:flex;
@@ -386,29 +737,22 @@
       justify-content:space-between;
       gap:12px;
       flex-wrap:wrap;
-      color:#0f172a;
+      color:#1f2937;
     }
+
     .total{
       font-weight: 950;
-      color:#0f172a;
-      background: rgba(15,23,42,0.04);
-      border: 1px solid rgba(15,23,42,0.08);
+      color:#1f2937;
+      background: rgba(255,255,255,.62);
+      border: 1px solid rgba(17,24,39,.08);
       padding: 10px 12px;
       border-radius: 999px;
       display:inline-flex;
       align-items:center;
       gap:8px;
+      box-shadow: 0 8px 18px rgba(0,0,0,.05);
     }
-
-    .privacy-note{
-      margin-top: 10px;
-      font-size: 12px;
-      color: rgba(15,23,42,.65);
-      font-weight: 800;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
+    .total i{ color: var(--uni-red); }
 
     .pager{
       display:flex;
@@ -420,19 +764,40 @@
     .pbtn{
       padding: 9px 12px;
       border-radius: 14px;
-      border: 1px solid rgba(15,23,42,0.12);
+      border: 1px solid rgba(17,24,39,0.11);
       background: rgba(255,255,255,0.90);
       font-weight: 950;
-      color:#0f172a;
+      color:#1f2937;
       text-decoration:none;
       display:inline-flex;
       align-items:center;
       gap:8px;
-      box-shadow: 0 10px 22px rgba(0,0,0,.06);
+      box-shadow: 0 8px 18px rgba(0,0,0,.05);
+      transition: .12s ease;
+    }
+    .pbtn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(166,29,34,.16);
+      color: var(--uni-red);
     }
     .pbtn.disabled{ opacity: .55; pointer-events: none; }
-    .pinfo{ font-weight: 900; color: rgba(15,23,42,.72); font-size: 13px; }
 
+    .pinfo{
+      font-weight: 900;
+      color: rgba(31,41,55,.75);
+      font-size: 13px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .pinfo::before{
+      content:"";
+      width:8px;height:8px;border-radius:999px;
+      background: linear-gradient(135deg, var(--uni-red), var(--uni-gold));
+      box-shadow: 0 0 0 4px rgba(166,29,34,.10);
+    }
+
+    /* ---------- EMPTY ---------- */
     .empty-wrap{
       padding: 46px 14px;
       display:flex;
@@ -443,31 +808,20 @@
     }
     .empty-ico{
       width:56px;height:56px;border-radius:18px;
-      background: rgba(37,99,235,.10);
-      border: 1px solid rgba(37,99,235,.18);
+      background: rgba(166,29,34,.08);
+      border: 1px solid rgba(166,29,34,.14);
       display:grid;place-items:center;
+      box-shadow: 0 8px 18px rgba(166,29,34,.08);
     }
-    .empty-title{ font-weight: 950; color:#0f172a; font-size: 16px; }
+    .empty-title{ font-weight: 950; color:#1f2937; font-size: 16px; }
     .empty-sub{
       font-weight: 850;
-      color: rgba(15,23,42,.65);
+      color: rgba(31,41,55,.68);
       font-size: 13px;
       max-width: 420px;
     }
 
-    @media (max-width: 576px){
-      .title{ font-size: 24px; }
-      .cardx-head{ padding: 18px 16px 10px; }
-      .filters{ padding: 0 16px 16px; }
-      .kpi-grid{ padding: 0 16px 16px; }
-      .active-filters{ padding: 0 16px 12px; }
-      .table-wrap{ margin: 0 16px 14px; }
-      .footer-row{ padding: 0 16px 18px; }
-      .brand h1{ font-size: 15px; }
-      .userpill{ display:none; }
-    }
-
-    /* ✅ Toasts */
+    /* ---------- TOASTS ---------- */
     .toast-wrap{
       position: fixed;
       top: 86px;
@@ -489,31 +843,32 @@
       animation: toastIn .18s ease-out;
       border: 1px solid rgba(255,255,255,.25);
       font-weight: 850;
+      background: rgba(255,255,255,.80);
     }
     .toastx-icon{
       width: 34px; height: 34px;
       display: grid;
       place-items: center;
       border-radius: 12px;
-      background: rgba(255,255,255,.18);
+      background: rgba(255,255,255,.40);
       font-size: 18px;
-      color: #0f172a;
+      color: #1f2937;
     }
-    .toastx-text{ color: #0f172a; line-height: 1.2; }
+    .toastx-text{ color: #1f2937; line-height: 1.2; }
     .toastx-close{
       border: 0;
       background: transparent;
-      color: rgba(15,23,42,.65);
+      color: rgba(31,41,55,.70);
       padding: 6px;
       border-radius: 10px;
       cursor: pointer;
     }
-    .toastx-close:hover{ background: rgba(255,255,255,.22); }
+    .toastx-close:hover{ background: rgba(255,255,255,.28); }
 
-    .toastx-success{ background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.35); }
-    .toastx-warning{ background: rgba(245,158,11,.18); border-color: rgba(245,158,11,.35); }
-    .toastx-error{ background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.35); }
-    .toastx-info{ background: rgba(59,130,246,.18); border-color: rgba(59,130,246,.35); }
+    .toastx-success{ background: rgba(34,197,94,.20); border-color: rgba(34,197,94,.30); }
+    .toastx-warning{ background: rgba(245,158,11,.20); border-color: rgba(245,158,11,.30); }
+    .toastx-error{ background: rgba(239,68,68,.20); border-color: rgba(239,68,68,.30); }
+    .toastx-info{ background: rgba(59,130,246,.20); border-color: rgba(59,130,246,.30); }
 
     .toastx-hide{
       opacity: 0;
@@ -526,17 +881,46 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Rendimiento tabla */
-    .cv-auto{ content-visibility:auto; contain-intrinsic-size: 900px 600px; }
-    .table thead th{ position: sticky; top: 0; z-index: 1; background: rgba(15,23,42,0.03); }
+    /* Rendimiento */
+    .cv-auto{ content-visibility:auto; contain-intrinsic-size: 900px 650px; }
+    .table-responsive{ will-change: scroll-position; }
+
+    /* Responsive */
+    @media (max-width: 768px){
+      .title{ font-size: 24px; }
+      .title i{ width: 36px; height: 36px; font-size: 18px; border-radius: 12px; }
+      .cardx-head{ padding: 18px 16px 10px; }
+      .filters{ padding: 0 16px 16px; }
+      .kpi-grid{ padding: 0 16px 16px; }
+      .active-filters{ padding: 0 16px 12px; }
+      .table-wrap{ margin: 0 16px 14px; }
+      .footer-row{ padding: 0 16px 18px; }
+      .brand h1{ font-size: 15px; }
+      .brand small{ font-size: 11px; }
+      .userpill{ display:none; }
+      .side-panel{
+        position: static;
+        order: -1;
+      }
+      .topbar-inner{ padding: 10px 12px; }
+      .btnx{ padding: 9px 12px; border-radius: 12px; }
+      .btnx .subtxt{ display:none; }
+      .quick-grid{ grid-template-columns: 1fr 1fr; }
+    }
 
     @media (prefers-reduced-motion: reduce){
       *{ animation:none !important; transition:none !important; }
+      #uniParticles{ display:none; }
     }
   </style>
 </head>
 
 <body>
+  <!-- Fondo -->
+ 
+  <div class="bg-orb orb-1" aria-hidden="true"></div>
+  <div class="bg-orb orb-2" aria-hidden="true"></div>
+  <div class="bg-orb orb-3" aria-hidden="true"></div>
 
   <div class="topbar">
     <div class="topbar-inner">
@@ -597,329 +981,607 @@
   {% endif %}
 
   <div class="page">
-    <div class="cardx">
-      <div class="cardx-head">
-        <div>
-          <h2 class="title">
-            <i class="bi bi-clock-history"></i>
-            Historial
-          </h2>
-          <p class="subtitle">Filtra por docente, condición y rango de fechas</p>
+    <div class="layout-grid">
 
-          <div class="privacy-note">
-            <i class="bi bi-shield-lock"></i>
-            Por privacidad, el DNI no se muestra en el historial.
+      <!-- PANEL PRINCIPAL -->
+      <div class="cardx">
+        <div class="cardx-head">
+          <div>
+            <h2 class="title">
+              <i class="bi bi-clock-history"></i>
+              Historial
+            </h2>
+            <p class="subtitle">Filtra por docente, condición y rango de fechas</p>
+
+            <div class="privacy-note">
+              <i class="bi bi-shield-lock"></i>
+              Por privacidad, el DNI no se muestra en el historial.
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap align-items-start">
+            {% if request.user.username|lower == 'george' %}
+              <a class="btnx btnx-primary"
+                 title="Registrar asistencia manualmente por DNI"
+                 href="{% url 'registro_manual' %}">
+                <i class="bi bi-pencil-square"></i>
+                <span>
+                  Registro manual
+                  <span class="subtxt">Por DNI</span>
+                </span>
+              </a>
+            {% endif %}
+
+            {% if puede_volver_just %}
+              <a class="btnx btnx-primary"
+                 title="Volver al panel de justificaciones"
+                 href="{% url 'panel_justificaciones' %}?fecha={{ fecha_just|urlencode }}">
+                <i class="bi bi-arrow-left-circle"></i>
+                <span>
+                  Ir a justificaciones
+                  <span class="subtxt">Volver al panel</span>
+                </span>
+              </a>
+            {% endif %}
+
+            <a class="btnx btnx-success"
+               title="Exporta una MATRIZ por días: filas = docentes, columnas = cada día del filtro."
+               href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}">
+              <i class="bi bi-file-earmark-excel"></i>
+              <span>
+                Exportar Excel
+                <span class="subtxt">Matriz por días</span>
+              </span>
+            </a>
+
+            <div style="margin-top:6px; font-size:12px; font-weight:900; color:rgba(31,41,55,.75); display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span class="doc-chip" style="margin:0;">
+                <i class="bi bi-calendar-range"></i>
+                {% if desde %}{{ desde }}{% else %}hoy{% endif %} — {% if hasta %}{{ hasta }}{% else %}hoy{% endif %}
+              </span>
+
+              {% if condicion %}
+                <span class="doc-chip" style="margin:0;">
+                  <i class="bi bi-person-badge"></i> Condición: {{ condicion|upper }}
+                </span>
+              {% endif %}
+
+              {% if q %}
+                <span class="doc-chip" style="margin:0;">
+                  <i class="bi bi-search"></i> "{{ q }}"
+                </span>
+              {% endif %}
+            </div>
           </div>
         </div>
 
-        <div class="d-flex gap-2 flex-wrap">
-          {% if request.user.username|lower == 'george' %}
-            <a class="btnx btnx-primary"
-               title="Registrar asistencia manualmente por DNI"
-               href="{% url 'registro_manual' %}">
-              <i class="bi bi-pencil-square"></i>
-              <span>
-                Registro manual
-                <span class="subtxt">Por DNI</span>
-              </span>
-            </a>
-          {% endif %}
-
-          {% if puede_volver_just %}
-            <a class="btnx btnx-primary"
-               title="Volver al panel de justificaciones"
-               href="{% url 'panel_justificaciones' %}?fecha={{ fecha_just|urlencode }}">
-              <i class="bi bi-arrow-left-circle"></i>
-              <span>
-                Ir a justificaciones
-                <span class="subtxt">Volver al panel</span>
-              </span>
-            </a>
-          {% endif %}
-
-          <a class="btnx btnx-success"
-             title="Exporta una MATRIZ por días: filas = docentes, columnas = cada día del filtro."
-             href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}">
-            <i class="bi bi-file-earmark-excel"></i>
-            <span>
-              Exportar Excel
-              <span class="subtxt">Matriz por días</span>
-            </span>
-          </a>
-
-          <div style="margin-top:6px; font-size:12px; font-weight:900; color:rgba(15,23,42,.65); display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <span class="doc-chip" style="margin:0;">
-              <i class="bi bi-calendar-range"></i>
-              {% if desde %}{{ desde }}{% else %}hoy{% endif %} — {% if hasta %}{{ hasta }}{% else %}hoy{% endif %}
-            </span>
-
-            {% if condicion %}
-              <span class="doc-chip" style="margin:0;">
-                <i class="bi bi-person-badge"></i> Condición: {{ condicion|upper }}
-              </span>
-            {% endif %}
-
-            {% if q %}
-              <span class="doc-chip" style="margin:0;">
-                <i class="bi bi-search"></i> "{{ q }}"
-              </span>
-            {% endif %}
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="k-title"><i class="bi bi-list-check"></i> Total registros</div>
+            <div class="k-val">{{ total_registros }}</div>
+          </div>
+          <div class="kpi">
+            <div class="k-title"><i class="bi bi-people"></i> Docentes únicos</div>
+            <div class="k-val">{{ docentes_unicos }}</div>
+          </div>
+          <div class="kpi">
+            <div class="k-title"><i class="bi bi-person-badge"></i> Registros condición N</div>
+            <div class="k-val">{{ registros_n }}</div>
+          </div>
+          <div class="kpi">
+            <div class="k-title"><i class="bi bi-person-badge-fill"></i> Registros condición C</div>
+            <div class="k-val">{{ registros_c }}</div>
           </div>
         </div>
-      </div>
 
-      <div class="kpi-grid">
-        <div class="kpi">
-          <div class="k-title"><i class="bi bi-list-check"></i> Total registros</div>
-          <div class="k-val">{{ total_registros }}</div>
-        </div>
-        <div class="kpi">
-          <div class="k-title"><i class="bi bi-people"></i> Docentes únicos</div>
-          <div class="k-val">{{ docentes_unicos }}</div>
-        </div>
-        <div class="kpi">
-          <div class="k-title"><i class="bi bi-person-badge"></i> Registros condición N</div>
-          <div class="k-val">{{ registros_n }}</div>
-        </div>
-        <div class="kpi">
-          <div class="k-title"><i class="bi bi-person-badge-fill"></i> Registros condición C</div>
-          <div class="k-val">{{ registros_c }}</div>
-        </div>
-      </div>
+        <div class="active-filters">
+          {% if q %}
+            <span class="pill"><i class="bi bi-search"></i> <span class="muted">Búsqueda:</span> {{ q }}</span>
+          {% endif %}
+          {% if desde %}
+            <span class="pill"><i class="bi bi-calendar-event"></i> <span class="muted">Desde:</span> <span class="mono">{{ desde }}</span></span>
+          {% endif %}
+          {% if hasta %}
+            <span class="pill"><i class="bi bi-calendar-check"></i> <span class="muted">Hasta:</span> <span class="mono">{{ hasta }}</span></span>
+          {% endif %}
+          {% if condicion %}
+            <span class="pill"><i class="bi bi-person-badge"></i> <span class="muted">Condición:</span> {{ condicion|upper }}</span>
+          {% endif %}
+          <span class="pill"><i class="bi bi-eye"></i> <span class="muted">Mostrar:</span> {{ ps }} / pág</span>
 
-      <div class="active-filters">
-        {% if q %}
-          <span class="pill"><i class="bi bi-search"></i> <span class="muted">Búsqueda:</span> {{ q }}</span>
-        {% endif %}
-        {% if desde %}
-          <span class="pill"><i class="bi bi-calendar-event"></i> <span class="muted">Desde:</span> <span class="mono">{{ desde }}</span></span>
-        {% endif %}
-        {% if hasta %}
-          <span class="pill"><i class="bi bi-calendar-check"></i> <span class="muted">Hasta:</span> <span class="mono">{{ hasta }}</span></span>
-        {% endif %}
-        {% if condicion %}
-          <span class="pill"><i class="bi bi-person-badge"></i> <span class="muted">Condición:</span> {{ condicion|upper }}</span>
-        {% endif %}
-        <span class="pill"><i class="bi bi-eye"></i> <span class="muted">Mostrar:</span> {{ ps }} / pág</span>
+          {% if q or desde or hasta or condicion %}
+            <span class="pill"><i class="bi bi-funnel"></i> Filtros activos</span>
+          {% endif %}
+        </div>
 
-        {% if q or desde or hasta or condicion %}
-          <span class="pill"><i class="bi bi-funnel"></i> Filtros activos</span>
-        {% endif %}
-      </div>
+        <div class="filters">
+          <div class="filter-card">
+            <form method="get">
+              <div class="row g-3 align-items-end">
+                <div class="col-12 col-lg-5">
+                  <label class="form-label">Búsqueda</label>
+                  <div class="input-group">
+                    <span class="input-group-text" style="border-radius:14px 0 0 14px; border:1px solid rgba(17,24,39,0.14); border-right:0; background:rgba(255,255,255,.94);">
+                      <i class="bi bi-search" style="color: var(--uni-red);"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control"
+                           style="border-radius:0 14px 14px 0 !important;"
+                           placeholder="Código / Apellidos / Nombres"
+                           value="{{ q }}"
+                           autocomplete="off">
+                  </div>
+                </div>
 
-      <div class="filters">
-        <div class="filter-card">
-          <!-- ✅ SIN autosubmit: ultra rápido -->
-          <form method="get">
-            <div class="row g-3 align-items-end">
-              <div class="col-12 col-lg-5">
-                <label class="form-label">Búsqueda</label>
-                <div class="input-group">
-                  <span class="input-group-text" style="border-radius:14px 0 0 14px; border:1px solid rgba(15,23,42,0.14); border-right:0; background:#fff;">
-                    <i class="bi bi-search"></i>
-                  </span>
-                  <input type="text" name="q" class="form-control"
-                         style="border-radius:0 14px 14px 0 !important;"
-                         placeholder="Código / Apellidos / Nombres"
-                         value="{{ q }}"
-                         autocomplete="off">
+                <div class="col-6 col-lg-2">
+                  <label class="form-label">Desde</label>
+                  <input type="date" name="desde" class="form-control" value="{{ desde }}">
+                </div>
+
+                <div class="col-6 col-lg-2">
+                  <label class="form-label">Hasta</label>
+                  <input type="date" name="hasta" class="form-control" value="{{ hasta }}">
+                </div>
+
+                <div class="col-6 col-lg-2">
+                  <label class="form-label">Condición</label>
+                  <select name="condicion" class="form-select">
+                    <option value="" {% if not condicion %}selected{% endif %}>Todas</option>
+                    <option value="N" {% if condicion == "N" or condicion == "n" %}selected{% endif %}>N</option>
+                    <option value="C" {% if condicion == "C" or condicion == "c" %}selected{% endif %}>C</option>
+                  </select>
+                </div>
+
+                <div class="col-6 col-lg-1">
+                  <label class="form-label">Mostrar</label>
+                  <select name="ps" class="form-select">
+                    <option value="25" {% if ps == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if ps == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if ps == 100 %}selected{% endif %}>100</option>
+                  </select>
+                </div>
+
+                <div class="col-12 col-lg-2 d-grid">
+                  <button class="btn-apply" type="submit">
+                    <i class="bi bi-funnel-fill"></i> Aplicar
+                  </button>
+                </div>
+
+                <div class="col-12 d-flex justify-content-end">
+                  <a class="btn-clear" href="{% url 'historial_asistencias' %}">
+                    <i class="bi bi-x-circle"></i> Limpiar filtros
+                  </a>
                 </div>
               </div>
-
-              <div class="col-6 col-lg-2">
-                <label class="form-label">Desde</label>
-                <input type="date" name="desde" class="form-control" value="{{ desde }}">
-              </div>
-
-              <div class="col-6 col-lg-2">
-                <label class="form-label">Hasta</label>
-                <input type="date" name="hasta" class="form-control" value="{{ hasta }}">
-              </div>
-
-              <div class="col-6 col-lg-2">
-                <label class="form-label">Condición</label>
-                <select name="condicion" class="form-select">
-                  <option value="" {% if not condicion %}selected{% endif %}>Todas</option>
-                  <option value="N" {% if condicion == "N" or condicion == "n" %}selected{% endif %}>N</option>
-                  <option value="C" {% if condicion == "C" or condicion == "c" %}selected{% endif %}>C</option>
-                </select>
-              </div>
-
-              <div class="col-6 col-lg-1">
-                <label class="form-label">Mostrar</label>
-                <select name="ps" class="form-select">
-                  <option value="25" {% if ps == 25 %}selected{% endif %}>25</option>
-                  <option value="50" {% if ps == 50 %}selected{% endif %}>50</option>
-                  <option value="100" {% if ps == 100 %}selected{% endif %}>100</option>
-                </select>
-              </div>
-
-              <div class="col-12 col-lg-2 d-grid">
-                <button class="btn-apply" type="submit">
-                  <i class="bi bi-funnel-fill"></i> Aplicar
-                </button>
-              </div>
-
-              <div class="col-12 d-flex justify-content-end">
-                <a class="btn-clear" href="{% url 'historial_asistencias' %}">
-                  <i class="bi bi-x-circle"></i> Limpiar filtros
-                </a>
-              </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
-      </div>
 
-      <div class="table-wrap cv-auto">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead>
-              <tr>
-                <th style="width:60px;">#</th>
-                <th>Docente</th>
-                <th style="width:220px;">Condición</th>
-                <th style="width:220px;">Estado</th>
-                <th style="width:230px;">Fecha y hora</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {% for a in items %}
+        <div class="table-wrap cv-auto">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
                 <tr>
-                  <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                  <th style="width:60px;">#</th>
+                  <th>Docente</th>
+                  <th style="width:220px;">Condición</th>
+                  <th style="width:220px;">Estado</th>
+                  <th style="width:230px;">Fecha y hora</th>
+                </tr>
+              </thead>
 
-                  <td>
-                    <div class="doc-name">{{ a.profesor.apellidos }}, {{ a.profesor.nombres }}</div>
-                    <div class="doc-sub">
-                      <span class="doc-chip"><i class="bi bi-hash"></i> Código: {{ a.profesor.codigo }}</span>
-                    </div>
-                  </td>
+              <tbody>
+                {% for a in items %}
+                  <tr>
+                    <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
 
-                  <td>
-                    {% if a.profesor.condicion == "N" %}
-                      <span class="badge-cond cond-n">
-                        <i class="bi bi-check-circle-fill"></i> N • Nombrado
-                      </span>
-                    {% elif a.profesor.condicion == "C" %}
-                      <span class="badge-cond cond-c">
-                        <i class="bi bi-briefcase-fill"></i> C • Contratado
-                      </span>
-                    {% else %}
-                      <span class="badge-cond cond-otro">
-                        <i class="bi bi-info-circle-fill"></i> {{ a.profesor.condicion }}
-                      </span>
-                    {% endif %}
-                  </td>
+                    <td>
+                      <div class="doc-name">{{ a.profesor.apellidos }}, {{ a.profesor.nombres }}</div>
+                      <div class="doc-sub">
+                        <span class="doc-chip"><i class="bi bi-hash"></i> Código: {{ a.profesor.codigo }}</span>
+                      </div>
+                    </td>
 
-                  <td>
-                    {% if "ASISTIÓ" in a.estado %}
-                      <span class="badge-cond st-asistio">
-                        <i class="bi bi-check2-circle"></i> ASISTIÓ
-                      </span>
-                    {% elif "JUSTIFICADO" in a.estado %}
-                      <span class="badge-cond st-just">
-                        <i class="bi bi-shield-check"></i> {{ a.estado }}
-                      </span>
-                      {% if a.detalle %}
-                        <div class="date-sub" style="margin-top:6px;">
-                          <i class="bi bi-card-text"></i> {{ a.detalle }}
-                        </div>
+                    <td>
+                      {% if a.profesor.condicion == "N" %}
+                        <span class="badge-cond cond-n">
+                          <i class="bi bi-check-circle-fill"></i> N • Nombrado
+                        </span>
+                      {% elif a.profesor.condicion == "C" %}
+                        <span class="badge-cond cond-c">
+                          <i class="bi bi-briefcase-fill"></i> C • Contratado
+                        </span>
+                      {% else %}
+                        <span class="badge-cond cond-otro">
+                          <i class="bi bi-info-circle-fill"></i> {{ a.profesor.condicion }}
+                        </span>
                       {% endif %}
-                    {% else %}
-                      <span class="badge-cond cond-otro">
-                        <i class="bi bi-info-circle"></i> {{ a.estado }}
-                      </span>
-                    {% endif %}
-                  </td>
+                    </td>
 
-                  <td>
-                    <div class="date-main">
-                      <i class="bi bi-clock-history" style="color:rgba(15,23,42,.55);"></i>
-                      {{ a.fecha_hora|date:"d/m/Y H:i" }}
-                    </div>
-                    <div class="date-sub">
-                      Hace {{ a.fecha_hora|timesince }}
-                    </div>
-                  </td>
-                </tr>
+                    <td>
+                      {% if "ASISTIÓ" in a.estado %}
+                        <span class="badge-cond st-asistio">
+                          <i class="bi bi-check2-circle"></i> ASISTIÓ
+                        </span>
+                      {% elif "JUSTIFICADO" in a.estado %}
+                        <span class="badge-cond st-just">
+                          <i class="bi bi-shield-check"></i> {{ a.estado }}
+                        </span>
+                        {% if a.detalle %}
+                          <div class="date-sub" style="margin-top:6px;">
+                            <i class="bi bi-card-text"></i> {{ a.detalle }}
+                          </div>
+                        {% endif %}
+                      {% else %}
+                        <span class="badge-cond cond-otro">
+                          <i class="bi bi-info-circle"></i> {{ a.estado }}
+                        </span>
+                      {% endif %}
+                    </td>
 
-              {% empty %}
-                <tr>
-                  <td colspan="5">
-                    <div class="empty-wrap">
-                      <div class="empty-ico">
-                        <i class="bi bi-inbox" style="font-size:26px;color:rgba(37,99,235,.85);"></i>
+                    <td>
+                      <div class="date-main">
+                        <i class="bi bi-clock-history" style="color:rgba(31,41,55,.55);"></i>
+                        {{ a.fecha_hora|date:"d/m/Y H:i" }}
                       </div>
-                      <div class="empty-title">No hay registros con esos filtros</div>
-                      <div class="empty-sub">
-                        Prueba cambiando la búsqueda, la condición o el rango de fechas.
+                      <div class="date-sub">
+                        Hace {{ a.fecha_hora|timesince }}
                       </div>
-                      <a class="btn-clear mt-2" href="{% url 'historial_asistencias' %}">
-                        <i class="bi bi-arrow-counterclockwise"></i> Quitar filtros
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                    </td>
+                  </tr>
+
+                {% empty %}
+                  <tr>
+                    <td colspan="5">
+                      <div class="empty-wrap">
+                        <div class="empty-ico">
+                          <i class="bi bi-inbox" style="font-size:26px;color:rgba(166,29,34,.9);"></i>
+                        </div>
+                        <div class="empty-title">No hay registros con esos filtros</div>
+                        <div class="empty-sub">
+                          Prueba cambiando la búsqueda, la condición o el rango de fechas.
+                        </div>
+                        <a class="btn-clear mt-2" href="{% url 'historial_asistencias' %}">
+                          <i class="bi bi-arrow-counterclockwise"></i> Quitar filtros
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="footer-row">
+          <div class="d-flex gap-2 flex-wrap">
+            <span class="total">
+              <i class="bi bi-list-check"></i> Total: {{ total_registros }} registros
+            </span>
+
+            <span class="pinfo">
+              Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+          </div>
+
+          <div class="pager">
+            <a class="pbtn {% if not page_obj.has_previous %}disabled{% endif %}"
+               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page=1">
+              <i class="bi bi-skip-backward-fill"></i> Inicio
+            </a>
+
+            {% if page_obj.has_previous %}
+              <a class="pbtn"
+                 href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.previous_page_number }}">
+                <i class="bi bi-chevron-left"></i> Anterior
+              </a>
+            {% else %}
+              <span class="pbtn disabled"><i class="bi bi-chevron-left"></i> Anterior</span>
+            {% endif %}
+
+            {% if page_obj.has_next %}
+              <a class="pbtn"
+                 href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.next_page_number }}">
+                Siguiente <i class="bi bi-chevron-right"></i>
+              </a>
+            {% else %}
+              <span class="pbtn disabled">Siguiente <i class="bi bi-chevron-right"></i></span>
+            {% endif %}
+
+            <a class="pbtn {% if not page_obj.has_next %}disabled{% endif %}"
+               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.paginator.num_pages }}">
+              Fin <i class="bi bi-skip-forward-fill"></i>
+            </a>
+          </div>
         </div>
       </div>
 
-      <div class="footer-row">
-        <div class="d-flex gap-2 flex-wrap">
-          <span class="total">
-            <i class="bi bi-list-check"></i> Total: {{ total_registros }} registros
-          </span>
-
-          <span class="pinfo">
-            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-          </span>
+      <!-- LATERAL NUEVO -->
+      <aside class="side-panel">
+        <div class="side-head">
+          <div class="ico"><i class="bi bi-columns-gap"></i></div>
+          <div>
+            <h3>Panel de apoyo</h3>
+            <p>Historial • Operación rápida</p>
+          </div>
         </div>
 
-        <div class="pager">
-          <a class="pbtn {% if not page_obj.has_previous %}disabled{% endif %}"
-             href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page=1">
-            <i class="bi bi-skip-backward-fill"></i> Inicio
-          </a>
+        <div class="side-body">
+          <div class="status-box">
+            <div class="status-row">
+              <span><i class="bi bi-shield-check me-1" style="color:var(--uni-red);"></i>Estado del módulo</span>
+              <span class="status-pill ok"><i class="bi bi-check-circle-fill"></i> Activo</span>
+            </div>
+            <div class="status-row">
+              <span><i class="bi bi-lock me-1" style="color:var(--uni-red);"></i>Privacidad</span>
+              <span class="status-pill sec"><i class="bi bi-eye-slash-fill"></i> DNI oculto</span>
+            </div>
+          </div>
 
-          {% if page_obj.has_previous %}
-            <a class="pbtn"
-               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.previous_page_number }}">
-              <i class="bi bi-chevron-left"></i> Anterior
-            </a>
-          {% else %}
-            <span class="pbtn disabled"><i class="bi bi-chevron-left"></i> Anterior</span>
-          {% endif %}
+          <div class="quick-grid">
+            <div class="quick-card">
+              <div class="k">Facultad</div>
+              <div class="v">Ingeniería Civil</div>
+            </div>
+            <div class="quick-card">
+              <div class="k">Módulo</div>
+              <div class="v">Historial</div>
+            </div>
+            <div class="quick-card">
+              <div class="k">Exportación</div>
+              <div class="v">Excel</div>
+            </div>
+            <div class="quick-card">
+              <div class="k">Filtro</div>
+              <div class="v">Fecha / Condición</div>
+            </div>
+          </div>
 
-          {% if page_obj.has_next %}
-            <a class="pbtn"
-               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.next_page_number }}">
-              Siguiente <i class="bi bi-chevron-right"></i>
-            </a>
-          {% else %}
-            <span class="pbtn disabled">Siguiente <i class="bi bi-chevron-right"></i></span>
-          {% endif %}
+          <ul class="side-list">
+            <li>
+              <i class="bi bi-lightning-charge"></i>
+              <span>Usa rangos cortos de fechas para consultas más rápidas.</span>
+            </li>
+            <li>
+              <i class="bi bi-funnel"></i>
+              <span>Combina búsqueda + condición para reportes más precisos.</span>
+            </li>
+            <li>
+              <i class="bi bi-file-earmark-excel"></i>
+              <span>Exporta con filtros aplicados para análisis académico.</span>
+            </li>
+            <li>
+              <i class="bi bi-clock-history"></i>
+              <span>Verifica la hora y el estado antes de reportar incidencias.</span>
+            </li>
+          </ul>
 
-          <a class="pbtn {% if not page_obj.has_next %}disabled{% endif %}"
-             href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.paginator.num_pages }}">
-            Fin <i class="bi bi-skip-forward-fill"></i>
-          </a>
+          <div class="side-mini">
+            <i class="bi bi-stars"></i>
+            Tip pro: si vas a revisar un solo docente, usa primero la búsqueda por código/apellidos y luego ajusta fechas.
+          </div>
         </div>
-      </div>
+      </aside>
 
     </div>
   </div>
 
   <script>
-    // ✅ Toast auto-hide 4s (solo esto)
-    const wrap = document.getElementById("toastWrap");
-    if (wrap) {
-      setTimeout(() => {
-        [...wrap.children].forEach((t) => t.classList.add("toastx-hide"));
-        setTimeout(() => wrap.remove(), 350);
-      }, 4000);
-    }
+    // ✅ Toast auto-hide
+    (function(){
+      const wrap = document.getElementById("toastWrap");
+      if (wrap) {
+        setTimeout(() => {
+          [...wrap.children].forEach((t) => t.classList.add("toastx-hide"));
+          setTimeout(() => wrap.remove(), 350);
+        }, 4000);
+      }
+    })();
+
   </script>
+  <script>
+(function () {
+  // Si ya existía uno previo, lo removemos para evitar duplicados
+  const old = document.getElementById("fxParticlesLive");
+  if (old) old.remove();
+
+  const canvas = document.createElement("canvas");
+  canvas.id = "fxParticlesLive";
+  canvas.style.position = "fixed";
+  canvas.style.inset = "0";
+  canvas.style.zIndex = "2";          // debajo del contenido (.page z-index:3)
+  canvas.style.pointerEvents = "none";
+  canvas.style.opacity = "1";
+  canvas.style.mixBlendMode = "screen";
+  canvas.setAttribute("aria-hidden", "true");
+
+  // ✅ lo insertamos al inicio del body para controlar mejor capas
+  document.body.insertBefore(canvas, document.body.firstChild);
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  let w = 0, h = 0, dpr = 1;
+  let particles = [];
+  let last = 0;
+  let rafId = 0;
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const mqLight = window.matchMedia("(prefers-color-scheme: light)");
+
+  function rand(min, max){ return Math.random() * (max - min) + min; }
+
+  function resize(){
+    w = Math.max(1, window.innerWidth);
+    h = Math.max(1, window.innerHeight);
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.scale(dpr, dpr);
+
+    // ✅ Más partículas para que se noten en este fondo rojo
+    const count = reduceMotion
+      ? 20
+      : Math.max(120, Math.min(230, Math.floor((w * h) / 9500)));
+
+    particles = Array.from({ length: count }, () => ({
+      x: rand(0, w),
+      y: rand(0, h),
+      r: rand(1.8, 4.2),                  // más grandes
+      vx: reduceMotion ? rand(-0.03, 0.03) : rand(-0.24, 0.24),
+      vy: reduceMotion ? rand(-0.03, 0.03) : rand(-0.20, 0.20),
+      tw: rand(0, Math.PI * 2),
+      tws: rand(0.012, 0.030),
+      a: rand(0.28, 0.62),
+      tone: (() => {
+        const p = Math.random();
+        if (p < 0.70) return "blue";   // dominante como login
+        if (p < 0.86) return "white";
+        if (p < 0.95) return "red";
+        return "gold";
+      })()
+    }));
+  }
+
+  function palette(light, tone){
+    if (tone === "blue"){
+      return light
+        ? { glow:"37,99,235", core:"29,78,216" }
+        : { glow:"147,197,253", core:"255,255,255" };
+    }
+    if (tone === "white") return { glow:"180,220,255", core:"255,255,255" };
+    if (tone === "red")   return { glow:"235,90,90",  core:"255,220,220" };
+    return { glow:"230,190,90", core:"255,240,180" }; // gold
+  }
+
+  function drawParticle(p, light){
+    const c = palette(light, p.tone);
+    const pulse = 0.78 + Math.sin(p.tw) * 0.22;
+    const alpha = p.a * pulse;
+
+    // halo fuerte tipo login
+    const R = p.r * 9.8;
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, R);
+    g.addColorStop(0,    `rgba(${c.glow},${Math.min(1, alpha * 1.35)})`);
+    g.addColorStop(0.35, `rgba(${c.glow},${alpha * 0.58})`);
+    g.addColorStop(1,    `rgba(${c.glow},0)`);
+
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, R, 0, Math.PI * 2);
+    ctx.fill();
+
+    // núcleo
+    ctx.fillStyle = `rgba(${c.core},${Math.min(1, alpha * 1.08)})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function frame(ts){
+    const dt = Math.min(40, ts - (last || ts));
+    last = ts;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // ✅ neblina base para que resalte sobre rojo oscuro
+    ctx.fillStyle = "rgba(120,170,255,0.06)";
+    ctx.fillRect(0, 0, w, h);
+
+    const fog1 = ctx.createRadialGradient(w * 0.18, h * 0.12, 10, w * 0.18, h * 0.12, w * 0.58);
+    fog1.addColorStop(0, "rgba(140,190,255,0.11)");
+    fog1.addColorStop(1, "rgba(140,190,255,0)");
+    ctx.fillStyle = fog1;
+    ctx.fillRect(0, 0, w, h);
+
+    const fog2 = ctx.createRadialGradient(w * 0.85, h * 0.18, 10, w * 0.85, h * 0.18, w * 0.45);
+    fog2.addColorStop(0, "rgba(235,90,90,0.06)");
+    fog2.addColorStop(1, "rgba(235,90,90,0)");
+    ctx.fillStyle = fog2;
+    ctx.fillRect(0, 0, w, h);
+
+    const light = mqLight.matches;
+    const maxD = reduceMotion ? 100 : 225;
+
+    // actualizar y dibujar partículas
+    for (const p of particles){
+      p.tw += p.tws * (dt * 0.06);
+
+      p.x += (p.vx + Math.sin(p.tw) * 0.024) * (dt * 0.11);
+      p.y += (p.vy + Math.cos(p.tw * 0.9) * 0.020) * (dt * 0.11);
+
+      if (p.x < -18) p.x = w + 18;
+      if (p.x > w + 18) p.x = -18;
+      if (p.y < -18) p.y = h + 18;
+      if (p.y > h + 18) p.y = -18;
+
+      drawParticle(p, light);
+    }
+
+    // conexiones visibles
+    for (let i = 0; i < particles.length; i++){
+      const a = particles[i];
+      for (let j = i + 1; j < particles.length; j++){
+        const b = particles[j];
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 > maxD * maxD) continue;
+
+        const d = Math.sqrt(d2);
+        const alpha = (1 - d / maxD) * (light ? 0.15 : 0.30);
+
+        let lineRGB = "147,197,253"; // azul claro
+        if ((a.tone === "red" || b.tone === "red") && Math.random() < 0.35) {
+          lineRGB = "235,90,90";
+        } else if ((a.tone === "gold" || b.tone === "gold") && Math.random() < 0.28) {
+          lineRGB = "230,190,90";
+        }
+
+        ctx.strokeStyle = `rgba(${lineRGB},${alpha})`;
+        ctx.lineWidth = light ? 1.2 : 1.7;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+    }
+
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function start(){
+    cancelAnimationFrame(rafId);
+    resize();
+    last = 0;
+    rafId = requestAnimationFrame(frame);
+  }
+
+  start();
+
+  let resizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(start, 120);
+  }, { passive: true });
+
+  try { mqLight.addEventListener("change", start); } catch(e) {}
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      cancelAnimationFrame(rafId);
+    } else {
+      last = 0;
+      rafId = requestAnimationFrame(frame);
+    }
+  });
+
+  console.log("✅ Partículas login-style activas (historial)");
+})();
+</script>
 </body>
 </html>

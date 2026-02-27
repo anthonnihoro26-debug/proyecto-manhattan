@@ -6,52 +6,129 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Proyecto Manhattan - Registro Manual</title>
 
-  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
   <style>
     :root{
-      --bg1:#0b1020;
-      --bg2:#2b1fff;
+      /* 🎓 Paleta UNI */
+      --uni-red:#a61d22;
+      --uni-red-2:#c62828;
+      --uni-red-3:#86161b;
+      --uni-cream:#f5f1e8;
+      --uni-cream-2:#efe7d9;
+      --uni-gold:#c9a227;
+
+      --bg-dark:#170b0e;
+      --bg-dark-2:#2b1016;
+
+      --ink:#171717;
+      --ink-2:#27272a;
       --muted:#6b7280;
-      --primary:#2563eb;
-      --primary2:#4f46e5;
+
       --success:#16a34a;
+      --success-2:#138a43;
       --danger:#dc2626;
+      --danger-2:#b91c1c;
+      --info:#1d4ed8;
+
+      --card: rgba(255,255,255,.92);
+      --line: rgba(17,24,39,.10);
+
       --shadow: 0 22px 55px rgba(0,0,0,.22);
+      --shadow-soft: 0 14px 34px rgba(0,0,0,.10);
       --radius: 22px;
-      --stroke: rgba(15, 23, 42, 0.10);
+    }
+
+    *{ box-sizing: border-box; }
+
+    html, body{
+      margin:0;
+      min-height:100%;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg-dark);
     }
 
     body{
-      margin:0;
-      min-height:100vh;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      position: relative;
+      overflow-x: hidden;
       background:
-        radial-gradient(1200px 700px at 10% 10%, rgba(79,70,229,.52), transparent 55%),
-        radial-gradient(900px 600px at 90% 20%, rgba(37,99,235,.42), transparent 60%),
-        radial-gradient(900px 700px at 50% 100%, rgba(168,85,247,.25), transparent 60%),
-        linear-gradient(135deg, #0b1020, #2a165f);
+        radial-gradient(1000px 560px at 10% 10%, rgba(198,40,40,.20), transparent 58%),
+        radial-gradient(800px 500px at 88% 12%, rgba(201,162,39,.10), transparent 62%),
+        radial-gradient(900px 620px at 50% 100%, rgba(166,29,34,.10), transparent 60%),
+        linear-gradient(145deg, #13080b 0%, #210d12 45%, #2a1015 100%);
       color:#111827;
     }
 
+    /* ✅ Orbes más suaves (para que no compitan con partículas) */
+    .bg-orb{
+      position: fixed;
+      border-radius: 999px;
+      filter: blur(42px);
+      z-index: 0 !important;
+      pointer-events: none;
+      opacity: .16;
+    }
+    .orb-1{
+      width: 260px; height: 260px;
+      left: -60px; top: 120px;
+      background: rgba(198,40,40,.60);
+      animation: floatOrb1 14s ease-in-out infinite;
+    }
+    .orb-2{
+      width: 220px; height: 220px;
+      right: -40px; top: 220px;
+      background: rgba(201,162,39,.42);
+      animation: floatOrb2 16s ease-in-out infinite;
+    }
+    .orb-3{
+      width: 300px; height: 300px;
+      right: 8%; bottom: -80px;
+      background: rgba(166,29,34,.30);
+      animation: floatOrb3 18s ease-in-out infinite;
+    }
+
+    @keyframes floatOrb1{
+      0%,100%{ transform: translate3d(0,0,0); }
+      50%{ transform: translate3d(12px,-14px,0); }
+    }
+    @keyframes floatOrb2{
+      0%,100%{ transform: translate3d(0,0,0); }
+      50%{ transform: translate3d(-14px,8px,0); }
+    }
+    @keyframes floatOrb3{
+      0%,100%{ transform: translate3d(0,0,0); }
+      50%{ transform: translate3d(16px,-10px,0); }
+    }
+
+    /* ---------- TOPBAR ---------- */
     .topbar{
       position: sticky;
       top: 0;
-      z-index: 50;
-      background: rgba(255,255,255,0.80);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(17,24,39,.08);
+      z-index: 60;
+      background: linear-gradient(180deg, rgba(247,244,237,.93), rgba(244,239,230,.88));
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(166,29,34,.10);
+      box-shadow: 0 8px 22px rgba(0,0,0,.08);
     }
+    .topbar::after{
+      content:"";
+      display:block;
+      height: 4px;
+      background: linear-gradient(90deg, var(--uni-red-3), var(--uni-red), var(--uni-gold), var(--uni-red));
+    }
+
     .topbar-inner{
-      max-width: 980px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 14px 16px;
+      padding: 12px 16px;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:14px;
+      position: relative;
+      z-index: 2;
     }
 
     .brand{
@@ -60,31 +137,35 @@
       gap:12px;
       min-width: 260px;
     }
+
     .uni-badge{
       background: transparent !important;
       border: 0 !important;
       box-shadow: none !important;
       padding: 0 !important;
       border-radius: 0 !important;
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       display: grid;
       place-items: center;
+      flex: 0 0 auto;
     }
+
     .uni-logo{
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       display: block;
       object-fit: contain;
-      filter: drop-shadow(0 6px 10px rgba(0,0,0,.10));
+      filter: drop-shadow(0 6px 12px rgba(166,29,34,.14));
     }
+
     .brand h1{
       font-size: 16px;
-      line-height: 1.1;
+      line-height: 1.08;
       margin: 0;
       font-weight: 950;
-      color:#0f172a;
-      letter-spacing: .2px;
+      color:#111827;
+      letter-spacing: .15px;
     }
     .brand small{
       display:block;
@@ -101,17 +182,19 @@
       flex-wrap:wrap;
       justify-content:flex-end;
     }
+
     .userpill{
       display:inline-flex;
       align-items:center;
       gap:8px;
       padding: 9px 12px;
       border-radius: 999px;
-      background: rgba(17,24,39,0.05);
-      border: 1px solid rgba(17,24,39,0.08);
+      background: rgba(255,255,255,.76);
+      border: 1px solid rgba(166,29,34,.10);
       color:#111827;
       font-weight: 850;
       font-size: 13px;
+      box-shadow: 0 8px 18px rgba(0,0,0,.05);
     }
 
     .btnx{
@@ -123,36 +206,78 @@
       align-items:center;
       gap:8px;
       text-decoration:none;
-      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease, filter .12s ease;
       box-shadow: 0 12px 26px rgba(0,0,0,.10);
       user-select:none;
       white-space: nowrap;
+      position: relative;
+      overflow: hidden;
     }
-    .btnx:hover{ transform: translateY(-1px); box-shadow: 0 16px 34px rgba(0,0,0,.14); }
-    .btnx:active{ transform: translateY(0px); opacity:.92; }
-    .btnx-danger{ background: linear-gradient(135deg, #dc2626, #ef4444); color:#fff; }
-    .btnx-primary{ background: linear-gradient(135deg, var(--primary), var(--primary2)); color:#fff; }
+    .btnx::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.15) 40%, transparent 70%);
+      transform: translateX(-120%);
+      transition: transform .6s ease;
+      pointer-events:none;
+    }
+    .btnx:hover::before{ transform: translateX(120%); }
+    .btnx:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 16px 34px rgba(0,0,0,.14);
+      filter: saturate(1.03);
+    }
+    .btnx:active{ transform: translateY(0px); opacity:.93; }
+
+    .btnx-danger{ background: linear-gradient(135deg, var(--danger-2), #ef4444); color:#fff; }
+    .btnx-primary{ background: linear-gradient(135deg, var(--uni-red), #d73636); color:#fff; }
     .btnx-ghost{
-      background: rgba(255,255,255,0.85);
-      border: 1px solid rgba(15,23,42,0.12);
-      color:#0f172a;
+      background: rgba(255,255,255,0.84);
+      border: 1px solid rgba(17,24,39,0.12);
+      color:#1f2937;
       box-shadow: 0 10px 22px rgba(0,0,0,.06);
     }
+    .btnx-ghost:hover{ color: var(--uni-red); border-color: rgba(166,29,34,.15); }
 
+    /* ---------- LAYOUT ---------- */
     .page{
-      max-width: 980px;
+      position: relative;
+      z-index: 3; /* ✅ encima del canvas */
+      max-width: 1200px;
       margin: 0 auto;
       padding: 24px 16px 40px;
     }
 
+    .layout-grid{
+      display:grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap:16px;
+      align-items:start;
+    }
+
+    @media (max-width: 1100px){
+      .layout-grid{ grid-template-columns: 1fr; }
+    }
+
     .cardx{
-      background: rgba(255,255,255,0.92);
+      background: linear-gradient(180deg, rgba(247,244,237,.92), rgba(242,236,226,.88));
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255,255,255,0.35);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
+      position: relative;
     }
+    .cardx::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:4px;
+      background: linear-gradient(90deg, var(--uni-red-3), var(--uni-red), var(--uni-gold), var(--uni-red));
+      z-index: 0;
+    }
+    .cardx > *{ position: relative; z-index:1; }
 
     .cardx-head{
       padding: 22px 22px 12px;
@@ -166,18 +291,32 @@
     .title{
       margin:0;
       font-weight: 950;
-      font-size: 26px;
+      font-size: 27px;
       letter-spacing: -0.5px;
-      color: #0f172a;
+      color: #1f2937;
       display:flex;
       align-items:center;
       gap:10px;
+      line-height: 1.06;
     }
+    .title i{
+      color: var(--uni-red);
+      background: rgba(166,29,34,.08);
+      border: 1px solid rgba(166,29,34,.14);
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display:grid;
+      place-items:center;
+      font-size: 20px;
+    }
+
     .subtitle{
       margin: 6px 0 0;
       color: var(--muted);
       font-weight: 800;
       font-size: 13px;
+      max-width: 760px;
     }
 
     .content{
@@ -185,15 +324,16 @@
     }
 
     .box{
-      background: rgba(15, 23, 42, 0.03);
-      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: rgba(255,255,255,.58);
+      border: 1px solid rgba(17,24,39,0.08);
       border-radius: 18px;
       padding: 16px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
     }
 
     .form-label{
       font-weight: 950;
-      color:#0f172a;
+      color:#1f2937;
       font-size: 13px;
       letter-spacing: .2px;
     }
@@ -201,32 +341,78 @@
     .form-control{
       border-radius: 14px !important;
       padding: 12px 12px;
-      border: 1px solid rgba(15, 23, 42, 0.14);
+      border: 1px solid rgba(17,24,39,0.14);
       font-weight: 900;
       font-size: 18px;
       letter-spacing: 1px;
+      background: rgba(255,255,255,.95);
+    }
+    .form-control:focus{
+      border-color: rgba(166,29,34,.35);
+      box-shadow: 0 0 0 .18rem rgba(166,29,34,.10);
     }
 
     .help{
       margin-top: 8px;
       font-size: 12px;
-      color: rgba(15,23,42,.65);
+      color: rgba(31,41,55,.70);
       font-weight: 800;
       display:flex;
       gap:8px;
-      align-items:center;
+      align-items:flex-start;
+      line-height: 1.35;
     }
+    .help i{ color: var(--uni-red); margin-top: 1px; }
 
     .msg-wrap{ padding: 0 22px 10px; }
-    .fade-message{ transition: opacity .35s ease; }
-    .fade-out{ opacity: 0; }
+    .fade-message{ transition: opacity .35s ease, transform .35s ease; }
+    .fade-out{ opacity: 0; transform: translateY(-4px); }
+
+    /* Mensajes elegantes */
+    .alertx{
+      border-radius: 14px;
+      font-weight: 850;
+      padding: 12px 13px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border: 1px solid transparent;
+      box-shadow: 0 12px 28px rgba(0,0,0,.08);
+      backdrop-filter: blur(8px);
+    }
+    .alertx i{ font-size: 18px; }
+    .alertx-success{
+      background: rgba(34,197,94,.14);
+      color: #14532d;
+      border-color: rgba(34,197,94,.22);
+    }
+    .alertx-error{
+      background: rgba(239,68,68,.14);
+      color: #7f1d1d;
+      border-color: rgba(239,68,68,.22);
+    }
+    .alertx-info{
+      background: rgba(59,130,246,.14);
+      color: #1e3a8a;
+      border-color: rgba(59,130,246,.22);
+    }
 
     .prof-box{
       border-radius: 18px;
-      background: rgba(255,255,255,0.92);
-      border: 1px solid rgba(15,23,42,0.10);
+      background: rgba(255,255,255,0.82);
+      border: 1px solid rgba(17,24,39,0.09);
       padding: 16px;
       box-shadow: 0 14px 30px rgba(0,0,0,.08);
+      position: relative;
+      overflow: hidden;
+    }
+    .prof-box::before{
+      content:"";
+      position:absolute;
+      top:0; left:0; right:0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--uni-red), var(--uni-gold));
+      opacity:.95;
     }
 
     .prof-row{
@@ -239,40 +425,39 @@
 
     .prof-title{
       font-weight: 950;
-      color:#0f172a;
+      color:#1f2937;
       margin:0;
       display:flex;
       align-items:center;
       gap:8px;
     }
+    .prof-title i{ color: var(--uni-red); }
 
     .kv{
-      margin: 10px 0 0;
+      margin: 12px 0 0;
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap:10px;
     }
-    @media (max-width: 620px){
-      .kv{ grid-template-columns: 1fr; }
-      .userpill{ display:none; }
-    }
 
     .kv .item{
-      background: rgba(15,23,42,0.04);
-      border: 1px solid rgba(15,23,42,0.10);
+      background: rgba(255,255,255,.66);
+      border: 1px solid rgba(17,24,39,0.08);
       border-radius: 14px;
       padding: 10px 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.04);
     }
     .kv .k{
       font-size: 12px;
       font-weight: 900;
-      color: rgba(15,23,42,.62);
+      color: rgba(31,41,55,.62);
       margin-bottom: 2px;
     }
     .kv .v{
       font-weight: 950;
-      color:#0f172a;
+      color:#111827;
       font-size: 14px;
+      word-break: break-word;
     }
 
     .actions{
@@ -291,17 +476,231 @@
       gap:8px;
       align-items:center;
       justify-content:center;
-      box-shadow: 0 14px 30px rgba(37,99,235,.22);
       text-decoration:none;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-big::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.18) 40%, transparent 70%);
+      transform: translateX(-120%);
+      transition: transform .6s ease;
+      pointer-events:none;
+    }
+    .btn-big:hover::before{ transform: translateX(120%); }
+    .btn-big:hover{ transform: translateY(-1px); filter:saturate(1.03); }
+
+    .btn-search{
+      background: linear-gradient(135deg, var(--uni-red), #d73636);
+      color:#fff;
+      box-shadow: 0 14px 30px rgba(166,29,34,.22);
+    }
+    .btn-accept{
+      background: linear-gradient(135deg, #138a43, #16a34a);
+      color:#fff;
+      box-shadow: 0 14px 30px rgba(34,197,94,.22);
     }
 
-    .btn-search{ background: linear-gradient(135deg, var(--primary), var(--primary2)); color:#fff; }
-    .btn-accept{ background: linear-gradient(135deg, #16a34a, #22c55e); color:#fff; box-shadow: 0 14px 30px rgba(34,197,94,.22); }
+    .mini-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius:999px;
+      padding: 7px 10px;
+      background: rgba(255,255,255,.72);
+      border:1px solid rgba(17,24,39,.08);
+      font-weight:900;
+      font-size:12px;
+      color:#1f2937;
+      box-shadow: 0 8px 18px rgba(0,0,0,.04);
+    }
+    .mini-badge i{ color: var(--uni-red); }
 
+    /* Sidebar nuevo (sin bloque largo viejo) */
+    .side-panel{
+      position: sticky;
+      top: 92px;
+      background: linear-gradient(180deg, rgba(247,244,237,.92), rgba(242,236,226,.88));
+      border: 1px solid rgba(255,255,255,.34);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+    .side-panel::before{
+      content:"";
+      display:block;
+      height:4px;
+      background: linear-gradient(90deg, var(--uni-red), var(--uni-gold), var(--uni-red));
+    }
+
+    .side-head{
+      padding: 16px 16px 10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .side-head .ico{
+      width:40px; height:40px;
+      border-radius:14px;
+      display:grid; place-items:center;
+      background: rgba(166,29,34,.08);
+      border: 1px solid rgba(166,29,34,.14);
+      color: var(--uni-red);
+      font-size: 20px;
+      flex:0 0 auto;
+    }
+    .side-head h3{
+      margin:0;
+      font-size:15px;
+      font-weight:950;
+      color:#1f2937;
+      line-height:1.15;
+    }
+    .side-head p{
+      margin:2px 0 0;
+      font-size:12px;
+      color:#6b7280;
+      font-weight:800;
+    }
+
+    .side-body{ padding: 6px 16px 16px; }
+
+    .status-box{
+      border-radius: 16px;
+      background: rgba(255,255,255,.66);
+      border: 1px solid rgba(17,24,39,.08);
+      padding: 12px;
+      box-shadow: 0 8px 18px rgba(0,0,0,.05);
+      display:grid;
+      gap:10px;
+    }
+    .status-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      font-size: 12px;
+      font-weight: 900;
+      color:#374151;
+    }
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius:999px;
+      padding: 6px 10px;
+      font-size:11px;
+      font-weight:950;
+      border:1px solid rgba(17,24,39,.08);
+      background: rgba(255,255,255,.75);
+      color:#1f2937;
+    }
+    .status-pill.ok{
+      background: rgba(34,197,94,.14);
+      border-color: rgba(34,197,94,.20);
+      color:#14532d;
+    }
+    .status-pill.warn{
+      background: rgba(245,158,11,.12);
+      border-color: rgba(245,158,11,.18);
+      color:#92400e;
+    }
+
+    .quick-grid{
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px;
+    }
+    .quick-card{
+      border-radius: 12px;
+      background: rgba(255,255,255,.56);
+      border: 1px solid rgba(17,24,39,.06);
+      padding: 10px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.04);
+    }
+    .quick-card .k{
+      font-size:11px;
+      font-weight:900;
+      color: rgba(31,41,55,.60);
+      margin-bottom: 3px;
+    }
+    .quick-card .v{
+      font-size:13px;
+      font-weight:950;
+      color:#1f2937;
+      line-height:1.2;
+    }
+
+    .side-list{
+      margin: 12px 0 0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:8px;
+    }
+    .side-list li{
+      display:flex;
+      align-items:flex-start;
+      gap:8px;
+      border-radius:12px;
+      padding: 9px 10px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(17,24,39,.06);
+      font-size:12px;
+      color:#374151;
+      font-weight:800;
+    }
+    .side-list i{
+      color: var(--uni-red);
+      margin-top:1px;
+    }
+
+    .side-mini{
+      margin-top: 12px;
+      border-radius: 14px;
+      padding: 10px;
+      background: linear-gradient(135deg, rgba(166,29,34,.08), rgba(201,162,39,.08));
+      border: 1px dashed rgba(166,29,34,.18);
+      font-size: 11.5px;
+      color:#4b5563;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px){
+      .topbar-inner{ padding: 10px 12px; }
+      .brand h1{ font-size: 15px; }
+      .brand small{ font-size: 11px; }
+      .userpill{ display:none; }
+      .btnx{ padding: 9px 12px; border-radius: 12px; }
+      .cardx-head{ padding: 18px 16px 10px; }
+      .content{ padding: 0 16px 16px; }
+      .msg-wrap{ padding: 0 16px 10px; }
+      .title{ font-size: 23px; }
+      .title i{ width: 36px; height: 36px; font-size: 18px; border-radius: 12px; }
+      .kv{ grid-template-columns: 1fr; }
+      .side-panel{ position: static; order: -1; }
+      .quick-grid{ grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ animation:none !important; transition:none !important; }
+    }
   </style>
 </head>
 
 <body>
+  <!-- Fondo animado -->
+  <div class="bg-orb orb-1" aria-hidden="true"></div>
+  <div class="bg-orb orb-2" aria-hidden="true"></div>
+  <div class="bg-orb orb-3" aria-hidden="true"></div>
+
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">
@@ -335,145 +734,436 @@
   </div>
 
   <div class="page">
-    <div class="cardx">
-      <div class="cardx-head">
-        <div>
-          <h2 class="title">
-            <i class="bi bi-pencil-square"></i>
-            Registro manual por DNI
-          </h2>
-          <p class="subtitle">
-            Usa esto si el docente olvidó su check/foto y necesitas registrar su asistencia manualmente.
-          </p>
+    <div class="layout-grid">
+
+      <!-- PANEL PRINCIPAL -->
+      <div class="cardx">
+        <div class="cardx-head">
+          <div>
+            <h2 class="title">
+              <i class="bi bi-pencil-square"></i>
+              Registro manual por DNI
+            </h2>
+            <p class="subtitle">
+              Usa este módulo cuando el docente olvidó su check/foto o se requiere registrar la asistencia de forma manual.
+            </p>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap">
+            <span class="mini-badge">
+              <i class="bi bi-shield-check"></i> Validación por confirmación
+            </span>
+            <span class="mini-badge">
+              <i class="bi bi-clock"></i> Registro controlado
+            </span>
+          </div>
         </div>
-      </div>
 
-      <!-- ✅ MENSAJES -->
-      {% if messages %}
-        <div id="msgBox" class="msg-wrap fade-message">
-          {% for message in messages %}
-            <div class="alert
-              {% if message.tags == 'success' %} alert-success
-              {% elif message.tags == 'error' %} alert-danger
-              {% else %} alert-info {% endif %}
-              mb-2" role="alert" style="border-radius:14px; font-weight:850;">
-              {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill"></i>
-              {% elif message.tags == 'error' %}<i class="bi bi-x-circle-fill"></i>
-              {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
-              <span class="ms-1">{{ message }}</span>
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-
-      <div class="content">
-
-        <!-- ✅ 1) FORMULARIO BUSCAR DNI (solo si NO hay profesor) -->
-        {% if not profesor %}
-          <div class="box">
-            <form method="post" autocomplete="off">
-              {% csrf_token %}
-              <input type="hidden" name="accion" value="buscar">
-
-              <label class="form-label">DNI del docente (8 dígitos)</label>
-              <input
-                type="text"
-                name="dni"
-                class="form-control"
-                maxlength="8"
-                required
-                autofocus
-                inputmode="numeric"
-                pattern="[0-9]{8}"
-                placeholder="Ej: 12345678"
-              />
-
-              <div class="help">
-                <i class="bi bi-shield-lock"></i>
-                Solo el DNI. El sistema buscará al docente y te pedirá confirmar.
+        {% if messages %}
+          <div id="msgBox" class="msg-wrap fade-message">
+            {% for message in messages %}
+              <div class="alertx
+                {% if message.tags == 'success' %}alertx-success
+                {% elif message.tags == 'error' %}alertx-error
+                {% else %}alertx-info{% endif %}
+                mb-2" role="alert">
+                {% if message.tags == 'success' %}
+                  <i class="bi bi-check-circle-fill"></i>
+                {% elif message.tags == 'error' %}
+                  <i class="bi bi-x-circle-fill"></i>
+                {% else %}
+                  <i class="bi bi-info-circle-fill"></i>
+                {% endif %}
+                <span>{{ message }}</span>
               </div>
-
-              <div class="actions">
-                <button type="submit" class="btn-big btn-search">
-                  <i class="bi bi-search"></i> Buscar docente
-                </button>
-
-                <a class="btnx btnx-ghost" href="{% url 'historial_asistencias' %}">
-                  <i class="bi bi-arrow-left"></i> Cancelar
-                </a>
-              </div>
-            </form>
+            {% endfor %}
           </div>
         {% endif %}
 
-        <!-- ✅ 2) DATOS DEL PROFESOR + BOTÓN ACEPTAR -->
-        {% if profesor %}
-          <div class="prof-box">
-            <div class="prof-row">
-              <h5 class="prof-title">
-                <i class="bi bi-person-badge"></i> Docente encontrado
-              </h5>
+        <div class="content">
 
-              <div class="d-flex gap-2 flex-wrap">
-                <a class="btnx btnx-ghost" href="{% url 'registro_manual' %}">
-                  <i class="bi bi-arrow-counterclockwise"></i> Buscar otro DNI
-                </a>
+          {% if not profesor %}
+            <div class="box">
+              <form method="post" autocomplete="off">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="buscar">
 
-                <!-- ✅ ACEPTAR = registra -->
-                <form method="post" class="m-0">
-                  {% csrf_token %}
-                  <input type="hidden" name="accion" value="aceptar">
-                  <input type="hidden" name="dni" value="{{ profesor.dni }}">
-                  <button type="submit" class="btn-big btn-accept">
-                    <i class="bi bi-check2-circle"></i> Confirmar y registrar
+                <label class="form-label">DNI del docente (8 dígitos)</label>
+                <input
+                  type="text"
+                  name="dni"
+                  class="form-control"
+                  maxlength="8"
+                  required
+                  autofocus
+                  inputmode="numeric"
+                  pattern="[0-9]{8}"
+                  placeholder="Ej: 12345678"
+                  id="dniInput"
+                />
+
+                <div class="help">
+                  <i class="bi bi-shield-lock"></i>
+                  <span>Ingresa solo el DNI. El sistema buscará al docente y luego te pedirá confirmación antes de registrar.</span>
+                </div>
+
+                <div class="actions">
+                  <button type="submit" class="btn-big btn-search">
+                    <i class="bi bi-search"></i> Buscar docente
                   </button>
-                </form>
+
+                  <a class="btnx btnx-ghost" href="{% url 'historial_asistencias' %}">
+                    <i class="bi bi-arrow-left"></i> Cancelar
+                  </a>
+                </div>
+              </form>
+            </div>
+          {% endif %}
+
+          {% if profesor %}
+            <div class="prof-box">
+              <div class="prof-row">
+                <h5 class="prof-title">
+                  <i class="bi bi-person-badge"></i> Docente encontrado
+                </h5>
+
+                <div class="d-flex gap-2 flex-wrap">
+                  <a class="btnx btnx-ghost" href="{% url 'registro_manual' %}">
+                    <i class="bi bi-arrow-counterclockwise"></i> Buscar otro DNI
+                  </a>
+
+                  <form method="post" class="m-0">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="aceptar">
+                    <input type="hidden" name="dni" value="{{ profesor.dni }}">
+                    <button type="submit" class="btn-big btn-accept">
+                      <i class="bi bi-check2-circle"></i> Confirmar y registrar
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              <div class="kv">
+                <div class="item">
+                  <div class="k">Código</div>
+                  <div class="v">{{ profesor.codigo }}</div>
+                </div>
+                <div class="item">
+                  <div class="k">Condición</div>
+                  <div class="v">{{ profesor.condicion }}</div>
+                </div>
+                <div class="item">
+                  <div class="k">Apellidos</div>
+                  <div class="v">{{ profesor.apellidos }}</div>
+                </div>
+                <div class="item">
+                  <div class="k">Nombres</div>
+                  <div class="v">{{ profesor.nombres }}</div>
+                </div>
+                <div class="item" style="grid-column: 1 / -1;">
+                  <div class="k">Fecha y hora del registro</div>
+                  <div class="v">{{ fecha_hora_str }}</div>
+                </div>
+              </div>
+
+              <div class="help mt-3">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>Verifica que sea el docente correcto antes de confirmar el registro manual.</span>
               </div>
             </div>
+          {% endif %}
 
-            <div class="kv">
-              <div class="item">
-                <div class="k">Código</div>
-                <div class="v">{{ profesor.codigo }}</div>
-              </div>
-              <div class="item">
-                <div class="k">Condición</div>
-                <div class="v">{{ profesor.condicion }}</div>
-              </div>
-              <div class="item">
-                <div class="k">Apellidos</div>
-                <div class="v">{{ profesor.apellidos }}</div>
-              </div>
-              <div class="item">
-                <div class="k">Nombres</div>
-                <div class="v">{{ profesor.nombres }}</div>
-              </div>
-              <div class="item" style="grid-column: 1 / -1;">
-                <div class="k">Fecha y hora</div>
-                <div class="v">{{ fecha_hora_str }}</div>
-              </div>
+        </div>
+      </div>
+
+      <!-- PANEL LATERAL NUEVO -->
+      <aside class="side-panel">
+        <div class="side-head">
+          <div class="ico"><i class="bi bi-columns-gap"></i></div>
+          <div>
+            <h3>Panel de apoyo</h3>
+            <p>Registro manual • Operación segura</p>
+          </div>
+        </div>
+
+        <div class="side-body">
+          <div class="status-box">
+            <div class="status-row">
+              <span><i class="bi bi-shield-check me-1" style="color:var(--uni-red);"></i>Estado del módulo</span>
+              <span class="status-pill ok"><i class="bi bi-check-circle-fill"></i> Activo</span>
             </div>
-
-            <div class="help mt-3">
-              <i class="bi bi-exclamation-triangle-fill"></i>
-              Verifica que sea el docente correcto antes de confirmar.
+            <div class="status-row">
+              <span><i class="bi bi-person-lock me-1" style="color:var(--uni-red);"></i>Modo de uso</span>
+              <span class="status-pill warn"><i class="bi bi-exclamation-circle"></i> Excepcional</span>
             </div>
           </div>
-        {% endif %}
 
-      </div>
+          <div class="quick-grid">
+            <div class="quick-card">
+              <div class="k">Facultad</div>
+              <div class="v">Ingeniería Civil</div>
+            </div>
+            <div class="quick-card">
+              <div class="k">Módulo</div>
+              <div class="v">Registro Manual</div>
+            </div>
+            <div class="quick-card">
+              <div class="k">Búsqueda</div>
+              <div class="v">Por DNI</div>
+            </div>
+            <div class="quick-card">
+              <div class="k">Validación</div>
+              <div class="v">Confirmación</div>
+            </div>
+          </div>
+
+          <ul class="side-list">
+            <li>
+              <i class="bi bi-search"></i>
+              <span>Busca primero por DNI antes de registrar la asistencia.</span>
+            </li>
+            <li>
+              <i class="bi bi-check2-square"></i>
+              <span>Confirma los datos del docente antes de guardar.</span>
+            </li>
+            <li>
+              <i class="bi bi-person-lock"></i>
+              <span>Uso recomendado solo para usuarios autorizados.</span>
+            </li>
+            <li>
+              <i class="bi bi-clock-history"></i>
+              <span>El registro queda integrado al historial del sistema.</span>
+            </li>
+          </ul>
+
+          <div class="side-mini">
+            <i class="bi bi-stars"></i>
+            Tip pro: si el docente aparece en pantalla, revisa nombres/apellidos y la hora antes de confirmar para evitar correcciones posteriores.
+          </div>
+        </div>
+      </aside>
+
     </div>
   </div>
 
   <script>
-    // ✅ Ocultar mensajes en 2 segundos
-    const msgBox = document.getElementById("msgBox");
-    if (msgBox) {
-      setTimeout(() => {
-        msgBox.classList.add("fade-out");
-        setTimeout(() => msgBox.remove(), 400);
-      }, 2000);
-    }
+    // ✅ Ocultar mensajes
+    (function(){
+      const msgBox = document.getElementById("msgBox");
+      if (msgBox) {
+        setTimeout(() => {
+          msgBox.classList.add("fade-out");
+          setTimeout(() => msgBox.remove(), 420);
+        }, 2400);
+      }
+    })();
+
+    // ✅ Sanitizar DNI (solo números)
+    (function(){
+      const input = document.getElementById("dniInput");
+      if (!input) return;
+      input.addEventListener("input", () => {
+        input.value = input.value.replace(/\D/g, "").slice(0, 8);
+      }, { passive: true });
+    })();
+
+    // ✅ Partículas EXACTAS estilo historial/login (crea su propio canvas)
+    (function () {
+      const old = document.getElementById("fxParticlesLive");
+      if (old) old.remove();
+
+      const canvas = document.createElement("canvas");
+      canvas.id = "fxParticlesLive";
+      canvas.style.position = "fixed";
+      canvas.style.inset = "0";
+      canvas.style.zIndex = "2";          // debajo del contenido (.page z-index:3)
+      canvas.style.pointerEvents = "none";
+      canvas.style.opacity = "1";
+      canvas.style.mixBlendMode = "screen";
+      canvas.setAttribute("aria-hidden", "true");
+
+      document.body.insertBefore(canvas, document.body.firstChild);
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      let w = 0, h = 0, dpr = 1;
+      let particles = [];
+      let last = 0;
+      let rafId = 0;
+
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const mqLight = window.matchMedia("(prefers-color-scheme: light)");
+
+      function rand(min, max){ return Math.random() * (max - min) + min; }
+
+      function resize(){
+        w = Math.max(1, window.innerWidth);
+        h = Math.max(1, window.innerHeight);
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + "px";
+        canvas.style.height = h + "px";
+
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.scale(dpr, dpr);
+
+        const count = reduceMotion
+          ? 20
+          : Math.max(120, Math.min(230, Math.floor((w * h) / 9500)));
+
+        particles = Array.from({ length: count }, () => ({
+          x: rand(0, w),
+          y: rand(0, h),
+          r: rand(1.8, 4.2),
+          vx: reduceMotion ? rand(-0.03, 0.03) : rand(-0.24, 0.24),
+          vy: reduceMotion ? rand(-0.03, 0.03) : rand(-0.20, 0.20),
+          tw: rand(0, Math.PI * 2),
+          tws: rand(0.012, 0.030),
+          a: rand(0.28, 0.62),
+          tone: (() => {
+            const p = Math.random();
+            if (p < 0.70) return "blue";
+            if (p < 0.86) return "white";
+            if (p < 0.95) return "red";
+            return "gold";
+          })()
+        }));
+      }
+
+      function palette(light, tone){
+        if (tone === "blue"){
+          return light
+            ? { glow:"37,99,235", core:"29,78,216" }
+            : { glow:"147,197,253", core:"255,255,255" };
+        }
+        if (tone === "white") return { glow:"180,220,255", core:"255,255,255" };
+        if (tone === "red")   return { glow:"235,90,90",  core:"255,220,220" };
+        return { glow:"230,190,90", core:"255,240,180" };
+      }
+
+      function drawParticle(p, light){
+        const c = palette(light, p.tone);
+        const pulse = 0.78 + Math.sin(p.tw) * 0.22;
+        const alpha = p.a * pulse;
+
+        const R = p.r * 9.8;
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, R);
+        g.addColorStop(0,    `rgba(${c.glow},${Math.min(1, alpha * 1.35)})`);
+        g.addColorStop(0.35, `rgba(${c.glow},${alpha * 0.58})`);
+        g.addColorStop(1,    `rgba(${c.glow},0)`);
+
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, R, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(${c.core},${Math.min(1, alpha * 1.08)})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function frame(ts){
+        const dt = Math.min(40, ts - (last || ts));
+        last = ts;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // neblina base
+        ctx.fillStyle = "rgba(120,170,255,0.06)";
+        ctx.fillRect(0, 0, w, h);
+
+        const fog1 = ctx.createRadialGradient(w * 0.18, h * 0.12, 10, w * 0.18, h * 0.12, w * 0.58);
+        fog1.addColorStop(0, "rgba(140,190,255,0.11)");
+        fog1.addColorStop(1, "rgba(140,190,255,0)");
+        ctx.fillStyle = fog1;
+        ctx.fillRect(0, 0, w, h);
+
+        const fog2 = ctx.createRadialGradient(w * 0.85, h * 0.18, 10, w * 0.85, h * 0.18, w * 0.45);
+        fog2.addColorStop(0, "rgba(235,90,90,0.06)");
+        fog2.addColorStop(1, "rgba(235,90,90,0)");
+        ctx.fillStyle = fog2;
+        ctx.fillRect(0, 0, w, h);
+
+        const light = mqLight.matches;
+        const maxD = reduceMotion ? 100 : 225;
+
+        for (const p of particles){
+          p.tw += p.tws * (dt * 0.06);
+
+          p.x += (p.vx + Math.sin(p.tw) * 0.024) * (dt * 0.11);
+          p.y += (p.vy + Math.cos(p.tw * 0.9) * 0.020) * (dt * 0.11);
+
+          if (p.x < -18) p.x = w + 18;
+          if (p.x > w + 18) p.x = -18;
+          if (p.y < -18) p.y = h + 18;
+          if (p.y > h + 18) p.y = -18;
+
+          drawParticle(p, light);
+        }
+
+        for (let i = 0; i < particles.length; i++){
+          const a = particles[i];
+          for (let j = i + 1; j < particles.length; j++){
+            const b = particles[j];
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            const d2 = dx*dx + dy*dy;
+            if (d2 > maxD * maxD) continue;
+
+            const d = Math.sqrt(d2);
+            const alpha = (1 - d / maxD) * (light ? 0.15 : 0.30);
+
+            let lineRGB = "147,197,253";
+            if ((a.tone === "red" || b.tone === "red") && Math.random() < 0.35) {
+              lineRGB = "235,90,90";
+            } else if ((a.tone === "gold" || b.tone === "gold") && Math.random() < 0.28) {
+              lineRGB = "230,190,90";
+            }
+
+            ctx.strokeStyle = `rgba(${lineRGB},${alpha})`;
+            ctx.lineWidth = light ? 1.2 : 1.7;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+
+        rafId = requestAnimationFrame(frame);
+      }
+
+      function start(){
+        cancelAnimationFrame(rafId);
+        resize();
+        last = 0;
+        rafId = requestAnimationFrame(frame);
+      }
+
+      start();
+
+      let resizeTimer;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(start, 120);
+      }, { passive: true });
+
+      try { mqLight.addEventListener("change", start); } catch(e) {}
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") {
+          cancelAnimationFrame(rafId);
+        } else {
+          last = 0;
+          rafId = requestAnimationFrame(frame);
+        }
+      });
+
+      console.log("✅ Partículas login-style activas (registro manual)");
+    })();
   </script>
 </body>
 </html>
