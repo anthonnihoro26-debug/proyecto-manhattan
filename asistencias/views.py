@@ -72,6 +72,32 @@ def _in_any_group(*group_names: str):
     return check
 
 
+# =========================================================
+# ✅ SELECTOR DE MÓDULO POR GRUPOS
+# =========================================================
+# Nombres EXACTOS de grupos -> URL names reales de tu proyecto
+GROUP_DESTINATIONS = {
+    "SCANNER": "scan_page",
+    "HISTORIAL": "historial_asistencias",
+    "JUSTIFICACIONES": "panel_justificaciones",
+}
+
+
+def get_user_allowed_groups(user):
+    """
+    Retorna grupos válidos del usuario según GROUP_DESTINATIONS.
+    - Superuser: acceso a todos los módulos.
+    """
+    if not user.is_authenticated:
+        return []
+
+    if user.is_superuser:
+        return list(GROUP_DESTINATIONS.keys())
+
+    user_groups = list(user.groups.values_list("name", flat=True))
+    return [g for g in user_groups if g in GROUP_DESTINATIONS]
+
+
 def _get_client_ip(request):
     xff = request.META.get("HTTP_X_FORWARDED_FOR")
     if xff:
@@ -281,26 +307,64 @@ def _merge_top_n(asist_qs, just_qs, n):
 
 
 # =========================================================
-# POST LOGIN REDIRECT ✅ FINAL
+# POST LOGIN REDIRECT ✅ FINAL (CON SELECTOR DE MÓDULO)
+# - Si tiene 1 grupo: entra directo
+# - Si tiene 2 o 3 grupos: muestra selector
+# - Superuser: muestra selector
 # =========================================================
 @login_required
 def post_login_redirect(request):
-    user = request.user
+    allowed_groups = get_user_allowed_groups(request.user)
 
-    if user.groups.filter(name="SCANNER").exists():
-        return redirect("scan_page")
+    if not allowed_groups:
+        logout(request)
+        messages.error(request, "Tu usuario no tiene módulos asignados.")
+        return redirect("login")
 
-    if user.groups.filter(name="HISTORIAL").exists():
-        return redirect("historial_asistencias")
+    # Si tiene solo 1 grupo, entra directo
+    if len(allowed_groups) == 1:
+        selected_group = allowed_groups[0]
+        request.session["selected_group"] = selected_group
+        return redirect(GROUP_DESTINATIONS[selected_group])
 
-    if user.groups.filter(name="JUSTIFICACIONES").exists():
-        return redirect("panel_justificaciones")
+    # Si tiene varios (2 o 3), mostrar selector
+    return redirect("seleccionar_grupo")
 
-    if user.is_superuser:
-        return redirect("historial_asistencias")
 
-    logout(request)
-    return redirect("login")
+# =========================================================
+# SELECTOR DE GRUPO / MÓDULO ✅ FINAL
+# - Solo aparece si tiene varios grupos
+# - Guarda selección en session["selected_group"]
+# =========================================================
+@login_required
+def seleccionar_grupo(request):
+    allowed_groups = get_user_allowed_groups(request.user)
+
+    if not allowed_groups:
+        logout(request)
+        messages.error(request, "Tu usuario no tiene módulos asignados.")
+        return redirect("login")
+
+    # Si solo tiene 1 grupo, entrar directo
+    if len(allowed_groups) == 1:
+        g = allowed_groups[0]
+        request.session["selected_group"] = g
+        return redirect(GROUP_DESTINATIONS[g])
+
+    if request.method == "POST":
+        grupo_elegido = (request.POST.get("grupo") or "").strip()
+
+        if grupo_elegido not in allowed_groups:
+            messages.error(request, "Grupo no válido.")
+            return redirect("seleccionar_grupo")
+
+        request.session["selected_group"] = grupo_elegido
+        messages.success(request, f"Ingresaste al módulo: {grupo_elegido}")
+        return redirect(GROUP_DESTINATIONS[grupo_elegido])
+
+    return render(request, "asistencias/seleccionar_grupo.html", {
+        "allowed_groups": allowed_groups
+    })
 
 
 # =========================================================
