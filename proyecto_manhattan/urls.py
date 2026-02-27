@@ -25,19 +25,18 @@ from asistencias import views as asist_views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # ✅ Login
-    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    # ✅ Login personalizado con geocerca (solo jorge)
+    path('login/', asist_views.login_view_geocerca, name='login'),
 
     # ✅ Logout (te regresa al login)
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 
-    # ✅ Post-login redirect por grupo (GEORGE o JORGE)
+    # ✅ Post-login redirect por grupo
     path('', asist_views.post_login_redirect, name='post_login'),
 
-# ✅ CRON PRIVADO (DEBE ESTAR AQUÍ, EN EL ROOT)
+    # ✅ CRON PRIVADO (DEBE ESTAR AQUÍ, EN EL ROOT)
     path("cron/reporte-asistencia/", asist_views.trigger_reporte_asistencia, name="cron_reporte_asistencia"),
 
-    
     # ✅ App
     path('asistencia/', include('asistencias.urls')),
 ]

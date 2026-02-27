@@ -2,6 +2,12 @@ import os
 import json
 import re
 import logging
+import math
+from decimal import Decimal, InvalidOperation
+
+from django.contrib.auth import logout, login as auth_login
+from django.contrib.auth import authenticate
+from django.contrib.auth.forms import AuthenticationForm
 from datetime import timedelta
 from io import BytesIO, StringIO
 from itertools import islice  # (no es obligatorio, pero lo dejo por si lo usas luego)
@@ -99,6 +105,113 @@ def _read_code_from_request(request) -> str:
         return (data.get("code") or data.get("dni") or "").strip()
 
     return (request.POST.get("code") or request.POST.get("dni") or "").strip()
+
+# =========================================================
+# ✅ HELPERS GEOLOGIN (Geocerca solo para usuario "jorge")
+# =========================================================
+JORGE_GEOFENCE_USERNAME = "jorge"
+JORGE_GEOFENCE_LAT = -12.0360672
+JORGE_GEOFENCE_LNG = -77.0033333
+JORGE_GEOFENCE_RADIUS_M = 30.0  # metros
+
+
+def _to_float_maybe(v):
+    """
+    Convierte string a float aceptando coma o punto decimal.
+    """
+    try:
+        if v is None:
+            return None
+        s = str(v).strip()
+        if not s:
+            return None
+        s = s.replace(",", ".")
+        return float(s)
+    except (ValueError, TypeError):
+        return None
+
+
+def _haversine_m(lat1, lon1, lat2, lon2):
+    """
+    Distancia entre 2 puntos en metros.
+    """
+    R = 6371000.0  # metros
+    p1 = math.radians(float(lat1))
+    p2 = math.radians(float(lat2))
+    dp = math.radians(float(lat2) - float(lat1))
+    dl = math.radians(float(lon2) - float(lon1))
+
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
+
+
+# =========================================================
+# ✅ LOGIN PERSONALIZADO (con geocerca solo para "jorge")
+# - usa tu template actual
+# - mantiene signals (LoginEvidencia) porque usa auth_login()
+# - bloquea a jorge si está fuera del área
+# =========================================================
+def login_view_geocerca(request):
+    if request.user.is_authenticated:
+        return redirect("post_login")
+
+    form = AuthenticationForm(request=request, data=request.POST or None)
+
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        username_lc = username.lower()
+
+        # Datos geo enviados desde tu login.html
+        geo_status = (request.POST.get("geo_status") or "").strip().lower()
+        geo_lat = _to_float_maybe(request.POST.get("geo_lat"))
+        geo_lng = _to_float_maybe(request.POST.get("geo_lng"))
+        geo_acc = _to_float_maybe(request.POST.get("geo_acc"))  # opcional
+
+        # ✅ Regla especial SOLO para jorge
+        if username_lc == JORGE_GEOFENCE_USERNAME:
+            # Debe venir ubicación OK
+            if geo_status != "ok" or geo_lat is None or geo_lng is None:
+                messages.error(
+                    request,
+                    "Jorge: debes permitir la ubicación para iniciar sesión."
+                )
+                return render(request, "login.html", {"form": form})
+
+            # Validar geocerca
+            distancia_m = _haversine_m(
+                geo_lat, geo_lng,
+                JORGE_GEOFENCE_LAT, JORGE_GEOFENCE_LNG
+            )
+
+            if distancia_m > JORGE_GEOFENCE_RADIUS_M:
+                msg = (
+                    f"Jorge: fuera del área permitida. "
+                    f"Distancia detectada: {distancia_m:.1f} m "
+                    f"(máximo {JORGE_GEOFENCE_RADIUS_M:.0f} m)."
+                )
+
+                # (Opcional) agregar precisión al mensaje
+                if geo_acc is not None:
+                    msg += f" Precisión reportada: ±{geo_acc:.0f} m."
+
+                messages.error(request, msg)
+                return render(request, "login.html", {"form": form})
+
+            # (Opcional) filtro por precisión:
+            # if geo_acc is not None and geo_acc > 50:
+            #     messages.error(request, f"Ubicación con baja precisión ({geo_acc:.0f} m). Intenta nuevamente con GPS activo.")
+            #     return render(request, "login.html", {"form": form})
+
+        # ✅ Autenticación normal Django (si pasa geocerca o no aplica)
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)  # dispara signal user_logged_in
+            return redirect(request.POST.get("next") or "post_login")
+
+        # Si credenciales incorrectas, cae al render con form.errors (tu template ya lo muestra)
+
+    return render(request, "login.html", {"form": form})
 
 
 # =========================================================
