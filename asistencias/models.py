@@ -150,15 +150,17 @@ class JustificacionAsistencia(models.Model):
 
     # ✅ PDF de sustento (descanso médico, permiso, etc.)
     archivo = models.FileField(
-    "Archivo (PDF)",
-    upload_to="justificaciones/%Y/%m/",
-    null=True,
-    blank=True,
-    max_length=500,   # ✅ importante
-)
+        "Archivo (PDF)",
+        upload_to="justificaciones/%Y/%m/",
+        null=True,
+        blank=True,
+        max_length=500,  # ✅ importante (evita varchar(100) cuando la ruta es larga)
+    )
+
     creado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         on_delete=models.SET_NULL,
         related_name="justificaciones_creadas",
         verbose_name="Creado por"
@@ -167,7 +169,8 @@ class JustificacionAsistencia(models.Model):
 
     actualizado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         on_delete=models.SET_NULL,
         related_name="justificaciones_actualizadas",
         verbose_name="Actualizado por"
@@ -178,7 +181,10 @@ class JustificacionAsistencia(models.Model):
         verbose_name = "Justificación"
         verbose_name_plural = "Justificaciones"
         constraints = [
-            models.UniqueConstraint(fields=["profesor", "fecha"], name="uniq_justificacion_profesor_fecha")
+            models.UniqueConstraint(
+                fields=["profesor", "fecha"],
+                name="uniq_justificacion_profesor_fecha"
+            )
         ]
         indexes = [
             models.Index(fields=["fecha", "profesor"]),
@@ -197,10 +203,57 @@ class JustificacionAsistencia(models.Model):
 
     @property
     def archivo_url(self) -> str:
+        """
+        Devuelve una URL utilizable del archivo de justificación (PDF), soportando:
+        - Cloudinary raw/upload
+        - Cloudinary image/upload (corrige a raw/upload si el archivo es PDF)
+        - URLs locales /media/...
+        - URLs absolutas http(s)
+        """
         try:
-            return self.archivo.url if self.archivo else ""
+            if not self.archivo:
+                return ""
+
+            # nombre guardado en DB (ej: justificaciones/2026/02/archivo.pdf)
+            nombre = str(getattr(self.archivo, "name", "") or "").strip()
+            nombre_lower = nombre.lower()
+
+            # url que genera el storage
+            url = str(getattr(self.archivo, "url", "") or "").strip()
+            if not url:
+                return ""
+
+            # 1) Si ya es URL absoluta http/https, la usamos (con corrección Cloudinary si aplica)
+            if url.startswith("http://") or url.startswith("https://"):
+                if (
+                    nombre_lower.endswith(".pdf")
+                    and "res.cloudinary.com" in url
+                    and "/image/upload/" in url
+                ):
+                    url = url.replace("/image/upload/", "/raw/upload/")
+                return url
+
+            # 2) Si es local (/media/...) o ruta relativa, devolver tal cual
+            #    Django normalmente resuelve self.archivo.url como /media/...
+            if url.startswith("/"):
+                return url
+
+            # 3) Si por alguna razón vino una ruta relativa sin slash, la normalizamos
+            #    (ej: media/justificaciones/... -> /media/justificaciones/...)
+            return f"/{url.lstrip('/')}"
+
         except Exception:
             return ""
+
+    @property
+    def tiene_pdf(self) -> bool:
+        try:
+            if not self.archivo:
+                return False
+            nombre = str(getattr(self.archivo, "name", "") or "").lower()
+            return nombre.endswith(".pdf")
+        except Exception:
+            return False
 
     def __str__(self):
         return f"{self.profesor} - {self.fecha} ({self.tipo})"

@@ -956,45 +956,52 @@
                         </div>
 
                       {% elif r.justificacion %}
-                        <div class="locked">
-                          <div>
-                            <div class="hint"><i class="bi bi-lock-fill"></i> Justificación ya registrada</div>
-                            <small class="d-flex align-items-center gap-2 flex-wrap">
-                              <span>Tipo:</span>
+  <div class="locked">
+    <div>
+      <div class="hint"><i class="bi bi-lock-fill"></i> Justificación ya registrada</div>
+      <small class="d-flex align-items-center gap-2 flex-wrap">
+        <span>Tipo:</span>
 
-                              {% if r.justificacion.tipo == "DM" %}
-                                <span class="type-pill tp-DM"><i class="bi bi-heart-pulse-fill"></i> {{ r.justificacion.tipo_label }}</span>
-                              {% elif r.justificacion.tipo == "C" %}
-                                <span class="type-pill tp-C"><i class="bi bi-briefcase-fill"></i> {{ r.justificacion.tipo_label }}</span>
-                              {% elif r.justificacion.tipo == "P" %}
-                                <span class="type-pill tp-P"><i class="bi bi-calendar2-check-fill"></i> {{ r.justificacion.tipo_label }}</span>
-                              {% else %}
-                                <span class="type-pill tp-O"><i class="bi bi-stars"></i> {{ r.justificacion.tipo_label }}</span>
-                              {% endif %}
+        {% if r.justificacion.tipo == "DM" %}
+          <span class="type-pill tp-DM"><i class="bi bi-heart-pulse-fill"></i> {{ r.justificacion.tipo_label }}</span>
+        {% elif r.justificacion.tipo == "C" %}
+          <span class="type-pill tp-C"><i class="bi bi-briefcase-fill"></i> {{ r.justificacion.tipo_label }}</span>
+        {% elif r.justificacion.tipo == "P" %}
+          <span class="type-pill tp-P"><i class="bi bi-calendar2-check-fill"></i> {{ r.justificacion.tipo_label }}</span>
+        {% else %}
+          <span class="type-pill tp-O"><i class="bi bi-stars"></i> {{ r.justificacion.tipo_label }}</span>
+        {% endif %}
 
-                              {% if r.justificacion.detalle %}<span>• {{ r.justificacion.detalle }}</span>{% endif %}
-                            </small>
-                          </div>
+        {% if r.justificacion.detalle %}<span>• {{ r.justificacion.detalle }}</span>{% endif %}
+      </small>
+    </div>
 
-                          <div class="d-flex gap-2 flex-wrap">
-                            {% if r.justificacion.archivo_url %}
-                              <button type="button"
-                                      class="btn btn-outline-primary btn-just js-open-pdf"
-                                      data-pdf-url="{{ r.justificacion.archivo_url }}"
-                                      data-pdf-title="Sustento PDF - {{ r.profesor.apellidos }}, {{ r.profesor.nombres }}">
-                                <i class="bi bi-file-earmark-pdf"></i> Ver PDF
-                              </button>
-                            {% else %}
-                              <button class="btn btn-outline-secondary btn-just" type="button" disabled title="No se adjuntó PDF">
-                                <i class="bi bi-file-earmark-pdf"></i> Ver PDF (no adjunto)
-                              </button>
-                            {% endif %}
+    <div class="d-flex gap-2 flex-wrap">
+      {% if r.justificacion.archivo_url %}
+        <button type="button"
+                class="btn btn-outline-primary btn-just js-open-pdf"
+                data-pdf-url="{{ r.justificacion.archivo_url }}"
+                data-pdf-title="Sustento PDF - {{ r.profesor.apellidos }}, {{ r.profesor.nombres }}">
+          <i class="bi bi-file-earmark-pdf"></i> Ver PDF
+        </button>
 
-                            <button class="btn btn-outline-secondary btn-just" disabled title="Solo se puede editar en el Admin">
-                              <i class="bi bi-check2-circle"></i> Guardado
-                            </button>
-                          </div>
-                        </div>
+        <!-- ✅ NUEVO: abre en pestaña nueva (más confiable) -->
+        <a class="btn btn-outline-danger btn-just"
+           target="_blank" rel="noopener"
+           href="{{ r.justificacion.archivo_url }}">
+          <i class="bi bi-box-arrow-up-right"></i> Abrir PDF
+        </a>
+      {% else %}
+        <button class="btn btn-outline-secondary btn-just" type="button" disabled title="No se adjuntó PDF">
+          <i class="bi bi-file-earmark-pdf"></i> Ver PDF (no adjunto)
+        </button>
+      {% endif %}
+
+      <button class="btn btn-outline-secondary btn-just" disabled title="Solo se puede editar en el Admin">
+        <i class="bi bi-check2-circle"></i> Guardado
+      </button>
+    </div>
+  </div>
 
                       {% else %}
                         <form method="post"
@@ -1159,51 +1166,70 @@
 
     // ===== Modal Preview PDF =====
     (function(){
-      const modalEl = document.getElementById('pdfPreviewModal');
-      const frame = document.getElementById('pdfPreviewFrame');
-      const title = document.getElementById('pdfPreviewLabel');
-      const fallback = document.getElementById('pdfFallback');
-      const openNewTab = document.getElementById('pdfOpenNewTab');
-      if (!modalEl || !frame) return;
+    const modalEl = document.getElementById('pdfPreviewModal');
+    const frame = document.getElementById('pdfPreviewFrame');
+    const title = document.getElementById('pdfPreviewLabel');
+    const fallback = document.getElementById('pdfFallback');
+    const openNewTab = document.getElementById('pdfOpenNewTab');
+    if (!modalEl || !frame) return;
 
-      const modal = new bootstrap.Modal(modalEl);
+    const modal = new bootstrap.Modal(modalEl);
+    let currentUrl = "";
 
-      function openPdfPreview(url, ttl){
+    function showFallback(url){
+      frame.style.display = 'none';
+      fallback.style.display = 'grid';
+      openNewTab.href = url;
+    }
+
+    function showFrame(url){
+      fallback.style.display = 'none';
+      frame.style.display = '';
+      frame.src = url;
+    }
+
+    function openPdfPreview(url, ttl){
+      currentUrl = url;
+      title.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> ' + (ttl || 'Vista previa PDF');
+      openNewTab.href = url;
+
+      // Reset visual
+      frame.src = "about:blank";
+      showFrame(url);
+
+      modal.show();
+
+      // ✅ Fallback si no carga en iframe (Edge/Cloudinary/raw/etc.)
+      const timer = setTimeout(() => {
+        // Si no hay señal de carga útil, mostramos fallback
+        // Nota: no podemos inspeccionar contenido por cross-origin
+        showFallback(url);
+      }, 1800);
+
+      // Si iframe dispara load antes del timeout, mantenemos iframe
+      const onLoad = () => {
+        clearTimeout(timer);
+        // Algunos navegadores disparan load aunque no rendericen;
+        // en ese caso el usuario igual tendrá botón en fallback si algo falla visualmente.
+      };
+
+      frame.addEventListener('load', onLoad, { once: true });
+
+      modalEl.addEventListener('hidden.bs.modal', () => {
+        clearTimeout(timer);
+        frame.src = "about:blank";
         frame.style.display = '';
         fallback.style.display = 'none';
-        frame.src = url;
-        title.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> ' + (ttl || 'Vista previa PDF');
-        openNewTab.href = url;
-        modal.show();
+      }, { once: true });
+    }
 
-        // fallback básico si iframe falla (algunos navegadores bloquean)
-        const failTimer = setTimeout(() => {
-          // Si sigue vacío o navegador no renderiza
-          // mostramos fallback sin romper experiencia
-          try {
-            if (!frame.contentWindow || frame.contentWindow.location.href === 'about:blank') {
-              frame.style.display = 'none';
-              fallback.style.display = 'grid';
-            }
-          } catch (e) {
-            // cross-origin al cargar PDF, eso es normal; no marcamos como error
-          }
-        }, 1400);
-
-        modalEl.addEventListener('hidden.bs.modal', () => {
-          clearTimeout(failTimer);
-          frame.src = '';
-        }, { once: true });
-      }
-
-      document.addEventListener('click', function(e){
-        const btn = e.target.closest('.js-open-pdf');
-        if (!btn) return;
-        e.preventDefault();
-        openPdfPreview(btn.dataset.pdfUrl, btn.dataset.pdfTitle);
-      });
-    })();
-
+    document.addEventListener('click', function(e){
+      const btn = e.target.closest('.js-open-pdf');
+      if (!btn) return;
+      e.preventDefault();
+      openPdfPreview(btn.dataset.pdfUrl, btn.dataset.pdfTitle);
+    });
+  })();
     // ===== Búsqueda en vivo (sin recargar) =====
     (function(){
       const input = document.getElementById('liveSearchInput');
