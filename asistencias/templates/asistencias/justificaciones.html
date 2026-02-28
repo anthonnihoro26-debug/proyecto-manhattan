@@ -4,146 +4,688 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Justificaciones</title>
+  <title>Justificaciones • Proyecto Manhattan V2 Premium</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
   <style>
     :root{
-      --muted:#6b7280;
-      --primary:#2563eb;
-      --primary2:#4f46e5;
-      --shadow: 0 22px 55px rgba(0,0,0,.22);
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --text-2:#cbd5e1;
+      --title:#f8fafc;
+
+      --primary:#ef4444;
+      --primary2:#b91c1c;
+      --accent:#fb7185;
+      --violet:#7c3aed;
+      --blue:#2563eb;
+
+      --glass: rgba(255,255,255,.08);
+      --stroke: rgba(255,255,255,.14);
+
+      --card-bg: rgba(255,255,255,0.88);
+      --card-ink:#0f172a;
+      --card-muted:#64748b;
+
+      --shadow: 0 22px 55px rgba(0,0,0,.30);
       --radius: 22px;
-      --stroke: rgba(15, 23, 42, 0.10);
     }
+
+    *{ box-sizing:border-box; }
+    html, body { height:100%; }
 
     body{
       margin:0;
       min-height:100vh;
       font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
       background:
-        radial-gradient(1200px 700px at 10% 10%, rgba(79,70,229,.52), transparent 55%),
-        radial-gradient(900px 600px at 90% 20%, rgba(37,99,235,.42), transparent 60%),
-        radial-gradient(900px 700px at 50% 100%, rgba(168,85,247,.25), transparent 60%),
-        linear-gradient(135deg, #0b1020, #2a165f);
-      color:#111827;
+        radial-gradient(1200px 700px at 10% 10%, rgba(239,68,68,.18), transparent 55%),
+        radial-gradient(900px 600px at 90% 15%, rgba(127,29,29,.22), transparent 60%),
+        radial-gradient(900px 700px at 50% 100%, rgba(124,58,237,.16), transparent 60%),
+        linear-gradient(135deg, #06080f, #12070a 35%, #1a0b12 70%, #090b14);
+      position: relative;
+      overflow-x: hidden;
     }
 
+    /* ===== Fondo FX ===== */
+    #particles{
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .95;
+    }
+
+    .fx-grid{
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events:none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 38px 38px;
+      mask-image: radial-gradient(circle at 50% 35%, black 35%, transparent 85%);
+      opacity: .35;
+      animation: gridShift 18s linear infinite;
+    }
+    @keyframes gridShift{
+      from{ transform: translateY(0px); }
+      to{ transform: translateY(38px); }
+    }
+
+    .orb{
+      position: fixed;
+      border-radius: 999px;
+      filter: blur(22px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: .75;
+      animation: floatOrb 12s ease-in-out infinite;
+    }
+    .orb.red1{
+      width: 220px; height: 220px;
+      left: -40px; top: 80px;
+      background: radial-gradient(circle, rgba(239,68,68,.50), rgba(239,68,68,0));
+      animation-delay: 0s;
+    }
+    .orb.red2{
+      width: 280px; height: 280px;
+      right: -80px; top: 140px;
+      background: radial-gradient(circle, rgba(220,38,38,.42), rgba(220,38,38,0));
+      animation-delay: -3s;
+    }
+    .orb.violet{
+      width: 250px; height: 250px;
+      left: 30%; bottom: -60px;
+      background: radial-gradient(circle, rgba(124,58,237,.28), rgba(124,58,237,0));
+      animation-delay: -6s;
+    }
+    @keyframes floatOrb{
+      0%,100%{ transform: translateY(0) translateX(0); }
+      50%{ transform: translateY(-18px) translateX(12px); }
+    }
+
+    .scanner-line{
+      position: fixed;
+      left: 0; right: 0; top: 0;
+      height: 2px;
+      z-index: 3;
+      background: linear-gradient(90deg, transparent, rgba(239,68,68,.95), transparent);
+      box-shadow: 0 0 18px rgba(239,68,68,.55), 0 0 30px rgba(239,68,68,.30);
+      animation: scanTop 4.6s linear infinite;
+      pointer-events:none;
+      opacity:.9;
+    }
+    @keyframes scanTop{
+      0%{ transform: translateX(-35%); opacity:.5; }
+      50%{ transform: translateX(35%); opacity:1; }
+      100%{ transform: translateX(-35%); opacity:.5; }
+    }
+
+    /* ===== Topbar ===== */
     .topbar{
       position: sticky; top:0; z-index: 50;
-      background: rgba(255,255,255,0.80);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(17,24,39,.08);
+      background: rgba(10,12,20,0.62);
+      backdrop-filter: blur(14px) saturate(1.3);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    }
+    .topbar::after{
+      content:"";
+      position:absolute; left:0; right:0; bottom:-1px; height:1px;
+      background: linear-gradient(90deg, transparent, rgba(239,68,68,.55), transparent);
+      opacity:.85;
     }
     .topbar-inner{
       max-width:1180px; margin:0 auto; padding:14px 16px;
       display:flex; align-items:center; justify-content:space-between; gap:14px;
+      position: relative;
+      z-index: 2;
     }
     .brand{ display:flex; align-items:center; gap:12px; min-width:260px; }
-    .brand h1{ font-size:18px; margin:0; font-weight:950; color:#0f172a; }
-    .brand small{ display:block; font-size:12px; color:var(--muted); font-weight:800; margin-top:2px; }
+    .brand h1{ font-size:18px; margin:0; font-weight:950; color:var(--title); }
+    .brand small{ display:block; font-size:12px; color:var(--text-2); font-weight:800; margin-top:2px; opacity:.9; }
 
-    .uni-badge{ width:52px; height:52px; display:grid; place-items:center; }
-    .uni-logo{ width:52px; height:52px; object-fit:contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,.10)); }
+    .uni-badge{
+      width:54px; height:54px; display:grid; place-items:center;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 10px 25px rgba(0,0,0,.24);
+      position: relative;
+      overflow: hidden;
+    }
+    .uni-logo{
+      width:50px; height:50px; object-fit:contain;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.20));
+      position: relative;
+      z-index: 1;
+    }
 
     .userbox{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
     .userpill{
       display:inline-flex; align-items:center; gap:8px;
       padding:9px 12px; border-radius:999px;
-      background: rgba(17,24,39,0.05);
-      border: 1px solid rgba(17,24,39,0.08);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.11);
+      color: #f1f5f9;
       font-weight:850; font-size:13px;
     }
+
     .btnx{
       border:0; border-radius:14px; padding:10px 14px; font-weight:950;
       display:inline-flex; align-items:center; gap:8px; text-decoration:none;
-      box-shadow: 0 12px 26px rgba(0,0,0,.10);
+      box-shadow: 0 12px 26px rgba(0,0,0,.18);
       user-select:none; white-space:nowrap;
-      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease, filter .15s ease;
+      position: relative; overflow: hidden;
     }
-    .btnx:hover{ transform: translateY(-1px); box-shadow: 0 16px 34px rgba(0,0,0,.14); }
-    .btnx:active{ transform: translateY(0px); opacity:.92; }
-    .btnx-danger{ background: linear-gradient(135deg, #dc2626, #ef4444); color:#fff; }
-    .btnx-primary{ background: linear-gradient(135deg, var(--primary), var(--primary2)); color:#fff; }
+    .btnx::before{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(110deg, transparent 15%, rgba(255,255,255,.20) 50%, transparent 85%);
+      transform: translateX(-140%);
+      transition: transform .55s ease;
+    }
+    .btnx:hover::before{ transform: translateX(140%); }
+    .btnx:hover{ transform: translateY(-1px); box-shadow: 0 16px 34px rgba(0,0,0,.22); filter: brightness(1.02); }
+    .btnx:active{ transform: translateY(0px); opacity:.94; }
 
-    .page{ max-width:1180px; margin:0 auto; padding:24px 16px 40px; }
+    .btnx-danger{
+      background: linear-gradient(135deg, #991b1b, #ef4444);
+      color:#fff;
+    }
+    .btnx-primary{
+      background: linear-gradient(135deg, #dc2626, #7f1d1d);
+      color:#fff;
+    }
+
+    /* ===== Layout ===== */
+    .page{
+      max-width:1180px;
+      margin:0 auto;
+      padding:24px 16px 42px;
+      position: relative;
+      z-index: 2;
+    }
+
     .cardx{
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.35);
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.88));
+      backdrop-filter: blur(16px) saturate(1.1);
+      border: 1px solid rgba(255,255,255,.24);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.4);
       overflow:hidden;
+      position: relative;
+      isolation: isolate;
     }
-    .cardx-head{ padding:22px 22px 12px; display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; }
-    .title{ margin:0; font-weight:950; font-size:28px; letter-spacing:-.6px; color:#0f172a; display:flex; align-items:center; gap:10px; }
-    .subtitle{ margin:6px 0 0; color: var(--muted); font-weight:800; }
+    .cardx::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(600px 180px at 10% 0%, rgba(239,68,68,.10), transparent 70%),
+        radial-gradient(600px 180px at 90% 0%, rgba(124,58,237,.07), transparent 70%);
+      pointer-events:none;
+      z-index: -1;
+    }
+    .cardx::after{
+      content:"";
+      position:absolute; left:0; right:0; top:0; height:2px;
+      background: linear-gradient(90deg, transparent, rgba(239,68,68,.9), rgba(251,113,133,.9), transparent);
+      opacity:.9;
+      box-shadow: 0 0 14px rgba(239,68,68,.35);
+    }
 
+    .cardx-head{
+      padding:22px 22px 12px;
+      display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    }
+
+    .title{
+      margin:0;
+      font-weight:950;
+      font-size:28px;
+      letter-spacing:-.6px;
+      color:#0f172a;
+      display:flex; align-items:center; gap:10px;
+    }
+    .title i{ color:#dc2626; }
+    .subtitle{
+      margin:6px 0 0;
+      color: #64748b;
+      font-weight:800;
+    }
+
+    /* ===== Filters ===== */
     .filters{ padding:0 22px 18px; }
     .filter-card{
-      background: rgba(15, 23, 42, 0.03);
+      background: linear-gradient(180deg, rgba(15,23,42,0.03), rgba(15,23,42,0.02));
       border: 1px solid rgba(15, 23, 42, 0.08);
       border-radius: 18px;
       padding: 16px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+      position: relative;
     }
-    .form-label{ font-weight:950; color:#0f172a; font-size:13px; letter-spacing:.2px; }
-    .form-control, .form-select{ border-radius:14px !important; padding:11px 12px; border:1px solid rgba(15,23,42,0.14); font-weight:850; }
+    .filter-card::before{
+      content:"";
+      position:absolute; inset:0 auto 0 0; width: 4px;
+      border-radius: 18px 0 0 18px;
+      background: linear-gradient(180deg, #ef4444, #991b1b);
+      opacity:.85;
+    }
+
+    .form-label{
+      font-weight:950;
+      color:#0f172a;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    .form-control, .form-select{
+      border-radius:14px !important;
+      padding:11px 12px;
+      border:1px solid rgba(15,23,42,0.14);
+      font-weight:850;
+      background: rgba(255,255,255,.95);
+      color:#0f172a;
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .form-control:focus, .form-select:focus{
+      border-color: rgba(239,68,68,.45);
+      box-shadow: 0 0 0 .2rem rgba(239,68,68,.13);
+      background:#fff;
+    }
 
     .btn-apply{
-      border-radius:14px; padding:11px 12px; font-weight:950;
-      background: linear-gradient(135deg, var(--primary), var(--primary2));
+      border-radius:14px;
+      padding:11px 12px;
+      font-weight:950;
+      background: linear-gradient(135deg, #dc2626, #7f1d1d);
       border:0; color:#fff;
-      box-shadow: 0 14px 30px rgba(37,99,235,.22);
+      box-shadow: 0 14px 30px rgba(239,68,68,.22);
       height:100%;
       display:flex; align-items:center; justify-content:center; gap:8px;
+      position: relative; overflow:hidden;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .btn-apply::before{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(110deg, transparent 15%, rgba(255,255,255,.22) 50%, transparent 85%);
+      transform: translateX(-130%);
+      animation: shimmerBtn 2.9s infinite;
+    }
+    @keyframes shimmerBtn{
+      0%, 20%{ transform: translateX(-130%); }
+      55%,100%{ transform: translateX(130%); }
+    }
+    .btn-apply:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 18px 34px rgba(239,68,68,.26);
     }
 
+    /* ===== Summary ===== */
     .summary{
       padding: 0 22px 12px;
       display:grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
     }
-    .sum-card{ background:#fff; border:1px solid rgba(15,23,42,.10); border-radius:18px; padding:14px; }
-    .sum-title{ font-size:12px; color: var(--muted); font-weight:900; }
+    .sum-card{
+      background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.92));
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:18px;
+      padding:14px;
+      box-shadow: 0 8px 20px rgba(15,23,42,.04);
+      position: relative;
+      overflow: hidden;
+      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+    }
+    .sum-card:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px rgba(15,23,42,.08), 0 6px 14px rgba(239,68,68,.08);
+      border-color: rgba(239,68,68,.15);
+    }
+    .sum-card::before{
+      content:"";
+      position:absolute; inset:0 auto 0 0; width:4px;
+      background: linear-gradient(180deg, rgba(239,68,68,.95), rgba(124,58,237,.75));
+      opacity:.9;
+    }
+    .sum-title{ font-size:12px; color: #64748b; font-weight:900; }
     .sum-value{ font-size:22px; font-weight:950; color:#0f172a; margin-top:4px; }
-    .sum-icon{ float:right; opacity:.15; font-size:26px; margin-top:-8px; }
-    @media (max-width: 992px){ .summary{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 576px){ .summary{ padding:0 16px 12px; grid-template-columns:1fr; } }
+    .sum-icon{
+      float:right; opacity:.12; font-size:28px; margin-top:-8px;
+      color:#dc2626;
+    }
 
+    @media (max-width: 992px){
+      .summary{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 576px){
+      .summary{ padding:0 16px 12px; grid-template-columns:1fr; }
+    }
+
+    /* ===== Tabla ===== */
     .table-wrap{
       margin: 0 22px 18px;
       border-radius: 18px;
       overflow:hidden;
-      border: 1px solid var(--stroke);
+      border: 1px solid rgba(15,23,42,.08);
       background: #fff;
     }
-    .badgex{ font-weight:900; border-radius:999px; padding:6px 10px; display:inline-flex; gap:6px; align-items:center; white-space:nowrap; }
-    .b-ok{ background:#dcfce7; color:#166534; }
-    .b-warn{ background:#fee2e2; color:#991b1b; }
-    .b-info{ background:#e0e7ff; color:#1e3a8a; }
+    .table{
+      --bs-table-bg: transparent;
+      --bs-table-hover-bg: rgba(239,68,68,.045);
+      color:#0f172a;
+    }
+    .table thead th{
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.96));
+      color:#0f172a;
+      border-bottom:1px solid rgba(15,23,42,.08);
+      font-weight: 950;
+    }
 
+    tr.row-hidden-live { display:none !important; }
+
+    .badgex{
+      font-weight:900;
+      border-radius:999px;
+      padding:7px 11px;
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
+      white-space:nowrap;
+      border: 1px solid transparent;
+    }
+    .b-ok{
+      background: linear-gradient(180deg, #dcfce7, #bbf7d0);
+      color:#166534;
+      border-color: rgba(22,101,52,.12);
+    }
+    .b-warn{
+      background: linear-gradient(180deg, #fee2e2, #fecaca);
+      color:#991b1b;
+      border-color: rgba(153,27,27,.12);
+    }
+    .b-info{
+      background: linear-gradient(180deg, #e0e7ff, #c7d2fe);
+      color:#1e3a8a;
+      border-color: rgba(30,58,138,.12);
+    }
+
+    /* Badges tipo */
+    .type-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 9px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:12px;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .tp-DM{
+      background:#dcfce7; color:#166534; border-color:rgba(22,101,52,.15);
+    }
+    .tp-C{
+      background:#dbeafe; color:#1d4ed8; border-color:rgba(29,78,216,.15);
+    }
+    .tp-P{
+      background:#fef3c7; color:#92400e; border-color:rgba(146,64,14,.15);
+    }
+    .tp-O{
+      background:#f3e8ff; color:#6d28d9; border-color:rgba(109,40,217,.15);
+    }
+
+    /* ===== Acción ===== */
     .action-box{
-      background: rgba(15,23,42,0.03);
-      border: 1px solid rgba(15,23,42,0.10);
+      background: linear-gradient(180deg, rgba(15,23,42,0.03), rgba(15,23,42,0.02));
+      border: 1px solid rgba(15,23,42,0.08);
       border-radius: 16px;
       padding: 12px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+      position: relative;
+      overflow: hidden;
     }
-    .action-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:end; }
+    .action-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      align-items:end;
+    }
     .action-grid .ag-btn{ grid-column: 1 / -1; }
-    .action-grid-2{ display:grid; grid-template-columns: 1fr; gap:10px; margin-top:10px; }
-    .btn-just{ border-radius:14px; font-weight:950; padding:10px 14px; width:100%; display:flex; align-items:center; justify-content:center; gap:8px; white-space:nowrap; }
+    .action-grid-2{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .btn-just{
+      border-radius:14px;
+      font-weight:950;
+      padding:10px 14px;
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      white-space:nowrap;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .btn-just:hover{ transform: translateY(-1px); }
+
+    .btn-success.btn-just{
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      border: 0;
+      box-shadow: 0 10px 22px rgba(22,163,74,.20);
+    }
 
     .locked{
-      background:#fff; border:1px dashed rgba(15,23,42,.18); border-radius:14px;
-      padding:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      background: linear-gradient(180deg, #fff, #fafafa);
+      border:1px dashed rgba(15,23,42,.16);
+      border-radius:14px;
+      padding:12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      position: relative;
     }
-    .locked .hint{ font-weight:900; color:#0f172a; display:flex; gap:10px; align-items:center; }
-    .locked small{ display:block; color: rgba(15,23,42,.65); font-weight:850; margin-top:2px; }
+    .locked .hint{
+      font-weight:900;
+      color:#0f172a;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .locked small{
+      display:block;
+      color: rgba(15,23,42,.68);
+      font-weight:850;
+      margin-top:2px;
+    }
 
-    @media (max-width: 992px){ .action-grid{ grid-template-columns:1fr; } .action-grid .ag-btn{ grid-column:auto; } }
+    /* ===== Extras V2 ===== */
+    .detail-tools{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      margin-top:6px; flex-wrap:wrap;
+    }
+    .char-counter{
+      font-size:12px; font-weight:900; color:#64748b;
+      padding:4px 8px; border-radius:999px;
+      background:rgba(15,23,42,.05);
+      border:1px solid rgba(15,23,42,.08);
+    }
+    .char-counter.warn{
+      color:#92400e; background:#fef3c7; border-color:#fde68a;
+    }
+    .char-counter.danger{
+      color:#991b1b; background:#fee2e2; border-color:#fecaca;
+    }
+
+    .file-help{
+      margin-top:6px;
+      font-size:12px;
+      color:#64748b;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .file-status{
+      margin-top:8px;
+      padding:10px 12px;
+      border-radius:12px;
+      font-size:12px;
+      font-weight:900;
+      border:1px solid rgba(15,23,42,.08);
+      display:none;
+    }
+    .file-status.show{ display:block; }
+    .file-status.ok{
+      background:#ecfdf5; color:#065f46; border-color:#a7f3d0;
+    }
+    .file-status.err{
+      background:#fef2f2; color:#991b1b; border-color:#fecaca;
+    }
+    .file-status.info{
+      background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe;
+    }
+
+    .live-search-status{
+      margin: 6px 0 0;
+      font-size:12px;
+      font-weight:900;
+      color:#64748b;
+      display:flex; align-items:center; gap:6px;
+    }
+
+    /* Sweet confirm modal custom */
+    .confirm-overlay{
+      position: fixed; inset:0;
+      background: rgba(2,6,23,.55);
+      backdrop-filter: blur(6px);
+      z-index: 2000;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+    }
+    .confirm-overlay.show{ display:flex; animation: fadeIn .14s ease-out; }
+    .confirm-card{
+      width:min(480px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.96));
+      border:1px solid rgba(255,255,255,.45);
+      border-radius:20px;
+      box-shadow: 0 30px 70px rgba(0,0,0,.28);
+      overflow:hidden;
+      transform: translateY(8px) scale(.985);
+      animation: popIn .15s ease-out forwards;
+    }
+    .confirm-head{
+      padding:16px 18px 10px;
+      display:flex; align-items:center; gap:12px;
+      border-bottom:1px solid rgba(15,23,42,.06);
+    }
+    .confirm-icon{
+      width:42px; height:42px; border-radius:14px;
+      display:grid; place-items:center;
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      color:#b91c1c; font-size:20px;
+      border:1px solid rgba(239,68,68,.20);
+    }
+    .confirm-title{
+      margin:0; font-weight:950; color:#0f172a; font-size:18px;
+    }
+    .confirm-sub{
+      margin:2px 0 0; color:#64748b; font-weight:800; font-size:13px;
+    }
+    .confirm-body{
+      padding:14px 18px 8px;
+      color:#0f172a; font-weight:800;
+    }
+    .confirm-list{
+      margin:0; padding-left:18px; color:#334155; font-weight:800; font-size:14px;
+    }
+    .confirm-list li{ margin-bottom:6px; }
+    .confirm-actions{
+      padding:14px 18px 18px;
+      display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;
+    }
+    .btn-confirm{
+      border:0; border-radius:12px; font-weight:950;
+      padding:10px 14px; cursor:pointer;
+    }
+    .btn-confirm-cancel{
+      background:#f1f5f9; color:#0f172a;
+      border:1px solid rgba(15,23,42,.08);
+    }
+    .btn-confirm-ok{
+      color:#fff;
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      box-shadow: 0 12px 24px rgba(22,163,74,.18);
+    }
+
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+    @keyframes popIn {
+      to{ transform: translateY(0) scale(1); }
+    }
+
+    /* PDF preview modal */
+    .pdf-modal .modal-content{
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 18px;
+      overflow:hidden;
+      background: rgba(10,12,20,.92);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 24px 60px rgba(0,0,0,.35);
+    }
+    .pdf-modal .modal-header{
+      border-bottom:1px solid rgba(255,255,255,.08);
+      color:#f8fafc;
+      background: rgba(255,255,255,.03);
+    }
+    .pdf-modal .modal-title{ font-weight:950; }
+    .pdf-modal .btn-close{
+      filter: invert(1) grayscale(1);
+      opacity:.9;
+    }
+    .pdf-frame-wrap{
+      height: min(75vh, 760px);
+      background: #0b1020;
+      border-top:1px solid rgba(255,255,255,.05);
+    }
+    .pdf-frame{
+      width:100%;
+      height:100%;
+      border:0;
+      background:#0b1020;
+    }
+    .pdf-fallback{
+      color:#e2e8f0;
+      padding:20px;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      height:100%;
+      gap:10px;
+    }
+
+    @media (max-width: 992px){
+      .action-grid{ grid-template-columns:1fr; }
+      .action-grid .ag-btn{ grid-column:auto; }
+    }
     @media (max-width: 576px){
       .title{ font-size:22px; }
       .cardx-head{ padding:18px 16px 10px; }
@@ -152,10 +694,13 @@
       .brand h1{ font-size:15px; }
       .userpill{ display:none; }
       .uni-badge{ width:46px; height:46px; }
-      .uni-logo{ width:46px; height:46px; }
+      .uni-logo{ width:42px; height:42px; }
+      .topbar-inner{ padding:12px 12px; }
+      .btnx{ padding:9px 11px; border-radius:12px; font-size:13px; }
+      .detail-tools{ align-items:flex-start; }
     }
 
-    /* ✅ Toasts */
+    /* Toasts */
     .toast-wrap{
       position: fixed; top: 86px; right: 18px; z-index: 9999;
       display: grid; gap: 10px; max-width: 420px;
@@ -167,17 +712,18 @@
       gap: 10px;
       padding: 12px 12px;
       border-radius: 14px;
-      box-shadow: 0 16px 38px rgba(0,0,0,.18);
+      box-shadow: 0 16px 38px rgba(0,0,0,.22);
       backdrop-filter: blur(10px);
       animation: toastIn .18s ease-out;
-      border: 1px solid rgba(255,255,255,.25);
+      border: 1px solid rgba(255,255,255,.28);
       font-weight: 850;
+      color:#0f172a;
     }
     .toastx-icon{
       width: 34px; height: 34px;
       display: grid; place-items: center;
       border-radius: 12px;
-      background: rgba(255,255,255,.18);
+      background: rgba(255,255,255,.25);
       font-size: 18px; color: #0f172a;
     }
     .toastx-text{ color:#0f172a; line-height:1.2; }
@@ -186,22 +732,48 @@
       color: rgba(15,23,42,.65);
       padding:6px; border-radius:10px; cursor:pointer;
     }
-    .toastx-close:hover{ background: rgba(255,255,255,.22); }
-    .toastx-success{ background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.35); }
-    .toastx-warning{ background: rgba(245,158,11,.18); border-color: rgba(245,158,11,.35); }
-    .toastx-error{ background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.35); }
-    .toastx-info{ background: rgba(59,130,246,.18); border-color: rgba(59,130,246,.35); }
-    .toastx-hide{ opacity:0; transform: translateY(-6px); transition: opacity .28s ease, transform .28s ease; }
-    @keyframes toastIn{ from{opacity:0; transform: translateY(-8px);} to{opacity:1; transform: translateY(0);} }
+    .toastx-close:hover{ background: rgba(255,255,255,.24); }
+    .toastx-success{ background: rgba(34,197,94,.20); border-color: rgba(34,197,94,.35); }
+    .toastx-warning{ background: rgba(245,158,11,.20); border-color: rgba(245,158,11,.35); }
+    .toastx-error{ background: rgba(239,68,68,.20); border-color: rgba(239,68,68,.35); }
+    .toastx-info{ background: rgba(59,130,246,.20); border-color: rgba(59,130,246,.35); }
+    .toastx-hide{
+      opacity:0;
+      transform: translateY(-6px);
+      transition: opacity .28s ease, transform .28s ease;
+    }
+    @keyframes toastIn{
+      from{opacity:0; transform: translateY(-8px);}
+      to{opacity:1; transform: translateY(0);}
+    }
 
-    /* Rendimiento */
-    .cv-auto{ content-visibility:auto; contain-intrinsic-size: 900px 600px; }
-    .table thead th{ position: sticky; top: 0; z-index: 1; background: #fff; }
-    @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+    .cv-auto{
+      content-visibility:auto;
+      contain-intrinsic-size: 900px 600px;
+    }
+
+    .fade-up{ animation: fadeUp .35s ease-out both; }
+    @keyframes fadeUp{
+      from{ opacity:0; transform: translateY(8px); }
+      to{ opacity:1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ animation:none !important; transition:none !important; }
+      #particles,.fx-grid{ display:none; }
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- FX -->
+  <canvas id="particles"></canvas>
+  <div class="fx-grid"></div>
+  <div class="orb red1"></div>
+  <div class="orb red2"></div>
+  <div class="orb violet"></div>
+  <div class="scanner-line"></div>
 
   <div class="topbar">
     <div class="topbar-inner">
@@ -267,12 +839,12 @@
   {% endif %}
 
   <div class="page">
-    <div class="cardx">
+    <div class="cardx fade-up">
 
       <div class="cardx-head">
         <div>
           <h2 class="title"><i class="bi bi-clipboard2-check"></i> Justificaciones</h2>
-          <p class="subtitle">Marca descanso médico u otros para una fecha</p>
+          <p class="subtitle">Versión 2 Premium • con validaciones, preview PDF y UX mejorada</p>
         </div>
       </div>
 
@@ -303,7 +875,6 @@
 
       <div class="filters">
         <div class="filter-card">
-          <!-- ✅ SIN autosubmit: ultra rápido -->
           <form method="get" class="row g-2 align-items-end">
             <div class="col-12 col-md-3">
               <label class="form-label">Fecha</label>
@@ -312,8 +883,11 @@
 
             <div class="col-12 col-md-6">
               <label class="form-label">Buscar</label>
-              <input type="text" name="q" class="form-control" value="{{ q }}"
+              <input id="liveSearchInput" type="text" name="q" class="form-control" value="{{ q }}"
                      placeholder="DNI / Código / Apellidos / Nombres" autocomplete="off">
+              <div class="live-search-status" id="liveSearchStatus">
+                <i class="bi bi-lightning-charge-fill"></i> Búsqueda en vivo activa
+              </div>
             </div>
 
             <div class="col-12 col-md-3 d-grid">
@@ -327,7 +901,7 @@
 
       <div class="table-wrap cv-auto">
         <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
+          <table class="table table-hover align-middle mb-0" id="justTable">
             <thead>
               <tr>
                 <th>Docente</th>
@@ -336,9 +910,18 @@
               </tr>
             </thead>
 
-            <tbody>
+            <tbody id="justTableBody">
               {% for r in rows %}
-                <tr>
+                <tr class="just-row"
+                    data-search="
+                      {{ r.profesor.apellidos|default:'' }}
+                      {{ r.profesor.nombres|default:'' }}
+                      {{ r.profesor.dni|default:'' }}
+                      {{ r.profesor.codigo|default:'' }}
+                      {{ r.estado|default:'' }}
+                      {{ r.estado_detalle|default:'' }}
+                      {% if r.justificacion %}{{ r.justificacion.tipo_label|default:'' }} {{ r.justificacion.detalle|default:'' }}{% endif %}
+                    ">
                   <td>
                     <div class="fw-bold">{{ r.profesor.apellidos }}, {{ r.profesor.nombres }}</div>
                     {% if r.estado_detalle %}
@@ -376,18 +959,31 @@
                         <div class="locked">
                           <div>
                             <div class="hint"><i class="bi bi-lock-fill"></i> Justificación ya registrada</div>
-                            <small>
-                              Tipo: <strong>{{ r.justificacion.tipo_label }}</strong>
-                              {% if r.justificacion.detalle %} • {{ r.justificacion.detalle }}{% endif %}
+                            <small class="d-flex align-items-center gap-2 flex-wrap">
+                              <span>Tipo:</span>
+
+                              {% if r.justificacion.tipo == "DM" %}
+                                <span class="type-pill tp-DM"><i class="bi bi-heart-pulse-fill"></i> {{ r.justificacion.tipo_label }}</span>
+                              {% elif r.justificacion.tipo == "C" %}
+                                <span class="type-pill tp-C"><i class="bi bi-briefcase-fill"></i> {{ r.justificacion.tipo_label }}</span>
+                              {% elif r.justificacion.tipo == "P" %}
+                                <span class="type-pill tp-P"><i class="bi bi-calendar2-check-fill"></i> {{ r.justificacion.tipo_label }}</span>
+                              {% else %}
+                                <span class="type-pill tp-O"><i class="bi bi-stars"></i> {{ r.justificacion.tipo_label }}</span>
+                              {% endif %}
+
+                              {% if r.justificacion.detalle %}<span>• {{ r.justificacion.detalle }}</span>{% endif %}
                             </small>
                           </div>
 
                           <div class="d-flex gap-2 flex-wrap">
                             {% if r.justificacion.archivo_url %}
-                              <a class="btn btn-outline-primary btn-just" target="_blank"
-                                 href="{{ r.justificacion.archivo_url }}">
+                              <button type="button"
+                                      class="btn btn-outline-primary btn-just js-open-pdf"
+                                      data-pdf-url="{{ r.justificacion.archivo_url }}"
+                                      data-pdf-title="Sustento PDF - {{ r.profesor.apellidos }}, {{ r.profesor.nombres }}">
                                 <i class="bi bi-file-earmark-pdf"></i> Ver PDF
-                              </a>
+                              </button>
                             {% else %}
                               <button class="btn btn-outline-secondary btn-just" type="button" disabled title="No se adjuntó PDF">
                                 <i class="bi bi-file-earmark-pdf"></i> Ver PDF (no adjunto)
@@ -401,7 +997,10 @@
                         </div>
 
                       {% else %}
-                        <form method="post" action="{% url 'set_justificacion' %}" enctype="multipart/form-data">
+                        <form method="post"
+                              action="{% url 'set_justificacion' %}"
+                              enctype="multipart/form-data"
+                              class="js-just-form">
                           {% csrf_token %}
                           <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
                           <input type="hidden" name="profesor_id" value="{{ r.profesor.id }}">
@@ -410,18 +1009,32 @@
                           <div class="action-grid">
                             <div>
                               <label class="form-label mb-1">Tipo</label>
-                              <select name="tipo" class="form-select form-select-sm" required>
-                                <option value="DM">Descanso médico (DM)</option>
+                              <select name="tipo" class="form-select form-select-sm js-tipo-select" required>
+                                <option value="DM" selected>Descanso médico (DM)</option>
                                 <option value="C">Comisión / Encargo (C)</option>
                                 <option value="P">Permiso (P)</option>
                                 <option value="O">Otro (O)</option>
                               </select>
+                              <div class="mt-2">
+                                <span class="type-pill tp-DM js-tipo-pill">
+                                  <i class="bi bi-heart-pulse-fill"></i>
+                                  <span class="js-tipo-pill-text">Descanso médico</span>
+                                </span>
+                              </div>
                             </div>
 
                             <div>
                               <label class="form-label mb-1">Detalle</label>
-                              <input name="detalle" class="form-control form-control-sm"
+                              <input name="detalle"
+                                     class="form-control form-control-sm js-detalle-input"
+                                     maxlength="220"
                                      placeholder="Ej: Comisión Académica 2026-1 / Por dolor fuerte de cabeza">
+                              <div class="detail-tools">
+                                <div class="file-help m-0">
+                                  <i class="bi bi-pencil-square"></i> Describe brevemente el sustento
+                                </div>
+                                <div class="char-counter js-char-counter">0 / 220</div>
+                              </div>
                             </div>
 
                             <div class="ag-btn">
@@ -434,10 +1047,14 @@
                           <div class="action-grid-2">
                             <div>
                               <label class="form-label mb-1">PDF (opcional)</label>
-                              <input type="file" name="archivo" accept="application/pdf" class="form-control form-control-sm">
+                              <input type="file"
+                                     name="archivo"
+                                     accept="application/pdf"
+                                     class="form-control form-control-sm js-pdf-input">
                               <div class="file-help">
                                 <span><i class="bi bi-info-circle"></i> Adjunta un sustento si aplica (máx. 10 MB).</span>
                               </div>
+                              <div class="file-status js-file-status" aria-live="polite"></div>
                             </div>
                           </div>
                         </form>
@@ -448,12 +1065,19 @@
                 </tr>
 
               {% empty %}
-                <tr>
+                <tr id="emptyServerRow">
                   <td colspan="3" class="text-center text-muted p-4">
                     No hay profesores con ese filtro.
                   </td>
                 </tr>
               {% endfor %}
+
+              <!-- fila vacía para búsqueda en vivo -->
+              <tr id="liveNoResultsRow" style="display:none;">
+                <td colspan="3" class="text-center text-muted p-4">
+                  <i class="bi bi-search"></i> No se encontraron coincidencias en la búsqueda en vivo.
+                </td>
+              </tr>
             </tbody>
 
           </table>
@@ -463,14 +1087,580 @@
     </div>
   </div>
 
+  <!-- Confirmación elegante -->
+  <div id="confirmOverlay" class="confirm-overlay" aria-hidden="true">
+    <div class="confirm-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="confirm-head">
+        <div class="confirm-icon"><i class="bi bi-shield-check"></i></div>
+        <div>
+          <h3 id="confirmTitle" class="confirm-title">¿Registrar justificación?</h3>
+          <p class="confirm-sub">Revisa los datos antes de guardar</p>
+        </div>
+      </div>
+
+      <div class="confirm-body">
+        <ul class="confirm-list" id="confirmList">
+          <li>Tipo: —</li>
+          <li>Detalle: —</li>
+          <li>PDF: —</li>
+        </ul>
+      </div>
+
+      <div class="confirm-actions">
+        <button type="button" class="btn-confirm btn-confirm-cancel" id="confirmCancelBtn">
+          <i class="bi bi-x-lg"></i> Cancelar
+        </button>
+        <button type="button" class="btn-confirm btn-confirm-ok" id="confirmOkBtn">
+          <i class="bi bi-check2-circle"></i> Sí, guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal preview PDF -->
+  <div class="modal fade pdf-modal" id="pdfPreviewModal" tabindex="-1" aria-labelledby="pdfPreviewLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="pdfPreviewLabel"><i class="bi bi-file-earmark-pdf"></i> Vista previa PDF</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="pdf-frame-wrap">
+          <iframe id="pdfPreviewFrame" class="pdf-frame" src="" title="Vista previa PDF"></iframe>
+          <div id="pdfFallback" class="pdf-fallback" style="display:none;">
+            <div style="font-size:44px; opacity:.9;"><i class="bi bi-file-earmark-pdf-fill"></i></div>
+            <div>
+              <div style="font-weight:950;">No se pudo previsualizar el PDF en este navegador</div>
+              <div style="opacity:.85; margin-top:6px;">Puedes abrirlo en una pestaña nueva.</div>
+            </div>
+            <a id="pdfOpenNewTab" class="btn btn-danger btn-sm" target="_blank" rel="noopener">
+              <i class="bi bi-box-arrow-up-right"></i> Abrir PDF
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS (necesario para modal) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
-    const wrap = document.getElementById("toastWrap");
-    if (wrap) {
-      setTimeout(() => {
-        [...wrap.children].forEach((t) => t.classList.add("toastx-hide"));
-        setTimeout(() => wrap.remove(), 350);
-      }, 4000);
-    }
+    // ===== Toast autoclose =====
+    (function(){
+      const wrap = document.getElementById("toastWrap");
+      if (wrap) {
+        setTimeout(() => {
+          [...wrap.children].forEach((t) => t.classList.add("toastx-hide"));
+          setTimeout(() => wrap.remove(), 350);
+        }, 4000);
+      }
+    })();
+
+    // ===== Modal Preview PDF =====
+    (function(){
+      const modalEl = document.getElementById('pdfPreviewModal');
+      const frame = document.getElementById('pdfPreviewFrame');
+      const title = document.getElementById('pdfPreviewLabel');
+      const fallback = document.getElementById('pdfFallback');
+      const openNewTab = document.getElementById('pdfOpenNewTab');
+      if (!modalEl || !frame) return;
+
+      const modal = new bootstrap.Modal(modalEl);
+
+      function openPdfPreview(url, ttl){
+        frame.style.display = '';
+        fallback.style.display = 'none';
+        frame.src = url;
+        title.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> ' + (ttl || 'Vista previa PDF');
+        openNewTab.href = url;
+        modal.show();
+
+        // fallback básico si iframe falla (algunos navegadores bloquean)
+        const failTimer = setTimeout(() => {
+          // Si sigue vacío o navegador no renderiza
+          // mostramos fallback sin romper experiencia
+          try {
+            if (!frame.contentWindow || frame.contentWindow.location.href === 'about:blank') {
+              frame.style.display = 'none';
+              fallback.style.display = 'grid';
+            }
+          } catch (e) {
+            // cross-origin al cargar PDF, eso es normal; no marcamos como error
+          }
+        }, 1400);
+
+        modalEl.addEventListener('hidden.bs.modal', () => {
+          clearTimeout(failTimer);
+          frame.src = '';
+        }, { once: true });
+      }
+
+      document.addEventListener('click', function(e){
+        const btn = e.target.closest('.js-open-pdf');
+        if (!btn) return;
+        e.preventDefault();
+        openPdfPreview(btn.dataset.pdfUrl, btn.dataset.pdfTitle);
+      });
+    })();
+
+    // ===== Búsqueda en vivo (sin recargar) =====
+    (function(){
+      const input = document.getElementById('liveSearchInput');
+      const rows = Array.from(document.querySelectorAll('#justTableBody .just-row'));
+      const noResults = document.getElementById('liveNoResultsRow');
+      const serverEmpty = document.getElementById('emptyServerRow');
+      const status = document.getElementById('liveSearchStatus');
+
+      if (!input || !rows.length) return;
+
+      function normalize(s){
+        return (s || '')
+          .toString()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .trim();
+      }
+
+      function filterRows(){
+        const q = normalize(input.value);
+        let visible = 0;
+
+        rows.forEach((tr) => {
+          const hay = normalize(tr.dataset.search);
+          const show = !q || hay.includes(q);
+          tr.classList.toggle('row-hidden-live', !show);
+          if (show) visible++;
+        });
+
+        if (noResults) noResults.style.display = (visible === 0 ? '' : 'none');
+        if (serverEmpty) serverEmpty.style.display = 'none';
+
+        if (status) {
+          status.innerHTML = visible === rows.length
+            ? '<i class="bi bi-lightning-charge-fill"></i> Búsqueda en vivo activa'
+            : `<i class="bi bi-search"></i> Mostrando ${visible} de ${rows.length} docentes`;
+        }
+      }
+
+      input.addEventListener('input', filterRows, { passive:true });
+      filterRows();
+    })();
+
+    // ===== Color por tipo (DM/C/P/O) + label =====
+    (function(){
+      const MAP = {
+        DM: { cls:'tp-DM', text:'Descanso médico', icon:'bi-heart-pulse-fill' },
+        C:  { cls:'tp-C',  text:'Comisión / Encargo', icon:'bi-briefcase-fill' },
+        P:  { cls:'tp-P',  text:'Permiso', icon:'bi-calendar2-check-fill' },
+        O:  { cls:'tp-O',  text:'Otro', icon:'bi-stars' }
+      };
+
+      function syncTipo(form){
+        const select = form.querySelector('.js-tipo-select');
+        const pill = form.querySelector('.js-tipo-pill');
+        const textEl = form.querySelector('.js-tipo-pill-text');
+        if (!select || !pill || !textEl) return;
+
+        const cfg = MAP[select.value] || MAP.DM;
+        pill.className = 'type-pill js-tipo-pill ' + cfg.cls;
+        textEl.textContent = cfg.text;
+
+        let icon = pill.querySelector('i');
+        if (!icon) {
+          icon = document.createElement('i');
+          pill.prepend(icon);
+        }
+        icon.className = 'bi ' + cfg.icon;
+      }
+
+      document.querySelectorAll('.js-just-form').forEach(form => {
+        const select = form.querySelector('.js-tipo-select');
+        if (!select) return;
+        syncTipo(form);
+        select.addEventListener('change', () => syncTipo(form));
+      });
+    })();
+
+    // ===== Contador de caracteres =====
+    (function(){
+      document.querySelectorAll('.js-just-form').forEach(form => {
+        const input = form.querySelector('.js-detalle-input');
+        const counter = form.querySelector('.js-char-counter');
+        if (!input || !counter) return;
+
+        const max = Number(input.getAttribute('maxlength') || 220);
+
+        function paint(){
+          const n = (input.value || '').length;
+          counter.textContent = `${n} / ${max}`;
+          counter.classList.remove('warn', 'danger');
+          if (n >= Math.floor(max * 0.8) && n < max) counter.classList.add('warn');
+          if (n >= max) counter.classList.add('danger');
+        }
+
+        input.addEventListener('input', paint, { passive:true });
+        paint();
+      });
+    })();
+
+    // ===== Validación visual PDF (frontend) =====
+    (function(){
+      const MAX_MB = 10;
+      const MAX_BYTES = MAX_MB * 1024 * 1024;
+
+      function fmtBytes(bytes){
+        if (!bytes && bytes !== 0) return '0 B';
+        const units = ['B','KB','MB','GB'];
+        let i = 0;
+        let n = bytes;
+        while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+        return `${n.toFixed(i === 0 ? 0 : 2)} ${units[i]}`;
+      }
+
+      function setStatus(el, type, html){
+        if (!el) return;
+        el.className = `file-status js-file-status show ${type}`;
+        el.innerHTML = html;
+      }
+
+      document.querySelectorAll('.js-just-form').forEach(form => {
+        const input = form.querySelector('.js-pdf-input');
+        const status = form.querySelector('.js-file-status');
+        if (!input || !status) return;
+
+        input.addEventListener('change', () => {
+          status.className = 'file-status js-file-status';
+          status.innerHTML = '';
+
+          const f = input.files && input.files[0];
+          if (!f) {
+            setStatus(status, 'info', `<i class="bi bi-paperclip"></i> No se adjuntó archivo. (Opcional)`);
+            return;
+          }
+
+          const name = f.name || 'archivo';
+          const isPdfMime = (f.type || '').toLowerCase() === 'application/pdf';
+          const isPdfExt = /\.pdf$/i.test(name);
+          const isPdf = isPdfMime || isPdfExt;
+          const sizeOk = f.size <= MAX_BYTES;
+
+          if (!isPdf) {
+            setStatus(status, 'err',
+              `<i class="bi bi-x-octagon-fill"></i> Archivo inválido: <strong>${name}</strong>. Solo se permite PDF.`);
+            input.value = '';
+            return;
+          }
+
+          if (!sizeOk) {
+            setStatus(status, 'err',
+              `<i class="bi bi-exclamation-triangle-fill"></i> <strong>${name}</strong> pesa ${fmtBytes(f.size)}. Máximo permitido: ${MAX_MB} MB.`);
+            input.value = '';
+            return;
+          }
+
+          setStatus(status, 'ok',
+            `<i class="bi bi-check-circle-fill"></i> PDF válido: <strong>${name}</strong> • ${fmtBytes(f.size)}`);
+        });
+      });
+    })();
+
+    // ===== Confirmación elegante antes de guardar =====
+    (function(){
+      const overlay = document.getElementById('confirmOverlay');
+      const cancelBtn = document.getElementById('confirmCancelBtn');
+      const okBtn = document.getElementById('confirmOkBtn');
+      const list = document.getElementById('confirmList');
+
+      if (!overlay || !cancelBtn || !okBtn || !list) return;
+
+      let pendingForm = null;
+
+      function getTipoText(v){
+        return {
+          DM: 'Descanso médico (DM)',
+          C: 'Comisión / Encargo (C)',
+          P: 'Permiso (P)',
+          O: 'Otro (O)'
+        }[v] || v || '—';
+      }
+
+      function openConfirm(form){
+        const tipo = form.querySelector('[name="tipo"]')?.value || '';
+        const detalle = (form.querySelector('[name="detalle"]')?.value || '').trim();
+        const archivo = form.querySelector('[name="archivo"]')?.files?.[0];
+
+        list.innerHTML = `
+          <li><strong>Tipo:</strong> ${getTipoText(tipo)}</li>
+          <li><strong>Detalle:</strong> ${detalle ? detalle.replace(/</g,'&lt;').replace(/>/g,'&gt;') : 'Sin detalle'}</li>
+          <li><strong>PDF:</strong> ${archivo ? `${archivo.name} (${(archivo.size / (1024*1024)).toFixed(2)} MB)` : 'No adjuntado'}</li>
+        `;
+
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+        pendingForm = form;
+      }
+
+      function closeConfirm(){
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+        pendingForm = null;
+      }
+
+      document.querySelectorAll('.js-just-form').forEach(form => {
+        form.addEventListener('submit', function(e){
+          // Evita doble submit si ya confirmaron
+          if (form.dataset.confirmed === '1') {
+            form.dataset.confirmed = '0';
+            return;
+          }
+
+          // Valida PDF frontend antes de confirmar (por si el usuario forzó algo)
+          const fileInput = form.querySelector('.js-pdf-input');
+          const f = fileInput?.files?.[0];
+          if (f) {
+            const isPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '');
+            const maxBytes = 10 * 1024 * 1024;
+            if (!isPdf || f.size > maxBytes) {
+              e.preventDefault();
+              return;
+            }
+          }
+
+          e.preventDefault();
+          openConfirm(form);
+        });
+      });
+
+      cancelBtn.addEventListener('click', closeConfirm);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeConfirm();
+      });
+
+      okBtn.addEventListener('click', () => {
+        if (!pendingForm) return;
+        pendingForm.dataset.confirmed = '1';
+        overlay.classList.remove('show');
+        pendingForm.submit();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('show')) closeConfirm();
+      });
+    })();
+
+    // ===== Partículas rojas premium con reacción al mouse =====
+    (function () {
+      const canvas = document.getElementById('particles');
+      if (!canvas) return;
+
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced) return;
+
+      const ctx = canvas.getContext('2d', { alpha: true });
+      let w = 0, h = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+      let particles = [];
+      let running = true;
+
+      const mouse = {
+        x: null, y: null,
+        radius: 120,
+        force: 0.16
+      };
+
+      function rnd(min, max) { return Math.random() * (max - min) + min; }
+
+      function createParticle() {
+        const layer = Math.random();
+        return {
+          x: rnd(0, w),
+          y: rnd(0, h),
+          r: layer < 0.65 ? rnd(0.8, 2.2) : rnd(2.2, 4.2),
+          vx: rnd(-0.18, 0.18),
+          vy: rnd(-0.55, -0.10),
+          tw: rnd(0, Math.PI * 2),
+          tws: rnd(0.012, 0.03),
+          alpha: layer < 0.7 ? rnd(0.25, 0.75) : rnd(0.35, 0.95),
+          hue: Math.random() < 0.82 ? rnd(0, 12) : rnd(345, 360),
+          glow: layer > 0.55,
+          ox: 0, oy: 0
+        };
+      }
+
+      function resize() {
+        w = window.innerWidth;
+        h = window.innerHeight;
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const count = Math.max(38, Math.min(92, Math.floor((w * h) / 23000)));
+        particles = Array.from({ length: count }, createParticle);
+      }
+
+      function drawParticle(p) {
+        const a = Math.max(0.05, Math.min(1, p.alpha + Math.sin(p.tw) * 0.12));
+        const core = `hsla(${p.hue}, 95%, 62%, ${a})`;
+        const soft = `hsla(${p.hue}, 95%, 55%, ${a * 0.18})`;
+
+        if (p.glow) {
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 6.3);
+          g.addColorStop(0, soft);
+          g.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * 6.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawLinks() {
+        const maxDist = 110;
+        for (let i = 0; i < particles.length; i++) {
+          const a = particles[i];
+          for (let j = i + 1; j < particles.length; j++) {
+            const b = particles[j];
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < maxDist) {
+              const alpha = (1 - dist / maxDist) * 0.11;
+              ctx.strokeStyle = `rgba(248, 113, 113, ${alpha})`;
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        // vínculo con mouse (halo reactivo)
+        if (mouse.x != null && mouse.y != null) {
+          for (const p of particles) {
+            const dx = p.x - mouse.x;
+            const dy = p.y - mouse.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < mouse.radius) {
+              const alpha = (1 - dist / mouse.radius) * 0.22;
+              ctx.strokeStyle = `rgba(239,68,68,${alpha})`;
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(mouse.x, mouse.y);
+              ctx.stroke();
+            }
+          }
+
+          // halo mouse
+          const halo = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, mouse.radius * 0.9);
+          halo.addColorStop(0, 'rgba(239,68,68,0.09)');
+          halo.addColorStop(1, 'rgba(239,68,68,0)');
+          ctx.fillStyle = halo;
+          ctx.beginPath();
+          ctx.arc(mouse.x, mouse.y, mouse.radius * 0.9, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function step() {
+        if (!running) return;
+        ctx.clearRect(0, 0, w, h);
+
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, 'rgba(239,68,68,0.015)');
+        g.addColorStop(0.5, 'rgba(124,58,237,0.008)');
+        g.addColorStop(1, 'rgba(239,68,68,0.018)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+
+        for (const p of particles) {
+          // reacción al mouse (repulsión suave)
+          if (mouse.x != null && mouse.y != null) {
+            const dx = p.x - mouse.x;
+            const dy = p.y - mouse.y;
+            const dist = Math.hypot(dx, dy) || 0.001;
+            if (dist < mouse.radius) {
+              const power = (1 - dist / mouse.radius) * mouse.force;
+              p.vx += (dx / dist) * power;
+              p.vy += (dy / dist) * power;
+            }
+          }
+
+          p.x += p.vx;
+          p.y += p.vy;
+          p.tw += p.tws;
+
+          p.x += Math.sin(p.tw * 0.7) * 0.05;
+
+          // amortiguación
+          p.vx *= 0.992;
+          p.vy *= 0.992;
+
+          // velocidad base (subida)
+          p.vy += -0.0015;
+
+          // limitar velocidad
+          p.vx = Math.max(-0.65, Math.min(0.65, p.vx));
+          p.vy = Math.max(-0.9, Math.min(0.35, p.vy));
+
+          if (p.y < -12) {
+            p.y = h + 12;
+            p.x = rnd(0, w);
+            p.vx = rnd(-0.18, 0.18);
+            p.vy = rnd(-0.55, -0.10);
+          }
+          if (p.x < -15) p.x = w + 15;
+          if (p.x > w + 15) p.x = -15;
+
+          drawParticle(p);
+        }
+
+        drawLinks();
+        requestAnimationFrame(step);
+      }
+
+      resize();
+      step();
+
+      let rAF;
+      window.addEventListener('resize', () => {
+        cancelAnimationFrame(rAF);
+        rAF = requestAnimationFrame(resize);
+      }, { passive: true });
+
+      window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        mouse.x = t.clientX;
+        mouse.y = t.clientY;
+      }, { passive: true });
+
+      window.addEventListener('mouseleave', () => {
+        mouse.x = null;
+        mouse.y = null;
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        running = !document.hidden;
+        if (running) step();
+      });
+    })();
   </script>
 
 </body>

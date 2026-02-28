@@ -150,12 +150,12 @@ class JustificacionAsistencia(models.Model):
 
     # ✅ PDF de sustento (descanso médico, permiso, etc.)
     archivo = models.FileField(
-        "Archivo (PDF)",
-        upload_to="justificaciones/%Y/%m/",
-        null=True,
-        blank=True
-    )
-
+    "Archivo (PDF)",
+    upload_to="justificaciones/%Y/%m/",
+    null=True,
+    blank=True,
+    max_length=500,   # ✅ importante
+)
     creado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True, blank=True,

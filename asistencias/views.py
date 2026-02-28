@@ -50,7 +50,18 @@ logger = logging.getLogger(__name__)
 # HELPERS DE ROLES (GRUPOS) ✅ FINAL
 # - Permite superuser siempre
 # - _in_any_group permite acceso si está en cualquiera de los grupos
-# =========================================================
+# =============================
+# 
+
+# Cloudinary (si está instalado/configurado)
+try:
+    import cloudinary.uploader
+    CLOUDINARY_AVAILABLE = True
+except Exception:
+    CLOUDINARY_AVAILABLE = False
+
+
+
 def _in_group(group_name: str):
     def check(user):
         return (
@@ -1127,6 +1138,11 @@ def panel_justificaciones(request):
 @require_POST
 @user_passes_test(_in_group("JUSTIFICACIONES"), login_url="login")
 def set_justificacion(request):
+    # ✅ (Opcional recomendado) proteger por método POST
+    if request.method != "POST":
+        messages.error(request, "Método no permitido.")
+        return redirect("/asistencia/justificaciones/")
+
     accion = (request.POST.get("accion") or "").strip().lower()
     profesor_id = (request.POST.get("profesor_id") or "").strip()
     fecha_str = (request.POST.get("fecha") or "").strip()
@@ -1155,42 +1171,136 @@ def set_justificacion(request):
     ip = _get_client_ip(request)
     ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
 
+    # ✅ Si ya registró asistencia de entrada, no permitir justificar
     if Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="E").exists():
         messages.warning(request, "🛑 Ya tiene ASISTENCIA ese día. No se registró justificación.")
         return redirect(redirect_url)
 
+    # ✅ Si ya existe justificación para ese día/profesor
     if JustificacionAsistencia.objects.filter(profesor=profesor, fecha=fecha).exists():
         messages.warning(request, "✅ Este docente ya fue justificado en esta fecha. (Solo se puede editar en el Admin).")
         return redirect(redirect_url)
 
+    # =========================
+    # ✅ VALIDACIÓN PDF (frontend + backend)
+    # =========================
     if archivo:
-        nombre = (archivo.name or "").lower()
+        nombre_original = (archivo.name or "").strip()
+        nombre_lower = nombre_original.lower()
         ctype = (getattr(archivo, "content_type", "") or "").lower()
+        size = getattr(archivo, "size", 0) or 0
 
-        if not nombre.endswith(".pdf"):
+        if not nombre_lower.endswith(".pdf"):
             messages.error(request, "El archivo debe terminar en .pdf")
             return redirect(redirect_url)
 
+        # OJO: algunos navegadores mandan content_type vacío o raro, por eso no lo hago súper estricto si viene vacío
         if ctype and ctype != "application/pdf":
-            messages.error(request, "El archivo debe ser application/pdf")
+            messages.error(request, f"El archivo debe ser PDF (content_type recibido: {ctype}).")
             return redirect(redirect_url)
 
-        if getattr(archivo, "size", 0) > 10 * 1024 * 1024:
+        if size > 10 * 1024 * 1024:
             messages.error(request, "El PDF es muy pesado (máx. 10 MB).")
             return redirect(redirect_url)
 
     try:
         with transaction.atomic():
-            JustificacionAsistencia.objects.create(
-                profesor=profesor,
-                fecha=fecha,
-                tipo=tipo_ok,
-                detalle=detalle,
-                archivo=archivo,
-                creado_por=request.user,
-                actualizado_por=request.user,
-            )
+            # ======================================
+            # ✅ PREPARAR DATOS DE JUSTIFICACIÓN
+            # ======================================
+            just_kwargs = {
+                "profesor": profesor,
+                "fecha": fecha,
+                "tipo": tipo_ok,
+                "detalle": detalle,
+                "creado_por": request.user,
+                "actualizado_por": request.user,
+            }
 
+            # ======================================
+            # ✅ SUBIDA DE ARCHIVO (Cloudinary preferido)
+            # ======================================
+            # Si Cloudinary está disponible y configurado, subimos allá para que TODOS puedan verlo.
+            # Si falla, hacemos fallback a FileField local (archivo=archivo).
+            if archivo:
+                archivo_url_cloud = None
+                cloudinary_error = None
+
+                # Carpeta amigable por fecha
+                folder = f"justificaciones/{fecha.year}/{fecha.month:02d}"
+
+                if CLOUDINARY_AVAILABLE:
+                    try:
+                        # IMPORTANTE: PDFs => resource_type="raw"
+                        upload_res = cloudinary.uploader.upload(
+                            archivo,
+                            resource_type="raw",
+                            folder=folder,
+                            use_filename=True,
+                            unique_filename=True,
+                            overwrite=False,
+                        )
+                        archivo_url_cloud = upload_res.get("secure_url") or upload_res.get("url")
+
+                        # Si tienes campo archivo_url en el modelo, lo guardamos
+                        model_field_names = {f.name for f in JustificacionAsistencia._meta.get_fields()}
+                        if "archivo_url" in model_field_names and archivo_url_cloud:
+                            just_kwargs["archivo_url"] = archivo_url_cloud
+
+                        # ✅ Guardamos también una copia local en FileField si tu modelo lo requiere
+                        # (opcional, pero útil para compatibilidad con código existente que usa .archivo)
+                        # OJO: como el archivo ya fue leído por Cloudinary, reseteamos puntero si se puede.
+                        try:
+                            archivo.seek(0)
+                        except Exception:
+                            pass
+
+                        just_kwargs["archivo"] = archivo
+
+                    except Exception as ex:
+                        # Fallback local si Cloudinary falla
+                        cloudinary_error = str(ex)[:220]
+                        try:
+                            archivo.seek(0)
+                        except Exception:
+                            pass
+                        just_kwargs["archivo"] = archivo
+                else:
+                    # Sin Cloudinary instalado: guardado local normal
+                    just_kwargs["archivo"] = archivo
+
+                # (Opcional) puedes notificar si Cloudinary falló pero guardó local
+                if cloudinary_error:
+                    messages.warning(
+                        request,
+                        f"⚠️ PDF guardado en almacenamiento local (Cloudinary falló): {cloudinary_error}"
+                    )
+
+            # ======================================
+            # ✅ CREAR JUSTIFICACIÓN
+            # ======================================
+            just = JustificacionAsistencia.objects.create(**just_kwargs)
+
+            # ======================================
+            # ✅ (Compatibilidad extra) Si NO existe archivo_url en DB pero quieres exponer URL
+            #    y tu modelo SÍ tiene archivo_url, lo llenamos desde archivo.url cuando sea local
+            # ======================================
+            try:
+                model_field_names = {f.name for f in JustificacionAsistencia._meta.get_fields()}
+                if "archivo_url" in model_field_names:
+                    if not getattr(just, "archivo_url", None):
+                        if getattr(just, "archivo", None):
+                            try:
+                                just.archivo_url = just.archivo.url  # local media URL
+                                just.save(update_fields=["archivo_url", "actualizado_por"])
+                            except Exception:
+                                pass
+            except Exception:
+                pass
+
+            # ======================================
+            # ✅ CREAR / ACTUALIZAR ASISTENCIA tipo J
+            # ======================================
             Asistencia.objects.update_or_create(
                 profesor=profesor,
                 fecha=fecha,
@@ -1213,5 +1323,5 @@ def set_justificacion(request):
         return redirect(redirect_url)
 
     except Exception as e:
-        messages.error(request, f"Error guardando justificación/PDF: {type(e).__name__} - {str(e)[:200]}")
+        messages.error(request, f"Error guardando justificación/PDF: {type(e).__name__} - {str(e)[:250]}")
         return redirect(redirect_url)
