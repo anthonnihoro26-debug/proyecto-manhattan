@@ -8,8 +8,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.staticfiles import finders
-from django.templatetags.static import static  # ✅ NUEVO
-
+from django.templatetags.static import static
 
 from asistencias.models import Profesor, Asistencia
 
@@ -29,7 +28,7 @@ class Command(BaseCommand):
         return now, lunes, viernes_fin
 
     # =========================
-    # ✅ Logo desde static (base64)
+    # Logo desde static (base64) - fallback
     # =========================
     def _logo_data_uri(self) -> str:
         """
@@ -51,7 +50,8 @@ class Command(BaseCommand):
             return ""
 
     # =========================
-    # ✅ NUEVO: Logo por URL público (Gmail-friendly)
+    # Logo por URL público (Gmail-friendly)
+    # Requiere settings.PUBLIC_BASE_URL
     # =========================
     def _logo_public_url(self) -> str:
         """
@@ -62,32 +62,59 @@ class Command(BaseCommand):
         if not base:
             return ""
 
-        # Tu logo está en asistencias/static/asistencias/img/uni_logo.png
         rel = static("asistencias/img/uni_logo.png")  # -> /static/asistencias/img/uni_logo.png
         return f"{base}{rel}"
 
     def _tipo_label(self, a: Asistencia) -> str:
         """
-        ✅ Solo para el reporte. Aquí:
+        Solo para el reporte:
         - E => ENTRADA
         - J => JUSTIFICACIÓN (con motivo + detalle si hay)
         - S => (se ignora, no debería entrar)
         """
-        if a.tipo == "E":
+        tipo = (a.tipo or "").strip().upper()
+
+        if tipo == "E":
             return "ENTRADA"
 
-        if a.tipo == "J":
+        if tipo == "J":
             try:
                 motivo = a.get_motivo_display()
             except Exception:
-                motivo = (a.motivo or "").strip() or "Sin motivo"
+                motivo = (getattr(a, "motivo", "") or "").strip() or "Sin motivo"
 
-            detalle = (a.detalle or "").strip()
+            detalle = (getattr(a, "detalle", "") or "").strip()
             if detalle:
                 return f"JUSTIFICACIÓN ({motivo}) - {detalle}"
             return f"JUSTIFICACIÓN ({motivo})"
 
-        return str(a.tipo or "").strip() or "REGISTRO"
+        return tipo or "REGISTRO"
+
+    def _tipo_badge_html(self, a: Asistencia) -> str:
+        """
+        Badge visual para el HTML del reporte.
+        """
+        tipo = (a.tipo or "").strip().upper()
+
+        if tipo == "E":
+            return (
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;'
+                'font-size:12px;font-weight:700;">ENTRADA</span>'
+            )
+
+        if tipo == "J":
+            return (
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;'
+                'font-size:12px;font-weight:700;">JUSTIFICACIÓN</span>'
+            )
+
+        return (
+            '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+            'background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;'
+            'font-size:12px;font-weight:700;">REGISTRO</span>'
+        )
 
     def _brevo_send_email(self, to_email: str, subject: str, body_text: str, body_html: str):
         api_key = (getattr(settings, "BREVO_API_KEY", "") or "").strip()
@@ -139,10 +166,10 @@ class Command(BaseCommand):
         saltados_sin_email = 0
         saltados_sin_registros = 0
 
-        # ✅ logo embebido (fallback)
+        # Logo embebido (fallback)
         logo_uri = self._logo_data_uri()
 
-        # ✅ NUEVO: logo por URL público (recomendado)
+        # Logo por URL público (recomendado para Gmail)
         logo_url = self._logo_public_url()
 
         for prof in profesores:
@@ -161,7 +188,7 @@ class Command(BaseCommand):
                     profesor=prof,
                     fecha_hora__gte=desde,
                     fecha_hora__lte=hasta,
-                    tipo__in=["E", "J"],   # 🚫 ignora S
+                    tipo__in=["E", "J"],   # envía a quienes tienen ENTRADA o JUSTIFICACIÓN
                 )
                 .order_by("-fecha_hora")
             )
@@ -175,19 +202,25 @@ class Command(BaseCommand):
             entradas = qs.filter(tipo="E").count()
             justificaciones = qs.filter(tipo="J").count()
 
-            nombre = getattr(prof, "nombre_completo", None) or f"{(prof.apellidos or '').strip()} {(prof.nombres or '').strip()}".strip()
+            nombre = (
+                getattr(prof, "nombre_completo", None)
+                or f"{(getattr(prof, 'apellidos', '') or '').strip()} {(getattr(prof, 'nombres', '') or '').strip()}".strip()
+            )
             nombre = nombre or "Profesor(a)"
 
-            subject = f"Reporte de Asistencia (Lun–Vie) | {desde:%d/%m} al {hasta:%d/%m/%Y}"
+            subject = (
+                f"Proyecto Manhattan | Reporte de Asistencia Docente | "
+                f"{desde:%d/%m/%Y} al {hasta:%d/%m/%Y}"
+            )
 
             # =========================
-            # ✅ TEXTO (fallback)
+            # TEXTO (fallback)
             # =========================
             body_lines = [
                 f"Hola {nombre},",
                 "",
-                "Reporte de asistencia (Lunes a Viernes)",
-                f"Rango: {desde:%d/%m/%Y %H:%M}  a  {hasta:%d/%m/%Y %H:%M}",
+                "Reporte de asistencia docente (Lunes a Viernes)",
+                f"Rango: {desde:%d/%m/%Y %H:%M} a {hasta:%d/%m/%Y %H:%M}",
                 "",
                 f"Total de registros: {total}",
                 f"Entradas: {entradas}",
@@ -204,118 +237,157 @@ class Command(BaseCommand):
                 hora = dt.strftime("%H:%M")
 
                 label = self._tipo_label(a)
+                badge_html = self._tipo_badge_html(a)
+
                 body_lines.append(f"{fecha} {hora} | {label}")
 
                 rows_for_html.append(
                     f"""
                     <tr>
-                      <td style="padding:10px 12px;border-bottom:1px solid #eaeaea;">{html.escape(fecha)}</td>
-                      <td style="padding:10px 12px;border-bottom:1px solid #eaeaea;">{html.escape(hora)}</td>
-                      <td style="padding:10px 12px;border-bottom:1px solid #eaeaea;font-weight:700;">{html.escape(label)}</td>
+                      <td style="padding:11px 12px;border-bottom:1px solid #eef2f7;color:#111827;">{html.escape(fecha)}</td>
+                      <td style="padding:11px 12px;border-bottom:1px solid #eef2f7;color:#111827;">{html.escape(hora)}</td>
+                      <td style="padding:11px 12px;border-bottom:1px solid #eef2f7;">{badge_html}</td>
+                      <td style="padding:11px 12px;border-bottom:1px solid #eef2f7;color:#374151;">
+                        {html.escape(label)}
+                      </td>
                     </tr>
                     """.strip()
                 )
 
-            body_lines += ["", "Saludos.", "Proyecto Manhattan"]
+            body_lines += [
+                "",
+                "Este correo fue generado automáticamente por Proyecto Manhattan.",
+                "Si identifica alguna inconsistencia, comuníquese con el administrador del sistema.",
+                "",
+                "Saludos cordiales,",
+                "Proyecto Manhattan",
+            ]
             body_text = "\n".join(body_lines)
 
             # =========================
-            # ✅ HTML (profesional + logo)
+            # HTML (profesional + logo)
             # =========================
             nombre_html = html.escape(nombre)
             rango_html = html.escape(f"{desde:%d/%m/%Y %H:%M} a {hasta:%d/%m/%Y %H:%M}")
 
-            mostrar_just_linea = False
-
-            just_html_line = ""
-            if mostrar_just_linea or justificaciones > 0:
-                just_html_line = f"""
-                  <div style="flex:1;background:#f6f7fb;border:1px solid #ececf3;border-radius:14px;padding:14px;min-width:180px;">
-                    <div style="font-size:12px;color:#6b7280;">Justificaciones</div>
-                    <div style="font-size:22px;font-weight:900;color:#111827;line-height:1.1;">{justificaciones}</div>
-                  </div>
-                """.strip()
-
-            # ✅ NO borro tu base64: solo priorizo URL público si existe
+            # Prioriza URL público; fallback base64
             img_src = (logo_url or "").strip() or (logo_uri or "").strip()
 
-            logo_html = ""
             if img_src:
                 logo_html = f"""
-                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-                    <img src="{html.escape(img_src)}" alt="UNI"
-                         style="height:52px;width:52px;object-fit:contain;border-radius:12px;background:#ffffff;padding:6px;border:1px solid rgba(255,255,255,.35);" />
+                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+                    <div style="height:56px;width:56px;border-radius:14px;background:rgba(255,255,255,.15);padding:6px;border:1px solid rgba(255,255,255,.35);box-sizing:border-box;">
+                      <img src="{html.escape(img_src)}" alt="UNI"
+                           style="height:100%;width:100%;object-fit:contain;display:block;" />
+                    </div>
                     <div>
-                      <div style="font-size:14px;opacity:.92;font-weight:900;">Universidad Nacional de Ingeniería</div>
-                      <div style="font-size:12px;opacity:.88;">Proyecto Manhattan • Control de Asistencia</div>
+                      <div style="font-size:14px;font-weight:900;opacity:.95;">Universidad Nacional de Ingeniería</div>
+                      <div style="font-size:12px;opacity:.9;">Proyecto Manhattan · Control de Asistencia Docente</div>
                     </div>
                   </div>
                 """.strip()
             else:
                 logo_html = """
-                  <div style="font-size:14px;opacity:.92;font-weight:900;">Proyecto Manhattan</div>
+                  <div style="font-size:14px;font-weight:900;opacity:.95;">
+                    Proyecto Manhattan · Control de Asistencia Docente
+                  </div>
                 """.strip()
 
             body_html = f"""
             <div style="margin:0;padding:0;background:#f3f4f6;">
-              <div style="max-width:740px;margin:0 auto;padding:26px 14px;font-family:Arial,Helvetica,sans-serif;">
-                <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;">
-                  <div style="padding:18px 20px;background:linear-gradient(135deg,#111827,#2563eb);color:#fff;">
+              <div style="max-width:760px;margin:0 auto;padding:28px 14px;font-family:Arial,Helvetica,sans-serif;">
+
+                <!-- Card principal -->
+                <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.05);">
+
+                  <!-- Header institucional -->
+                  <div style="padding:20px 22px;background:linear-gradient(135deg,#8b1118 0%, #b91c1c 55%, #111827 100%);color:#ffffff;">
                     {logo_html}
-                    <div style="font-size:22px;font-weight:900;margin-top:6px;">Reporte de Asistencia (Lun–Vie)</div>
-                    <div style="font-size:13px;opacity:.92;margin-top:6px;">Rango: {rango_html}</div>
+                    <div style="font-size:22px;font-weight:900;letter-spacing:.2px;margin-top:8px;">
+                      Reporte de Asistencia Docente
+                    </div>
+                    <div style="font-size:13px;opacity:.95;margin-top:6px;line-height:1.45;">
+                      Periodo evaluado: <b>{rango_html}</b>
+                    </div>
                   </div>
 
-                  <div style="padding:18px 20px;color:#111827;">
-                    <div style="font-size:15px;margin-bottom:14px;">
-                      Hola <b>{nombre_html}</b>,
-                      <div style="color:#6b7280;margin-top:6px;">
-                        A continuación se muestra el resumen de tus registros en el rango indicado.
-                      </div>
+                  <!-- Cuerpo -->
+                  <div style="padding:20px 22px;color:#111827;">
+
+                    <!-- Saludo -->
+                    <div style="font-size:15px;line-height:1.5;">
+                      Estimado(a) <b>{nombre_html}</b>:
+                    </div>
+                    <div style="font-size:14px;color:#6b7280;line-height:1.55;margin-top:8px;">
+                      A continuación, se presenta el resumen de sus registros de asistencia correspondientes al periodo indicado.
+                      Este reporte ha sido generado automáticamente por el sistema <b>Proyecto Manhattan</b>.
                     </div>
 
-                    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
-                      <div style="flex:1;background:#f6f7fb;border:1px solid #ececf3;border-radius:14px;padding:14px;min-width:180px;">
+                    <!-- KPI cards -->
+                    <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
+                      <div style="flex:1;min-width:180px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
                         <div style="font-size:12px;color:#6b7280;">Total de registros</div>
-                        <div style="font-size:22px;font-weight:900;color:#111827;line-height:1.1;">{total}</div>
+                        <div style="font-size:24px;font-weight:900;color:#111827;line-height:1.1;margin-top:4px;">{total}</div>
                       </div>
 
-                      <div style="flex:1;background:#f6f7fb;border:1px solid #ececf3;border-radius:14px;padding:14px;min-width:180px;">
-                        <div style="font-size:12px;color:#6b7280;">Entradas</div>
-                        <div style="font-size:22px;font-weight:900;color:#111827;line-height:1.1;">{entradas}</div>
+                      <div style="flex:1;min-width:180px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px;">
+                        <div style="font-size:12px;color:#065f46;">Entradas</div>
+                        <div style="font-size:24px;font-weight:900;color:#065f46;line-height:1.1;margin-top:4px;">{entradas}</div>
                       </div>
 
-                      {just_html_line}
+                      <div style="flex:1;min-width:180px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:14px;padding:14px;">
+                        <div style="font-size:12px;color:#5b21b6;">Justificaciones</div>
+                        <div style="font-size:24px;font-weight:900;color:#5b21b6;line-height:1.1;margin-top:4px;">{justificaciones}</div>
+                      </div>
                     </div>
 
-                    <div style="margin-top:6px;margin-bottom:10px;font-size:14px;font-weight:900;color:#111827;">
-                      Últimos {min(limite, total)} registros
+                    <!-- Bloque informativo -->
+                    <div style="margin-top:16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px 14px;">
+                      <div style="font-size:12px;font-weight:700;color:#9a3412;">Resumen informativo</div>
+                      <div style="font-size:12px;color:#9a3412;line-height:1.5;margin-top:4px;">
+                        Se muestran los <b>últimos {min(limite, total)} registros</b> del periodo seleccionado.
+                      </div>
                     </div>
 
-                    <div style="border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
-                      <table style="width:100%;border-collapse:collapse;font-size:14px;">
-                        <thead>
-                          <tr style="background:#f9fafb;color:#374151;text-align:left;">
-                            <th style="padding:10px 12px;border-bottom:1px solid #eaeaea;">Fecha</th>
-                            <th style="padding:10px 12px;border-bottom:1px solid #eaeaea;">Hora</th>
-                            <th style="padding:10px 12px;border-bottom:1px solid #eaeaea;">Registro</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {''.join(rows_for_html)}
-                        </tbody>
-                      </table>
+                    <!-- Tabla -->
+                    <div style="margin-top:18px;">
+                      <div style="font-size:14px;font-weight:800;color:#111827;margin-bottom:10px;">
+                        Detalle de registros
+                      </div>
+
+                      <div style="border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                          <thead>
+                            <tr style="background:#f9fafb;color:#374151;text-align:left;">
+                              <th style="padding:11px 12px;border-bottom:1px solid #e5e7eb;">Fecha</th>
+                              <th style="padding:11px 12px;border-bottom:1px solid #e5e7eb;">Hora</th>
+                              <th style="padding:11px 12px;border-bottom:1px solid #e5e7eb;">Tipo</th>
+                              <th style="padding:11px 12px;border-bottom:1px solid #e5e7eb;">Detalle</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {''.join(rows_for_html)}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
 
-                    <div style="margin-top:16px;color:#6b7280;font-size:12px;line-height:1.45;">
-                      Este correo fue generado automáticamente. Si encuentras algún dato incorrecto, comunícate con el administrador del sistema.
+                    <!-- Nota -->
+                    <div style="margin-top:16px;color:#6b7280;font-size:12px;line-height:1.5;">
+                      Si identifica alguna inconsistencia en la información mostrada, por favor comuníquese con el área administradora del sistema para su validación.
                     </div>
+
                   </div>
                 </div>
 
-                <div style="text-align:center;color:#9ca3af;font-size:12px;margin-top:10px;">
-                  © {timezone.localtime(timezone.now()).strftime("%Y")} Tony Stark
+                <!-- Footer institucional -->
+                <div style="text-align:center;color:#9ca3af;font-size:12px;line-height:1.55;margin-top:12px;">
+                  <div><b style="color:#6b7280;">Proyecto Manhattan</b> · Sistema de Control de Asistencia Docente</div>
+                  <div>Universidad Nacional de Ingeniería · Facultad de Ingeniería Civil</div>
+                  <div>Correo automático · No responder directamente a este mensaje</div>
+                  <div style="margin-top:4px;">© {timezone.localtime(timezone.now()).strftime("%Y")}</div>
                 </div>
+
               </div>
             </div>
             """.strip()
@@ -323,7 +395,8 @@ class Command(BaseCommand):
             if dry_run:
                 enviados += 1
                 self.stdout.write(self.style.WARNING(
-                    f"[DRY-RUN] to={email_prof} total={total} E={entradas} J={justificaciones} logo_url={'ok' if logo_url else 'no'}"
+                    f"[DRY-RUN] to={email_prof} total={total} E={entradas} J={justificaciones} "
+                    f"logo_url={'ok' if logo_url else 'no'}"
                 ))
                 continue
 
@@ -331,7 +404,8 @@ class Command(BaseCommand):
                 self._brevo_send_email(email_prof, subject, body_text, body_html)
                 enviados += 1
                 self.stdout.write(self.style.SUCCESS(
-                    f"[SEND] to={email_prof} total={total} E={entradas} J={justificaciones} logo_url={'ok' if logo_url else 'no'}"
+                    f"[SEND] to={email_prof} total={total} E={entradas} J={justificaciones} "
+                    f"logo_url={'ok' if logo_url else 'no'}"
                 ))
             except Exception as e:
                 errores += 1
