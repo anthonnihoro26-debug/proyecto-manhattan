@@ -16,16 +16,17 @@ from asistencias.models import Profesor, Asistencia
 class Command(BaseCommand):
     help = (
         "Envía por email un reporte profesional de asistencia (Lun-Vie) a cada profesor "
-        "con evaluación diaria: ENTRADA / JUSTIFICACIÓN / FALTA (Brevo API)."
+        "con evaluación diaria: ENTRADA / JUSTIFICACIÓN / FALTA (Brevo API). "
+        "ACTUALMENTE EL ENVÍO ESTÁ BLOQUEADO."
     )
 
     def add_arguments(self, parser):
-        parser.add_argument("--max-emails", type=int, default=40, help="Máximo de correos a enviar por ejecución (default 40).")
+        parser.add_argument("--max-emails", type=int, default=40, help="Máximo de correos a procesar por ejecución (default 40).")
         parser.add_argument("--dry-run", action="store_true", help="No envía correos, solo imprime en consola.")
         parser.add_argument(
             "--solo-con-registros",
             action="store_true",
-            help="Si se activa, solo envía a profesores con al menos un registro E/J en el rango.",
+            help="Si se activa, solo procesa profesores con al menos un registro E/J en el rango.",
         )
 
     def _rango_lun_vie(self):
@@ -194,10 +195,14 @@ class Command(BaseCommand):
             "faltas": faltas,
             "total_dias": total_dias,
             "cumplimiento": cumplimiento,
-            "total_registros_eyj": qs.count(),  # útil para logs/validación
+            "total_registros_eyj": qs.count(),
         }
 
     def _brevo_send_email(self, to_email: str, subject: str, body_text: str, body_html: str):
+        """
+        Método mantenido por compatibilidad, pero el envío real está bloqueado
+        desde handle() para evitar que se manden correos accidentalmente.
+        """
         api_key = (getattr(settings, "BREVO_API_KEY", "") or "").strip()
         sender_email = (getattr(settings, "BREVO_SENDER_EMAIL", "") or "").strip()
         sender_name = (getattr(settings, "BREVO_SENDER_NAME", "Proyecto Manhattan") or "").strip()
@@ -233,6 +238,11 @@ class Command(BaseCommand):
         dry_run = bool(options["dry_run"])
         solo_con_registros = bool(options["solo_con_registros"])
 
+        # =========================================
+        # BLOQUEO GLOBAL DE ENVÍO
+        # =========================================
+        envio_habilitado = False
+
         now, desde, hasta = self._rango_lun_vie()
 
         self.stdout.write(
@@ -240,12 +250,18 @@ class Command(BaseCommand):
             f"desde={desde:%Y-%m-%d %H:%M} hasta={hasta:%Y-%m-%d %H:%M}"
         )
 
+        if not envio_habilitado:
+            self.stdout.write(self.style.WARNING(
+                "[MODO SEGURO] El envío de correos está COMPLETAMENTE BLOQUEADO en este comando."
+            ))
+
         profesores = Profesor.objects.all().order_by("apellidos", "nombres")
 
         enviados = 0
         errores = 0
         saltados_sin_email = 0
         saltados_sin_registros = 0
+        bloqueados = 0
 
         logo_uri = self._logo_data_uri()
         logo_url = self._logo_public_url()
@@ -270,7 +286,6 @@ class Command(BaseCommand):
             cumplimiento = resultado["cumplimiento"]
             total_registros_eyj = resultado["total_registros_eyj"]
 
-            # Mantener opcionalmente comportamiento antiguo
             if solo_con_registros and total_registros_eyj == 0:
                 saltados_sin_registros += 1
                 self.stdout.write(f"[SKIP] {email_prof} -> sin registros (E/J) en el rango (--solo-con-registros)")
@@ -372,10 +387,8 @@ class Command(BaseCommand):
             <div style="margin:0;padding:0;background:#f3f4f6;">
               <div style="max-width:820px;margin:0 auto;padding:30px 14px;font-family:Arial,Helvetica,sans-serif;">
 
-                <!-- Card principal -->
                 <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.06);">
 
-                  <!-- Header institucional -->
                   <div style="padding:22px 24px;background:linear-gradient(135deg,#8b1118 0%, #b91c1c 55%, #111827 100%);color:#ffffff;">
                     {logo_html}
                     <div style="font-size:23px;font-weight:900;letter-spacing:.2px;margin-top:8px;">
@@ -386,10 +399,8 @@ class Command(BaseCommand):
                     </div>
                   </div>
 
-                  <!-- Cuerpo -->
                   <div style="padding:22px 24px;color:#111827;">
 
-                    <!-- Mensaje profesional -->
                     <div style="font-size:15px;line-height:1.6;color:#111827;">
                       Estimado(a) <b>{nombre_html}</b>:
                     </div>
@@ -402,7 +413,6 @@ class Command(BaseCommand):
                       Este reporte ha sido generado automáticamente por <b>Proyecto Manhattan</b> para fines de seguimiento y control institucional.
                     </div>
 
-                    <!-- KPIs elegantes -->
                     <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
                       <div style="flex:1;min-width:140px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
                         <div style="font-size:12px;color:#64748b;">Días evaluados</div>
@@ -430,7 +440,6 @@ class Command(BaseCommand):
                       </div>
                     </div>
 
-                    <!-- Tabla principal -->
                     <div style="margin-top:22px;">
                       <div style="font-size:15px;font-weight:800;color:#111827;margin-bottom:10px;">
                         Evaluación diaria (Lunes a Viernes)
@@ -454,7 +463,6 @@ class Command(BaseCommand):
                       </div>
                     </div>
 
-                    <!-- Mensaje institucional final -->
                     <div style="margin-top:18px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;">
                       <div style="font-size:12px;color:#475569;line-height:1.6;">
                         Si identifica alguna observación o inconsistencia en la información mostrada, por favor comuníquese con el área administradora del sistema para su revisión y validación correspondiente.
@@ -464,7 +472,6 @@ class Command(BaseCommand):
                   </div>
                 </div>
 
-                <!-- Footer institucional -->
                 <div style="text-align:center;color:#94a3b8;font-size:12px;line-height:1.6;margin-top:14px;">
                   <div><b style="color:#64748b;">Proyecto Manhattan</b> · Sistema de Control de Asistencia Docente</div>
                   <div>Departamento Académico de Ciencias Básicas · Facultad de Ingeniería Civil</div>
@@ -477,14 +484,30 @@ class Command(BaseCommand):
             </div>
             """.strip()
 
+            # =========================================
+            # BLOQUEO TOTAL DEL ENVÍO
+            # =========================================
             if dry_run:
-                enviados += 1
+                bloqueados += 1
                 self.stdout.write(self.style.WARNING(
-                    f"[DRY-RUN] to={email_prof} E={entradas} J={justificaciones} F={faltas} "
+                    f"[DRY-RUN / BLOQUEADO] to={email_prof} E={entradas} J={justificaciones} F={faltas} "
                     f"cumpl={cumplimiento_text} registros_EJ={total_registros_eyj} logo_url={'ok' if logo_url else 'no'}"
                 ))
                 continue
 
+            if not envio_habilitado:
+                bloqueados += 1
+                self.stdout.write(self.style.WARNING(
+                    f"[BLOQUEADO] No se enviará correo a {email_prof}. "
+                    f"E={entradas} J={justificaciones} F={faltas} "
+                    f"cumpl={cumplimiento_text} registros_EJ={total_registros_eyj} "
+                    f"logo_url={'ok' if logo_url else 'no'}"
+                ))
+                continue
+
+            # =========================================
+            # ENVÍO REAL (solo si envio_habilitado=True)
+            # =========================================
             try:
                 self._brevo_send_email(email_prof, subject, body_text, body_html)
                 enviados += 1
@@ -497,6 +520,6 @@ class Command(BaseCommand):
                 self.stderr.write(self.style.ERROR(f"[ERROR] Enviando a {email_prof}: {e}"))
 
         self.stdout.write(self.style.SUCCESS(
-            f"[DONE] Enviados: {enviados}. Errores: {errores}. "
+            f"[DONE] Enviados: {enviados}. Bloqueados: {bloqueados}. Errores: {errores}. "
             f"Saltados (sin email): {saltados_sin_email}. Saltados (sin registros): {saltados_sin_registros}."
         ))

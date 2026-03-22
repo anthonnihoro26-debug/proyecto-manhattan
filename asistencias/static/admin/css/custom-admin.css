@@ -1,0 +1,228 @@
+:root{
+  --uni-bg-1: #071a2f;
+  --uni-bg-2: #0d2747;
+  --uni-side: #08182c;
+  --uni-card: rgba(14, 31, 58, 0.96);
+  --uni-card-2: rgba(19, 39, 70, 0.98);
+  --uni-line: rgba(255,255,255,.08);
+
+  --uni-primary: #7b1e2b;
+  --uni-primary-2: #9a2534;
+  --uni-gold: #d4af37;
+  --uni-gold-soft: #e8cb72;
+
+  --uni-text: #f8fbff;
+  --uni-text-soft: #d6e1ee;
+  --uni-text-muted: #aebfd3;
+
+  --uni-radius: 16px;
+  --uni-shadow: 0 14px 35px rgba(0,0,0,.22);
+}
+
+/* Fondo general */
+html, body{
+  background:
+    radial-gradient(circle at top left, rgba(212,175,55,.07), transparent 20%),
+    radial-gradient(circle at bottom right, rgba(123,30,43,.10), transparent 24%),
+    linear-gradient(135deg, var(--uni-bg-1), var(--uni-bg-2)) !important;
+  color: var(--uni-text) !important;
+}
+
+/* Sidebar */
+aside{
+  background: linear-gradient(180deg, #08182c 0%, #091d35 100%) !important;
+  border-right: 1px solid var(--uni-line) !important;
+}
+
+aside *{
+  color: var(--uni-text) !important;
+}
+
+/* Marca superior */
+aside .font-semibold,
+aside .font-bold{
+  letter-spacing: .2px;
+}
+
+/* Menú lateral */
+aside a{
+  border-radius: 12px !important;
+  transition: all .18s ease;
+  color: var(--uni-text-soft) !important;
+}
+
+aside a:hover{
+  background: rgba(212,175,55,.08) !important;
+  color: #fff !important;
+  transform: translateX(2px);
+}
+
+aside a[aria-current="page"],
+aside a.bg-primary-600,
+aside a[class*="primary"]{
+  background: linear-gradient(90deg, rgba(123,30,43,.58), rgba(212,175,55,.12)) !important;
+  border: 1px solid rgba(212,175,55,.20) !important;
+  color: #fff !important;
+}
+
+/* Barra superior */
+header, nav{
+  background: rgba(8, 23, 42, .72) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+header *, nav *{
+  color: var(--uni-text) !important;
+}
+
+/* Cards */
+div[class*="bg-base"],
+section,
+article,
+.rounded-lg,
+.rounded-md{
+  background: var(--uni-card) !important;
+  border: 1px solid var(--uni-line) !important;
+  border-radius: var(--uni-radius) !important;
+  box-shadow: var(--uni-shadow);
+}
+
+/* Títulos */
+h1, h2, h3, h4, h5, h6{
+  color: var(--uni-text) !important;
+}
+
+.text-font-important-light,
+.text-font-default-light{
+  color: var(--uni-text) !important;
+}
+
+.text-font-subtle-light,
+.text-base-400,
+.text-base-500,
+.text-base-600{
+  color: var(--uni-text-muted) !important;
+}
+
+/* Inputs */
+input,
+select,
+textarea{
+  background: rgba(7, 20, 38, .95) !important;
+  color: var(--uni-text) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  border-radius: 14px !important;
+}
+
+input::placeholder,
+textarea::placeholder{
+  color: #b9c8d8 !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  outline: none !important;
+  border-color: rgba(212,175,55,.45) !important;
+  box-shadow: 0 0 0 4px rgba(212,175,55,.10) !important;
+}
+
+/* Botones */
+button,
+input[type="submit"],
+input[type="button"],
+.submit-row input,
+a.button,
+.button{
+  border-radius: 13px !important;
+  border: 1px solid rgba(212,175,55,.18) !important;
+  background: linear-gradient(135deg, var(--uni-primary), var(--uni-primary-2)) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 10px 24px rgba(123,30,43,.22);
+  transition: all .18s ease;
+}
+
+button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+a.button:hover,
+.button:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 12px 28px rgba(123,30,43,.30);
+}
+
+/* Tablas */
+table{
+  width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  background: transparent !important;
+}
+
+thead th{
+  background: rgba(123,30,43,.18) !important;
+  color: var(--uni-gold-soft) !important;
+  font-weight: 700 !important;
+  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+}
+
+tbody tr{
+  background: rgba(13, 31, 56, .90) !important;
+  transition: background .18s ease;
+}
+
+tbody tr:nth-child(even){
+  background: rgba(17, 37, 66, .94) !important;
+}
+
+tbody tr:hover{
+  background: rgba(26, 50, 86, .98) !important;
+}
+
+tbody td,
+tbody th,
+td,
+th{
+  color: var(--uni-text) !important;
+  border-bottom: 1px solid rgba(255,255,255,.05) !important;
+}
+
+table a,
+tbody a,
+td a{
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+table a:hover,
+tbody a:hover,
+td a:hover{
+  color: var(--uni-gold-soft) !important;
+}
+
+/* Labels */
+label{
+  color: var(--uni-text) !important;
+  font-weight: 600;
+}
+
+/* Helptext */
+.help,
+.helptext,
+.text-sm{
+  color: var(--uni-text-muted) !important;
+}
+
+/* Paginación / filtros / badges */
+.rounded-full,
+.inline-flex{
+  border-radius: 999px !important;
+}
+
+/* Quitar sensación pesada */
+*{
+  scrollbar-color: rgba(212,175,55,.25) transparent;
+}

@@ -42,21 +42,25 @@ if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
 INSTALLED_APPS = [
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
+    "django_filters",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
-    "asistencias",
+    "django_htmx",
     "axes",
+    "asistencias",
+
+    
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-
+    "django_htmx.middleware.HtmxMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "asistencias.middleware.ClearAxesUnlockAtMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -88,21 +92,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "proyecto_manhattan.wsgi.application"
 
-USE_SQLITE = os.environ.get("USE_SQLITE", "0") == "1"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-if USE_SQLITE:
-    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
-else:
-    if not DATABASE_URL:
-        raise RuntimeError("DATABASE_URL is not defined. Define DATABASE_URL (PostgreSQL) or set USE_SQLITE=1.")
-    DATABASES = {
-        "default": dj_database_url.parse(
-            DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=not DEBUG,
-        )
-    }
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not defined. Define DATABASE_URL de PostgreSQL.")
+
+DATABASES = {
+    "default": dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=not DEBUG,
+    )
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -229,5 +230,52 @@ LOGGING = {
         "axes.middleware": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
         "axes.signals": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
         "axes.backends": {"handlers": ["null"], "level": "CRITICAL", "propagate": False},
+    },
+}
+UNFOLD = {
+    "SITE_TITLE": "Proyecto Manhattan",
+    "SITE_HEADER": "Proyecto Manhattan",
+    "SITE_SUBHEADER": "Panel administrativo institucional",
+    "SITE_SYMBOL": "school",
+    "SHOW_HISTORY": False,
+    "SHOW_VIEW_ON_SITE": False,
+    "STYLES": [
+        lambda request: "/static/admin/css/custom-admin.css",
+    ],
+    "COLORS": {
+        "base": {
+            "50": "241 245 249",
+            "100": "226 232 240",
+            "200": "203 213 225",
+            "300": "148 163 184",
+            "400": "100 116 139",
+            "500": "71 85 105",
+            "600": "51 65 85",
+            "700": "30 41 59",
+            "800": "15 23 42",
+            "900": "11 31 58",
+            "950": "8 24 44",
+        },
+        "primary": {
+            "50": "252 243 226",
+            "100": "248 226 184",
+            "200": "241 205 131",
+            "300": "231 177 74",
+            "400": "212 175 55",
+            "500": "186 145 35",
+            "600": "150 112 26",
+            "700": "123 30 43",
+            "800": "103 23 36",
+            "900": "84 18 30",
+            "950": "58 12 21",
+        },
+        "font": {
+            "subtle-light": "174 191 211",
+            "subtle-dark": "148 163 184",
+            "default-light": "248 251 255",
+            "default-dark": "15 23 42",
+            "important-light": "255 255 255",
+            "important-dark": "2 6 23",
+        },
     },
 }
