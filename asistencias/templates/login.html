@@ -2020,613 +2020,623 @@
   </div>
 
   <script>
-    const ENABLE_LOGIN_SOUND = false;
-    const DJANGO_USERNAME = `{% if request.user.is_authenticated %}{{ request.user.username|escapejs }}{% endif %}`.trim();
+  const ENABLE_LOGIN_SOUND = false;
+  const DJANGO_USERNAME = `{% if request.user.is_authenticated %}{{ request.user.username|escapejs }}{% endif %}`.trim();
+  const JORGE_GEOFENCE_USERNAME = "jorge";
 
-    let audioCtx = null;
-    function playSoftLoginSound() {
-      if (!ENABLE_LOGIN_SOUND) return;
-      try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        audioCtx = audioCtx || new Ctx();
-        if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+  let audioCtx = null;
+  function playSoftLoginSound() {
+    if (!ENABLE_LOGIN_SOUND) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audioCtx = audioCtx || new Ctx();
+      if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
 
-        const now = audioCtx.currentTime;
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+      const now = audioCtx.currentTime;
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
 
-        osc1.type = "sine";
-        osc2.type = "triangle";
+      osc1.type = "sine";
+      osc2.type = "triangle";
 
-        osc1.frequency.setValueAtTime(520, now);
-        osc1.frequency.exponentialRampToValueAtTime(740, now + 0.22);
+      osc1.frequency.setValueAtTime(520, now);
+      osc1.frequency.exponentialRampToValueAtTime(740, now + 0.22);
 
-        osc2.frequency.setValueAtTime(260, now);
-        osc2.frequency.exponentialRampToValueAtTime(370, now + 0.22);
+      osc2.frequency.setValueAtTime(260, now);
+      osc2.frequency.exponentialRampToValueAtTime(370, now + 0.22);
 
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.020, now + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.30);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.020, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.30);
 
-        osc1.connect(gain); osc2.connect(gain);
-        gain.connect(audioCtx.destination);
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(audioCtx.destination);
 
-        osc1.start(now); osc2.start(now);
-        osc1.stop(now + 0.30); osc2.stop(now + 0.30);
-      } catch(e){}
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.30);
+      osc2.stop(now + 0.30);
+    } catch(e){}
+  }
+
+  const toggle = document.getElementById("togglePass");
+  const pass = document.getElementById("password");
+  toggle?.addEventListener("click", () => {
+    const isPass = pass.type === "password";
+    pass.type = isPass ? "text" : "password";
+    toggle.innerHTML = isPass
+      ? '<i class="bi bi-eye-slash-fill"></i>'
+      : '<i class="bi bi-eye-fill"></i>';
+    toggle.setAttribute("aria-label", isPass ? "Ocultar contraseña" : "Mostrar contraseña");
+  });
+
+  const lockoutAlert = document.getElementById("lockoutAlert");
+  const lockoutTimeEl = document.getElementById("lockoutTime");
+
+  const btnLogin = document.getElementById("btnLogin");
+  const btnLoginText = document.getElementById("btnLoginText");
+  const loginForm = document.getElementById("loginForm");
+  const usernameInput = document.getElementById("usernameInput");
+
+  const loginOverlay = document.getElementById("loginOverlay");
+  const overlayTitle = document.getElementById("overlayTitle");
+  const overlaySub = document.getElementById("overlaySub");
+  const overlayStepText = document.getElementById("overlayStepText");
+  const overlayPercent = document.getElementById("overlayPercent");
+  const overlayProgressBar = document.getElementById("overlayProgressBar");
+  const overlayFoot = document.getElementById("overlayFoot");
+  const overlayTime = document.getElementById("overlayTime");
+  const overlayDots = document.getElementById("overlayDots");
+  const overlayUserText = document.getElementById("overlayUserText");
+
+  const welcomeChip = document.getElementById("welcomeChip");
+  const welcomeLine1 = document.getElementById("welcomeLine1");
+  const welcomeLine2 = document.getElementById("welcomeLine2");
+
+  let fakeProgressTimer = null;
+  let fakeProgressValue = 0;
+  let loaderStartTs = 0;
+  let overlayClockTimer = null;
+
+  function normalizeUsername(value){
+    return (value || "").trim().replace(/\s+/g, " ").slice(0, 32);
+  }
+
+  function smartCap(str){
+    if (!str) return "";
+    return str
+      .split(/([._-])/)
+      .map(part => /[._-]/.test(part) ? part : (part.charAt(0).toUpperCase() + part.slice(1)))
+      .join("");
+  }
+
+  function updateWelcomeChip(){
+    if (!welcomeChip) return;
+
+    const fromInput = normalizeUsername(usernameInput?.value || "");
+    const user = normalizeUsername(DJANGO_USERNAME || fromInput);
+
+    if (!user){
+      welcomeChip.classList.remove("show");
+      return;
     }
 
-    const toggle = document.getElementById("togglePass");
-    const pass = document.getElementById("password");
-    toggle?.addEventListener("click", () => {
-      const isPass = pass.type === "password";
-      pass.type = isPass ? "text" : "password";
-      toggle.innerHTML = isPass
-        ? '<i class="bi bi-eye-slash-fill"></i>'
-        : '<i class="bi bi-eye-fill"></i>';
-      toggle.setAttribute("aria-label", isPass ? "Ocultar contraseña" : "Mostrar contraseña");
+    const pretty = smartCap(user);
+    if (welcomeLine1) welcomeLine1.textContent = `Bienvenido/a, ${pretty}`;
+    if (welcomeLine2) welcomeLine2.textContent = "Continúa con tu acceso institucional";
+    welcomeChip.classList.add("show");
+  }
+
+  usernameInput?.addEventListener("input", updateWelcomeChip);
+  usernameInput?.addEventListener("blur", updateWelcomeChip);
+  updateWelcomeChip();
+
+  function pad2(n){ return String(n).padStart(2, "0"); }
+
+  function updateOverlayDots(step){
+    if (!overlayDots) return;
+    const dots = overlayDots.querySelectorAll("span");
+    dots.forEach((dot, idx) => {
+      dot.classList.toggle("active", idx <= step);
     });
+  }
 
-    const lockoutAlert = document.getElementById("lockoutAlert");
-    const lockoutTimeEl = document.getElementById("lockoutTime");
+  function startOverlayClock(){
+    stopOverlayClock();
+    loaderStartTs = Date.now();
 
-    const btnLogin = document.getElementById("btnLogin");
-    const btnLoginText = document.getElementById("btnLoginText");
-    const loginForm = document.getElementById("loginForm");
-    const usernameInput = document.getElementById("usernameInput");
+    overlayClockTimer = setInterval(() => {
+      if (!overlayTime) return;
+      const elapsed = Math.floor((Date.now() - loaderStartTs) / 1000);
+      overlayTime.textContent = elapsed <= 0
+        ? "Preparando sesión..."
+        : `Tiempo transcurrido: ${pad2(Math.floor(elapsed / 60))}:${pad2(elapsed % 60)}`;
+    }, 250);
+  }
 
-    const loginOverlay = document.getElementById("loginOverlay");
-    const overlayTitle = document.getElementById("overlayTitle");
-    const overlaySub = document.getElementById("overlaySub");
-    const overlayStepText = document.getElementById("overlayStepText");
-    const overlayPercent = document.getElementById("overlayPercent");
-    const overlayProgressBar = document.getElementById("overlayProgressBar");
-    const overlayFoot = document.getElementById("overlayFoot");
-    const overlayTime = document.getElementById("overlayTime");
-    const overlayDots = document.getElementById("overlayDots");
-    const overlayUserText = document.getElementById("overlayUserText");
+  function stopOverlayClock(){
+    if (overlayClockTimer){
+      clearInterval(overlayClockTimer);
+      overlayClockTimer = null;
+    }
+  }
 
-    const welcomeChip = document.getElementById("welcomeChip");
-    const welcomeLine1 = document.getElementById("welcomeLine1");
-    const welcomeLine2 = document.getElementById("welcomeLine2");
+  function setOverlayProgress(value){
+    const v = Math.max(0, Math.min(100, Math.floor(value)));
+    fakeProgressValue = v;
 
-    let fakeProgressTimer = null;
-    let fakeProgressValue = 0;
-    let loaderStartTs = 0;
-    let overlayClockTimer = null;
+    if (overlayPercent) overlayPercent.textContent = String(v);
+    if (overlayProgressBar) overlayProgressBar.style.width = v + "%";
 
-    function normalizeUsername(value){
-      return (value || "").trim().replace(/\s+/g, " ").slice(0, 32);
+    if (v <= 20) {
+      if (overlayTitle) overlayTitle.textContent = "Iniciando sesión...";
+      if (overlaySub) overlaySub.textContent = "Verificando usuario...";
+      if (overlayStepText) overlayStepText.textContent = "Validando credenciales";
+      if (overlayFoot) overlayFoot.textContent = "Comprobando datos ingresados...";
+      updateOverlayDots(0);
+    } else if (v <= 45) {
+      if (overlayTitle) overlayTitle.textContent = "Iniciando sesión...";
+      if (overlaySub) overlaySub.textContent = "Validando contraseña...";
+      if (overlayStepText) overlayStepText.textContent = "Autenticando acceso";
+      if (overlayFoot) overlayFoot.textContent = "Estableciendo conexión segura...";
+      updateOverlayDots(1);
+    } else if (v <= 72) {
+      if (overlayTitle) overlayTitle.textContent = "Cargando cuenta...";
+      if (overlaySub) overlaySub.textContent = "Preparando acceso...";
+      if (overlayStepText) overlayStepText.textContent = "Inicializando sesión";
+      if (overlayFoot) overlayFoot.textContent = "Cargando módulos institucionales...";
+      updateOverlayDots(2);
+    } else if (v <= 92) {
+      if (overlayTitle) overlayTitle.textContent = "Casi listo...";
+      if (overlaySub) overlaySub.textContent = "Redirigiendo...";
+      if (overlayStepText) overlayStepText.textContent = "Preparando panel principal";
+      if (overlayFoot) overlayFoot.textContent = "Organizando tu entorno de trabajo...";
+      updateOverlayDots(3);
+    } else if (v < 100) {
+      if (overlayTitle) overlayTitle.textContent = "Acceso concedido";
+      if (overlaySub) overlaySub.textContent = "Finalizando...";
+      if (overlayStepText) overlayStepText.textContent = "Cerrando proceso";
+      if (overlayFoot) overlayFoot.textContent = "Ultimando detalles del inicio de sesión...";
+      updateOverlayDots(3);
+    } else {
+      if (overlayTitle) overlayTitle.textContent = "Acceso concedido";
+      if (overlaySub) overlaySub.textContent = "Redirigiendo...";
+      if (overlayStepText) overlayStepText.textContent = "Finalizado";
+      if (overlayFoot) overlayFoot.textContent = "Listo.";
+      updateOverlayDots(3);
+    }
+  }
+
+  function stopFakeProgress(){
+    if (fakeProgressTimer){
+      clearInterval(fakeProgressTimer);
+      fakeProgressTimer = null;
+    }
+  }
+
+  function startFakeProgress(){
+    stopFakeProgress();
+    setOverlayProgress(0);
+
+    fakeProgressTimer = setInterval(() => {
+      let inc = 1;
+
+      if (fakeProgressValue < 15) inc = 3.2;
+      else if (fakeProgressValue < 35) inc = 2.0;
+      else if (fakeProgressValue < 65) inc = 1.35;
+      else if (fakeProgressValue < 84) inc = 0.9;
+      else if (fakeProgressValue < 94) inc = 0.45;
+      else inc = 0.18;
+
+      const jitter = Math.random() * 0.32;
+      const next = Math.min(fakeProgressValue + inc + jitter, 97);
+      setOverlayProgress(next);
+
+      if (fakeProgressValue >= 97) stopFakeProgress();
+    }, 120);
+  }
+
+  function showOverlay(){
+    const fromInput = normalizeUsername(usernameInput?.value || "");
+    const user = normalizeUsername(DJANGO_USERNAME || fromInput);
+
+    if (overlayUserText){
+      overlayUserText.textContent = user
+        ? `Bienvenido/a, ${smartCap(user)}`
+        : "Acceso institucional";
     }
 
-    function smartCap(str){
-      if (!str) return "";
-      return str
-        .split(/([._-])/)
-        .map(part => /[._-]/.test(part) ? part : (part.charAt(0).toUpperCase() + part.slice(1)))
-        .join("");
-    }
+    loginOverlay?.classList.add("show");
+    loginOverlay?.setAttribute("aria-hidden", "false");
+    startOverlayClock();
+    startFakeProgress();
+    setTimeout(() => setOverlayProgress(Math.max(fakeProgressValue, 12)), 60);
+  }
 
-    function updateWelcomeChip(){
-      if (!welcomeChip) return;
+  function hideOverlay(){
+    stopFakeProgress();
+    stopOverlayClock();
+    loginOverlay?.classList.remove("show");
+    loginOverlay?.setAttribute("aria-hidden", "true");
+    setOverlayProgress(0);
 
-      const fromInput = normalizeUsername(usernameInput?.value || "");
-      const user = normalizeUsername(DJANGO_USERNAME || fromInput);
+    if (overlayTime) overlayTime.textContent = "Preparando sesión...";
+    if (overlayUserText) overlayUserText.textContent = "Acceso institucional";
+  }
 
-      if (!user){
-        welcomeChip.classList.remove("show");
+  function setLoginButtonIdle(){
+    if (!btnLogin) return;
+    btnLogin.disabled = false;
+    btnLogin.classList.remove("loading");
+    if (btnLoginText) btnLoginText.textContent = "Ingresar al sistema";
+  }
+
+  function setLoginButtonLoading(){
+    if (!btnLogin) return;
+    btnLogin.disabled = true;
+    btnLogin.classList.add("loading");
+    if (btnLoginText) btnLoginText.textContent = "Validando acceso...";
+  }
+
+  if (lockoutAlert && lockoutTimeEl && btnLogin) {
+    const unlockAt = new Date(lockoutAlert.dataset.unlockAt);
+
+    const tick = () => {
+      const diffMs = unlockAt - new Date();
+
+      if (diffMs <= 0) {
+        lockoutAlert.style.display = "none";
+        setLoginButtonIdle();
+        hideOverlay();
         return;
       }
 
-      const pretty = smartCap(user);
-      welcomeLine1.textContent = `Bienvenido/a, ${pretty}`;
-      welcomeLine2.textContent = "Continúa con tu acceso institucional";
-      welcomeChip.classList.add("show");
-    }
-
-    usernameInput?.addEventListener("input", updateWelcomeChip);
-    usernameInput?.addEventListener("blur", updateWelcomeChip);
-    updateWelcomeChip();
-
-    function pad2(n){ return String(n).padStart(2, "0"); }
-
-    function updateOverlayDots(step){
-      if (!overlayDots) return;
-      const dots = overlayDots.querySelectorAll("span");
-      dots.forEach((dot, idx) => {
-        dot.classList.toggle("active", idx <= step);
-      });
-    }
-
-    function startOverlayClock(){
-      stopOverlayClock();
-      loaderStartTs = Date.now();
-
-      overlayClockTimer = setInterval(() => {
-        if (!overlayTime) return;
-        const elapsed = Math.floor((Date.now() - loaderStartTs) / 1000);
-        overlayTime.textContent = elapsed <= 0
-          ? "Preparando sesión..."
-          : `Tiempo transcurrido: ${pad2(Math.floor(elapsed / 60))}:${pad2(elapsed % 60)}`;
-      }, 250);
-    }
-
-    function stopOverlayClock(){
-      if (overlayClockTimer){
-        clearInterval(overlayClockTimer);
-        overlayClockTimer = null;
-      }
-    }
-
-    function setOverlayProgress(value){
-      const v = Math.max(0, Math.min(100, Math.floor(value)));
-      fakeProgressValue = v;
-
-      if (overlayPercent) overlayPercent.textContent = String(v);
-      if (overlayProgressBar) overlayProgressBar.style.width = v + "%";
-
-      if (v <= 20) {
-        overlayTitle.textContent = "Iniciando sesión...";
-        overlaySub.textContent = "Verificando usuario...";
-        overlayStepText.textContent = "Validando credenciales";
-        overlayFoot.textContent = "Comprobando datos ingresados...";
-        updateOverlayDots(0);
-      } else if (v <= 45) {
-        overlayTitle.textContent = "Iniciando sesión...";
-        overlaySub.textContent = "Validando contraseña...";
-        overlayStepText.textContent = "Autenticando acceso";
-        overlayFoot.textContent = "Estableciendo conexión segura...";
-        updateOverlayDots(1);
-      } else if (v <= 72) {
-        overlayTitle.textContent = "Cargando cuenta...";
-        overlaySub.textContent = "Preparando acceso...";
-        overlayStepText.textContent = "Inicializando sesión";
-        overlayFoot.textContent = "Cargando módulos institucionales...";
-        updateOverlayDots(2);
-      } else if (v <= 92) {
-        overlayTitle.textContent = "Casi listo...";
-        overlaySub.textContent = "Redirigiendo...";
-        overlayStepText.textContent = "Preparando panel principal";
-        overlayFoot.textContent = "Organizando tu entorno de trabajo...";
-        updateOverlayDots(3);
-      } else if (v < 100) {
-        overlayTitle.textContent = "Acceso concedido";
-        overlaySub.textContent = "Finalizando...";
-        overlayStepText.textContent = "Cerrando proceso";
-        overlayFoot.textContent = "Ultimando detalles del inicio de sesión...";
-        updateOverlayDots(3);
-      } else {
-        overlayTitle.textContent = "Acceso concedido";
-        overlaySub.textContent = "Redirigiendo...";
-        overlayStepText.textContent = "Finalizado";
-        overlayFoot.textContent = "Listo.";
-        updateOverlayDots(3);
-      }
-    }
-
-    function stopFakeProgress(){
-      if (fakeProgressTimer){
-        clearInterval(fakeProgressTimer);
-        fakeProgressTimer = null;
-      }
-    }
-
-    function startFakeProgress(){
-      stopFakeProgress();
-      setOverlayProgress(0);
-
-      fakeProgressTimer = setInterval(() => {
-        let inc = 1;
-
-        if (fakeProgressValue < 15) inc = 3.2;
-        else if (fakeProgressValue < 35) inc = 2.0;
-        else if (fakeProgressValue < 65) inc = 1.35;
-        else if (fakeProgressValue < 84) inc = 0.9;
-        else if (fakeProgressValue < 94) inc = 0.45;
-        else inc = 0.18;
-
-        const jitter = Math.random() * 0.32;
-        const next = Math.min(fakeProgressValue + inc + jitter, 97);
-        setOverlayProgress(next);
-
-        if (fakeProgressValue >= 97) stopFakeProgress();
-      }, 120);
-    }
-
-    function showOverlay(){
-      const fromInput = normalizeUsername(usernameInput?.value || "");
-      const user = normalizeUsername(DJANGO_USERNAME || fromInput);
-
-      if (overlayUserText){
-        overlayUserText.textContent = user
-          ? `Bienvenido/a, ${smartCap(user)}`
-          : "Acceso institucional";
-      }
-
-      loginOverlay?.classList.add("show");
-      loginOverlay?.setAttribute("aria-hidden", "false");
-      startOverlayClock();
-      startFakeProgress();
-      setTimeout(() => setOverlayProgress(Math.max(fakeProgressValue, 12)), 60);
-    }
-
-    function hideOverlay(){
-      stopFakeProgress();
-      stopOverlayClock();
-      loginOverlay?.classList.remove("show");
-      loginOverlay?.setAttribute("aria-hidden", "true");
-      setOverlayProgress(0);
-
-      if (overlayTime) overlayTime.textContent = "Preparando sesión...";
-      if (overlayUserText) overlayUserText.textContent = "Acceso institucional";
-    }
-
-    function setLoginButtonIdle(){
-      if (!btnLogin) return;
-      btnLogin.disabled = false;
-      btnLogin.classList.remove("loading");
-      if (btnLoginText) btnLoginText.textContent = "Ingresar al sistema";
-    }
-
-    function setLoginButtonLoading(){
-      if (!btnLogin) return;
       btnLogin.disabled = true;
-      btnLogin.classList.add("loading");
-      if (btnLoginText) btnLoginText.textContent = "Validando acceso...";
+      btnLogin.classList.remove("loading");
+      if (btnLoginText) btnLoginText.textContent = "Cuenta temporalmente bloqueada";
+
+      const totalSec = Math.floor(diffMs / 1000);
+      const min = Math.floor(totalSec / 60);
+      const sec = totalSec % 60;
+      lockoutTimeEl.textContent = `${pad2(min)}:${pad2(sec)}`;
+    };
+
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  function setGeoHidden(name, value) {
+    const el = document.getElementById(name);
+    if (el) el.value = (value ?? "") + "";
+  }
+
+  function clearGeoHidden() {
+    setGeoHidden("geo_lat", "");
+    setGeoHidden("geo_lng", "");
+    setGeoHidden("geo_acc", "");
+    setGeoHidden("geo_time", "");
+    setGeoHidden("geo_status", "");
+    setGeoHidden("geo_perm_state", "");
+    setGeoHidden("device_info", navigator.userAgent || "desconocido");
+  }
+
+  function getGeoStatus() {
+    return (document.getElementById("geo_status")?.value || "").trim();
+  }
+
+  function getGeoLat() {
+    return (document.getElementById("geo_lat")?.value || "").trim();
+  }
+
+  function getGeoLng() {
+    return (document.getElementById("geo_lng")?.value || "").trim();
+  }
+
+  function geoEstaOk() {
+    return getGeoStatus() === "ok" && getGeoLat() !== "" && getGeoLng() !== "";
+  }
+
+  function isJorgeUser() {
+    return (usernameInput?.value || "").trim().toLowerCase() === JORGE_GEOFENCE_USERNAME;
+  }
+
+  function mensajeSegunGeoStatus() {
+    const geoStatus = getGeoStatus();
+    let msg = "Jorge: debes permitir la ubicación para iniciar sesión.";
+
+    if (geoStatus === "denegado") {
+      msg = "Jorge: permiso de ubicación denegado. Debes habilitarlo para ingresar.";
+    } else if (geoStatus === "timeout") {
+      msg = "Jorge: no se pudo obtener la ubicación a tiempo. Intenta nuevamente.";
+    } else if (geoStatus === "no_soportado") {
+      msg = "Jorge: tu navegador no soporta geolocalización. Usa otro navegador o dispositivo.";
+    } else if (geoStatus === "no_disponible") {
+      msg = "Jorge: ubicación no disponible. Activa GPS o ubicación del dispositivo.";
+    } else if (geoStatus === "error_geo") {
+      msg = "Jorge: no se pudo validar tu ubicación. Intenta nuevamente.";
     }
 
-    if (lockoutAlert && lockoutTimeEl && btnLogin) {
-      const unlockAt = new Date(lockoutAlert.dataset.unlockAt);
+    return msg;
+  }
 
-      const tick = () => {
-        const diffMs = unlockAt - new Date();
+  async function capturarGeoRequerida() {
+    setGeoHidden("device_info", navigator.userAgent || "desconocido");
+    setGeoHidden("geo_time", new Date().toISOString());
 
-        if (diffMs <= 0) {
-          lockoutAlert.style.display = "none";
-          setLoginButtonIdle();
-          hideOverlay();
-          return;
-        }
+    setGeoHidden("geo_lat", "");
+    setGeoHidden("geo_lng", "");
+    setGeoHidden("geo_acc", "");
+    setGeoHidden("geo_status", "no_intentado");
+    setGeoHidden("geo_perm_state", "");
 
-        btnLogin.disabled = true;
-        btnLogin.classList.remove("loading");
-        if (btnLoginText) btnLoginText.textContent = "Cuenta temporalmente bloqueada";
-
-        const totalSec = Math.floor(diffMs / 1000);
-        const min = Math.floor(totalSec / 60);
-        const sec = totalSec % 60;
-        lockoutTimeEl.textContent = `${pad2(min)}:${pad2(sec)}`;
-      };
-
-      tick();
-      setInterval(tick, 1000);
+    if (!("geolocation" in navigator)) {
+      setGeoHidden("geo_status", "no_soportado");
+      throw new Error("no_soportado");
     }
 
-    function setGeoHidden(name, value) {
-      const el = document.getElementById(name);
-      if (el) el.value = (value ?? "") + "";
-    }
-
-    function getGeoStatus() {
-      return (document.getElementById("geo_status")?.value || "").trim();
-    }
-
-    function getGeoLat() {
-      return (document.getElementById("geo_lat")?.value || "").trim();
-    }
-
-    function getGeoLng() {
-      return (document.getElementById("geo_lng")?.value || "").trim();
-    }
-
-    function geoEstaOk() {
-      return getGeoStatus() === "ok" && getGeoLat() !== "" && getGeoLng() !== "";
-    }
-
-    function mensajeSegunGeoStatus() {
-      const geoStatus = getGeoStatus();
-      let msg = "Debes permitir la ubicación para ingresar al sistema.";
-
-      if (geoStatus === "denegado") {
-        msg = "Permiso de ubicación denegado. Debes habilitarlo para ingresar.";
-      } else if (geoStatus === "timeout") {
-        msg = "No se pudo obtener la ubicación a tiempo. Intenta nuevamente.";
-      } else if (geoStatus === "no_soportado") {
-        msg = "Tu navegador no soporta geolocalización. Usa otro navegador/dispositivo.";
-      } else if (geoStatus === "no_disponible") {
-        msg = "Ubicación no disponible. Activa GPS / ubicación del dispositivo.";
-      } else if (geoStatus === "error_geo") {
-        msg = "No se pudo validar tu ubicación. Intenta nuevamente.";
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        const perm = await navigator.permissions.query({ name: "geolocation" });
+        setGeoHidden("geo_perm_state", perm.state || "");
       }
+    } catch (e) {}
 
-      return msg;
-    }
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true,
+            timeout: 12000,
+            maximumAge: 0
+          }
+        );
+      });
 
-    async function capturarGeoRequerida() {
-      setGeoHidden("device_info", navigator.userAgent || "desconocido");
-      setGeoHidden("geo_time", new Date().toISOString());
-
-      setGeoHidden("geo_lat", "");
-      setGeoHidden("geo_lng", "");
-      setGeoHidden("geo_acc", "");
-      setGeoHidden("geo_status", "no_intentado");
-      setGeoHidden("geo_perm_state", "");
-
-      if (!("geolocation" in navigator)) {
-        setGeoHidden("geo_status", "no_soportado");
-        throw new Error("no_soportado");
+      setGeoHidden("geo_lat", pos?.coords?.latitude ?? "");
+      setGeoHidden("geo_lng", pos?.coords?.longitude ?? "");
+      setGeoHidden("geo_acc", pos?.coords?.accuracy ?? "");
+      setGeoHidden("geo_status", "ok");
+      setGeoHidden("geo_perm_state", "granted");
+      setGeoHidden("geo_time", new Date(pos.timestamp || Date.now()).toISOString());
+      return true;
+    } catch (err) {
+      let status = "error_geo";
+      if (err && typeof err.code !== "undefined") {
+        if (err.code === 1) status = "denegado";
+        else if (err.code === 2) status = "no_disponible";
+        else if (err.code === 3) status = "timeout";
       }
-
-      try {
-        if (navigator.permissions && navigator.permissions.query) {
-          const perm = await navigator.permissions.query({ name: "geolocation" });
-          setGeoHidden("geo_perm_state", perm.state || "");
-        }
-      } catch (e) {}
-
-      try {
-        const pos = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            resolve,
-            reject,
-            {
-              enableHighAccuracy: true,
-              timeout: 12000,
-              maximumAge: 0
-            }
-          );
-        });
-
-        setGeoHidden("geo_lat", pos?.coords?.latitude ?? "");
-        setGeoHidden("geo_lng", pos?.coords?.longitude ?? "");
-        setGeoHidden("geo_acc", pos?.coords?.accuracy ?? "");
-        setGeoHidden("geo_status", "ok");
-        setGeoHidden("geo_perm_state", "granted");
-        setGeoHidden("geo_time", new Date(pos.timestamp || Date.now()).toISOString());
-        return true;
-      } catch (err) {
-        let status = "error_geo";
-        if (err && typeof err.code !== "undefined") {
-          if (err.code === 1) status = "denegado";
-          else if (err.code === 2) status = "no_disponible";
-          else if (err.code === 3) status = "timeout";
-        }
-        setGeoHidden("geo_status", status);
-        if (status === "denegado") setGeoHidden("geo_perm_state", "denied");
-        throw err || new Error(status);
-      }
+      setGeoHidden("geo_status", status);
+      if (status === "denegado") setGeoHidden("geo_perm_state", "denied");
+      throw err || new Error(status);
     }
+  }
 
-    let __geoPrefetchDone = false;
-    let __geoPrefetchRunning = false;
+  if (loginForm && btnLogin) {
+    let __geoSubmitInProgress = false;
 
-    async function preSolicitarUbicacion() {
-      if (__geoPrefetchDone || __geoPrefetchRunning || geoEstaOk()) return;
-      __geoPrefetchRunning = true;
-      try { await capturarGeoRequerida(); } catch (e) { console.warn("Pre-permiso de ubicación:", e); }
-      finally {
-        __geoPrefetchRunning = false;
-        __geoPrefetchDone = true;
-      }
-    }
+    loginForm.addEventListener("submit", async function(e){
+      if (__geoSubmitInProgress) return;
 
-    ["click", "touchstart", "keydown"].forEach(evt => {
-      window.addEventListener(evt, preSolicitarUbicacion, { once: true, passive: true });
-    });
-
-    usernameInput?.addEventListener("focus", preSolicitarUbicacion, { once: true });
-    pass?.addEventListener("focus", preSolicitarUbicacion, { once: true });
-
-    if (loginForm && btnLogin) {
-      let __geoSubmitInProgress = false;
-
-      loginForm.addEventListener("submit", async function(e){
-        if (__geoSubmitInProgress) return;
-
-        if (btnLogin.disabled) {
-          e.preventDefault();
-          return;
-        }
-
-        if (!loginForm.checkValidity()) {
-          e.preventDefault();
-          loginForm.reportValidity?.();
-          return;
-        }
-
+      if (btnLogin.disabled) {
         e.preventDefault();
+        return;
+      }
 
+      if (!loginForm.checkValidity()) {
+        e.preventDefault();
+        loginForm.reportValidity?.();
+        return;
+      }
+
+      const esJorge = isJorgeUser();
+
+      if (!esJorge) {
+        clearGeoHidden();
         updateWelcomeChip();
         setLoginButtonLoading();
         showOverlay();
         playSoftLoginSound();
 
-        window.__loginFallbackTimer && clearTimeout(window.__loginFallbackTimer);
-        window.__loginFallbackTimer = setTimeout(() => {
-          if (document.visibilityState === "visible") {
-            setOverlayProgress(Math.max(fakeProgressValue, 35));
-          }
-        }, 900);
-
-        try {
-          if (!geoEstaOk()) await capturarGeoRequerida();
-          setOverlayProgress(Math.max(fakeProgressValue, 48));
-        } catch (err) {
-          console.warn("Geo requerida falló:", err);
-        }
-
-        if (!geoEstaOk()) {
-          hideOverlay();
-          setLoginButtonIdle();
-          alert(mensajeSegunGeoStatus());
-          return;
-        }
-
         __geoSubmitInProgress = true;
-        loginForm.submit();
-      });
+        return;
+      }
+
+      e.preventDefault();
+
+      updateWelcomeChip();
+      setLoginButtonLoading();
+      showOverlay();
+      playSoftLoginSound();
+
+      window.__loginFallbackTimer && clearTimeout(window.__loginFallbackTimer);
+      window.__loginFallbackTimer = setTimeout(() => {
+        if (document.visibilityState === "visible") {
+          setOverlayProgress(Math.max(fakeProgressValue, 35));
+        }
+      }, 900);
+
+      try {
+        if (!geoEstaOk()) await capturarGeoRequerida();
+        setOverlayProgress(Math.max(fakeProgressValue, 48));
+      } catch (err) {
+        console.warn("Geo requerida falló:", err);
+      }
+
+      if (!geoEstaOk()) {
+        hideOverlay();
+        setLoginButtonIdle();
+        alert(mensajeSegunGeoStatus());
+        return;
+      }
+
+      __geoSubmitInProgress = true;
+      loginForm.submit();
+    });
+  }
+
+  window.addEventListener("pageshow", () => {
+    if (!lockoutAlert) setLoginButtonIdle();
+    hideOverlay();
+    updateWelcomeChip();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      setOverlayProgress(Math.max(fakeProgressValue, 96));
+    }
+  });
+
+  (function () {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.id = "fxParticlesLive";
+    canvas.setAttribute("aria-hidden", "true");
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let w = 0, h = 0, dpr = 1;
+    let particles = [];
+    let last = 0;
+    let rafId = 0;
+
+    const mqLight = window.matchMedia("(prefers-color-scheme: light)");
+    const isTouch = window.matchMedia("(max-width: 768px)").matches;
+
+    function rand(min, max){ return Math.random() * (max - min) + min; }
+
+    function resize(){
+      w = Math.max(1, window.innerWidth);
+      h = Math.max(1, window.innerHeight);
+      dpr = Math.min(window.devicePixelRatio || 1, 1.8);
+
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(dpr, dpr);
+
+      const area = w * h;
+      let count = Math.floor(area / (isTouch ? 22000 : 16000));
+      count = Math.max(isTouch ? 30 : 48, Math.min(isTouch ? 70 : 110, count));
+
+      particles = Array.from({ length: count }, () => ({
+        x: rand(0, w),
+        y: rand(0, h),
+        r: rand(isTouch ? 1.1 : 1.3, isTouch ? 2.5 : 3.0),
+        vx: rand(-0.12, 0.12),
+        vy: rand(-0.10, 0.10),
+        tw: rand(0, Math.PI * 2),
+        tws: rand(0.008, 0.020),
+        a: rand(0.18, 0.40)
+      }));
+
+      canvas.style.mixBlendMode = isTouch ? "normal" : "screen";
     }
 
-    window.addEventListener("pageshow", () => {
-      if (!lockoutAlert) setLoginButtonIdle();
-      hideOverlay();
-      updateWelcomeChip();
-    });
+    function drawParticle(p, light){
+      const glowRGB = light ? "166,29,34" : "255,214,216";
+      const coreRGB = light ? "166,29,34" : "255,255,255";
+
+      const pulse = 0.82 + Math.sin(p.tw) * 0.18;
+      const alpha = p.a * pulse;
+
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 6.4);
+      g.addColorStop(0, `rgba(${glowRGB},${Math.min(1, alpha * 1.15)})`);
+      g.addColorStop(0.38, `rgba(${glowRGB},${alpha * 0.36})`);
+      g.addColorStop(1, `rgba(${glowRGB},0)`);
+
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 6.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = `rgba(${coreRGB},${Math.min(1, alpha * 0.96)})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function frame(ts){
+      const dt = Math.min(34, ts - (last || ts));
+      last = ts;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const light = mqLight.matches;
+      const lineRGB = light ? "166,29,34" : "255,214,216";
+      const maxD = isTouch ? 105 : 150;
+
+      for (const p of particles){
+        p.tw += p.tws * (dt * 0.06);
+        p.x += (p.vx + Math.sin(p.tw) * 0.014) * (dt * 0.11);
+        p.y += (p.vy + Math.cos(p.tw * 0.9) * 0.012) * (dt * 0.11);
+
+        if (p.x < -16) p.x = w + 16;
+        if (p.x > w + 16) p.x = -16;
+        if (p.y < -16) p.y = h + 16;
+        if (p.y > h + 16) p.y = -16;
+
+        drawParticle(p, light);
+      }
+
+      const len = particles.length;
+      for (let i = 0; i < len; i++){
+        const a = particles[i];
+        for (let j = i + 1; j < len; j++){
+          const b = particles[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const d2 = dx*dx + dy*dy;
+          if (d2 > maxD * maxD) continue;
+
+          const d = Math.sqrt(d2);
+          const alpha = (1 - d / maxD) * (light ? 0.06 : 0.09);
+
+          ctx.strokeStyle = `rgba(${lineRGB},${alpha})`;
+          ctx.lineWidth = light ? 0.85 : 1.0;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+
+      rafId = requestAnimationFrame(frame);
+    }
+
+    function start(){
+      cancelAnimationFrame(rafId);
+      resize();
+      last = 0;
+      rafId = requestAnimationFrame(frame);
+    }
+
+    start();
+    window.addEventListener("resize", resize, { passive: true });
+
+    try { mqLight.addEventListener("change", start); } catch(e) {}
 
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") {
-        setOverlayProgress(Math.max(fakeProgressValue, 96));
-      }
-    });
-
-    /* Partículas finas optimizadas */
-    (function () {
-      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (reduceMotion) return;
-
-      const canvas = document.createElement("canvas");
-      canvas.id = "fxParticlesLive";
-      canvas.setAttribute("aria-hidden", "true");
-      document.body.appendChild(canvas);
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      let w = 0, h = 0, dpr = 1;
-      let particles = [];
-      let last = 0;
-      let rafId = 0;
-
-      const mqLight = window.matchMedia("(prefers-color-scheme: light)");
-      const isTouch = window.matchMedia("(max-width: 768px)").matches;
-
-      function rand(min, max){ return Math.random() * (max - min) + min; }
-
-      function resize(){
-        w = Math.max(1, window.innerWidth);
-        h = Math.max(1, window.innerHeight);
-        dpr = Math.min(window.devicePixelRatio || 1, 1.8);
-
-        canvas.width = Math.floor(w * dpr);
-        canvas.height = Math.floor(h * dpr);
-        canvas.style.width = w + "px";
-        canvas.style.height = h + "px";
-
-        ctx.setTransform(1,0,0,1,0,0);
-        ctx.scale(dpr, dpr);
-
-        const area = w * h;
-        let count = Math.floor(area / (isTouch ? 22000 : 16000));
-        count = Math.max(isTouch ? 30 : 48, Math.min(isTouch ? 70 : 110, count));
-
-        particles = Array.from({ length: count }, () => ({
-          x: rand(0, w),
-          y: rand(0, h),
-          r: rand(isTouch ? 1.1 : 1.3, isTouch ? 2.5 : 3.0),
-          vx: rand(-0.12, 0.12),
-          vy: rand(-0.10, 0.10),
-          tw: rand(0, Math.PI * 2),
-          tws: rand(0.008, 0.020),
-          a: rand(0.18, 0.40)
-        }));
-
-        canvas.style.mixBlendMode = isTouch ? "normal" : "screen";
-      }
-
-      function drawParticle(p, light){
-        const glowRGB = light ? "166,29,34" : "255,214,216";
-        const coreRGB = light ? "166,29,34" : "255,255,255";
-
-        const pulse = 0.82 + Math.sin(p.tw) * 0.18;
-        const alpha = p.a * pulse;
-
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 6.4);
-        g.addColorStop(0, `rgba(${glowRGB},${Math.min(1, alpha * 1.15)})`);
-        g.addColorStop(0.38, `rgba(${glowRGB},${alpha * 0.36})`);
-        g.addColorStop(1, `rgba(${glowRGB},0)`);
-
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r * 6.4, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = `rgba(${coreRGB},${Math.min(1, alpha * 0.96)})`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      function frame(ts){
-        const dt = Math.min(34, ts - (last || ts));
-        last = ts;
-
-        ctx.clearRect(0, 0, w, h);
-
-        const light = mqLight.matches;
-        const lineRGB = light ? "166,29,34" : "255,214,216";
-        const maxD = isTouch ? 105 : 150;
-
-        for (const p of particles){
-          p.tw += p.tws * (dt * 0.06);
-          p.x += (p.vx + Math.sin(p.tw) * 0.014) * (dt * 0.11);
-          p.y += (p.vy + Math.cos(p.tw * 0.9) * 0.012) * (dt * 0.11);
-
-          if (p.x < -16) p.x = w + 16;
-          if (p.x > w + 16) p.x = -16;
-          if (p.y < -16) p.y = h + 16;
-          if (p.y > h + 16) p.y = -16;
-
-          drawParticle(p, light);
-        }
-
-        const len = particles.length;
-        for (let i = 0; i < len; i++){
-          const a = particles[i];
-          for (let j = i + 1; j < len; j++){
-            const b = particles[j];
-            const dx = a.x - b.x;
-            const dy = a.y - b.y;
-            const d2 = dx*dx + dy*dy;
-            if (d2 > maxD * maxD) continue;
-
-            const d = Math.sqrt(d2);
-            const alpha = (1 - d / maxD) * (light ? 0.06 : 0.09);
-
-            ctx.strokeStyle = `rgba(${lineRGB},${alpha})`;
-            ctx.lineWidth = light ? 0.85 : 1.0;
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, b.y);
-            ctx.stroke();
-          }
-        }
-
-        rafId = requestAnimationFrame(frame);
-      }
-
-      function start(){
         cancelAnimationFrame(rafId);
-        resize();
+      } else {
         last = 0;
         rafId = requestAnimationFrame(frame);
       }
-
-      start();
-      window.addEventListener("resize", resize, { passive: true });
-
-      try { mqLight.addEventListener("change", start); } catch(e) {}
-
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "hidden") {
-          cancelAnimationFrame(rafId);
-        } else {
-          last = 0;
-          rafId = requestAnimationFrame(frame);
-        }
-      });
-    })();
-  </script>
+    });
+  })();
+</script>
 </body>
 </html>
