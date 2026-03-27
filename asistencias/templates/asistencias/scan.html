@@ -451,15 +451,15 @@
       aspect-ratio:1/1;
       border-radius:22px;
       position:relative;
-      border:2px solid rgba(34,211,238,.85);
+      border:2px solid rgba(239,68,68,.92);
       box-shadow:
         0 0 0 9999px rgba(0,0,0,.32),
         0 0 0 1px rgba(255,255,255,.03),
-        0 0 28px rgba(34,211,238,.18),
-        inset 0 0 18px rgba(34,211,238,.10);
+        0 0 28px rgba(239,68,68,.20),
+        inset 0 0 18px rgba(239,68,68,.12);
       background:
-        radial-gradient(circle at center, rgba(34,211,238,.05), transparent 60%),
-        linear-gradient(180deg, rgba(34,211,238,.02), rgba(34,211,238,.08), rgba(34,211,238,.02));
+        radial-gradient(circle at center, rgba(239,68,68,.07), transparent 60%),
+        linear-gradient(180deg, rgba(239,68,68,.03), rgba(239,68,68,.10), rgba(239,68,68,.03));
       transition: border-color .15s ease, box-shadow .15s ease;
       overflow:hidden;
     }
@@ -481,7 +481,7 @@
     .winQR .scanGlow{
       position:absolute; left:10px; right:10px; top:50%;
       height:18px;
-      background: radial-gradient(ellipse at center, rgba(34,211,238,.18), transparent 75%);
+      background: radial-gradient(ellipse at center, rgba(239,68,68,.20), transparent 75%);
       transform: translateY(-9px);
       filter: blur(4px);
       animation: qrSweepGlow 1.2s ease-in-out infinite;
@@ -490,16 +490,16 @@
     .winQR .scanLine{
       position:absolute; left:10px; right:10px; top:50%;
       height:2px;
-      background: linear-gradient(90deg, transparent, rgba(34,211,238,.95), transparent);
-      box-shadow: 0 0 16px rgba(34,211,238,.35);
+      background: linear-gradient(90deg, transparent, rgba(239,68,68,.95), transparent);
+      box-shadow: 0 0 16px rgba(239,68,68,.35);
       animation: qrSweep 1.2s ease-in-out infinite;
     }
     .winQR .centerDot{
       position:absolute; left:50%; top:50%;
       width:10px; height:10px; border-radius:999px;
       transform: translate(-50%, -50%);
-      background: rgba(34,211,238,.95);
-      box-shadow: 0 0 14px rgba(34,211,238,.35);
+      background: rgba(239,68,68,.95);
+      box-shadow: 0 0 14px rgba(239,68,68,.35);
       opacity:.85;
       animation: pulse 1.4s ease-in-out infinite;
     }
@@ -555,9 +555,9 @@
       position:absolute;
       width:30px; height:30px;
       border-style:solid;
-      border-color: rgba(34,211,238,.95);
+      border-color: rgba(239,68,68,.95);
       opacity:.95;
-      filter: drop-shadow(0 0 8px rgba(34,211,238,.24));
+      filter: drop-shadow(0 0 8px rgba(239,68,68,.26));
     }
     .c-tl{ top:8px; left:8px; border-width:3px 0 0 3px; border-radius:11px 0 0 0; }
     .c-tr{ top:8px; right:8px; border-width:3px 3px 0 0; border-radius:0 11px 0 0; }
@@ -577,107 +577,25 @@
     .overlayGrid.mode-qr .winBar{
       display:none !important;
     }
-    .overlayGrid.mode-qr{
-      gap:0 !important;
-    }
-    .overlayGrid.mode-qr .winQR{
-      width:64%;
-      max-width:520px;
-    }
 
-    /* ======================
-       STATUS BAR
-       ====================== */
-    .status{
-      margin: 0 12px 12px;
-      padding: 11px 12px;
+    .guideText{
+      position:absolute;
+      bottom:12px;
+      left:50%;
+      transform: translateX(-50%);
+      width:min(92%, 720px);
+      padding:10px 12px;
       border-radius:14px;
-      border:1px solid rgba(255,255,255,.09);
-      background: rgba(255,255,255,.035);
-      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
-      position:relative;
-      z-index:1;
-      overflow:hidden;
+      text-align:center;
+      font-size:12px;
+      font-weight:800;
+      color: rgba(240,248,255,.92);
+      background: linear-gradient(180deg, rgba(7,12,22,.76), rgba(7,12,22,.56));
+      border:1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 10px 20px rgba(0,0,0,.24);
+      text-shadow: 0 1px 0 rgba(0,0,0,.35);
     }
-    .status::before{
-      content:"";
-      position:absolute; inset:0;
-      background: linear-gradient(90deg, transparent, rgba(34,211,238,.02), transparent);
-      animation: statusFlow 6s linear infinite;
-      pointer-events:none;
-    }
-    @keyframes statusFlow{
-      from{ transform: translateX(-100%); }
-      to{ transform: translateX(100%); }
-    }
-
-    .statusLeft{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0;
-      position:relative; z-index:1;
-    }
-    .statusRight{
-      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-      font-size:12px; color:rgba(220,230,245,.72); font-weight:850;
-      position:relative; z-index:1;
-    }
-
-    .chip{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.04);
-      font-weight:950; font-size:12px;
-      white-space:nowrap;
-      position:relative;
-      overflow:hidden;
-    }
-    .chip::after{
-      content:"";
-      position:absolute; inset:0;
-      background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,.05), transparent 70%);
-      transform: translateX(-110%);
-      animation: chipGlow 4s linear infinite;
-      pointer-events:none;
-    }
-    @keyframes chipGlow{
-      0%,70%{ transform: translateX(-110%); }
-      100%{ transform: translateX(120%); }
-    }
-
-    .dot{
-      width:10px; height:10px; border-radius:999px;
-      background: rgba(255,255,255,.34);
-      box-shadow: 0 0 10px rgba(255,255,255,.08);
-      position:relative; z-index:1;
-    }
-    .chip-run .dot{ background: var(--blue); box-shadow:0 0 16px rgba(91,140,255,.26); animation:pulse 1.2s ease-in-out infinite; }
-    .chip-ok .dot{ background: var(--green); box-shadow:0 0 16px rgba(34,197,94,.24); }
-    .chip-warn .dot{ background: var(--amber); box-shadow:0 0 16px rgba(245,158,11,.24); }
-    .chip-bad .dot{ background: var(--red); box-shadow:0 0 16px rgba(239,68,68,.24); }
-
-    @keyframes pulse{
-      0%{ transform: scale(.9); opacity:.65; }
-      50%{ transform: scale(1.12); opacity:1; }
-      100%{ transform: scale(.9); opacity:.65; }
-    }
-
-    .hintMarquee{
-      display:inline-flex; align-items:center; gap:8px;
-      max-width:100%;
-      color: rgba(245,250,255,.95);
-      font-size:13px;
-      font-weight:850;
-      min-width:0;
-    }
-    .miniSpinner{
-      width:12px; height:12px; border-radius:999px;
-      border:2px solid rgba(255,255,255,.14);
-      border-top-color: rgba(34,211,238,.95);
-      animation: spin .75s linear infinite;
-      flex:0 0 auto;
-    }
-    @keyframes spin{ to{ transform: rotate(360deg); } }
 
     /* ======================
        SIDE PANEL
@@ -686,292 +604,448 @@
       padding:12px;
       position:relative;
       z-index:1;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
     }
-    .sideBox{
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.09);
+
+    .statusCard{
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
       background:
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-      padding:12px;
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      box-shadow: 0 14px 26px rgba(0,0,0,.20);
       position:relative;
       overflow:hidden;
     }
-    .sideBox::before{
+    .statusCard::after{
       content:"";
-      position:absolute; inset:0;
-      background:
-        repeating-linear-gradient(0deg, transparent 0 16px, rgba(255,255,255,.008) 16px 17px);
-      pointer-events:none;
+      position:absolute; left:0; right:0; top:0; height:1px;
+      background: linear-gradient(90deg, transparent, rgba(91,140,255,.5), transparent);
+      opacity:.7;
     }
 
-    .sideTitle{
-      margin:0 0 10px;
-      display:flex; align-items:center; justify-content:space-between; gap:8px;
-      font-size:14px; font-weight:950;
-      position:relative; z-index:1;
+    .eyebrow{
+      display:flex; align-items:center; gap:8px;
+      color:var(--muted);
+      font-size:11px; font-weight:900; letter-spacing:.35px;
+      text-transform:uppercase;
+      margin-bottom:10px;
     }
-    .badgeLive{
-      display:inline-flex; align-items:center; gap:6px;
-      padding:5px 8px;
-      border-radius:999px;
-      border:1px solid rgba(34,197,94,.23);
-      background: rgba(34,197,94,.12);
-      font-size:11px; font-weight:950;
-    }
-    .badgeLive i{
-      width:7px; height:7px; border-radius:999px; display:inline-block;
+    .eyebrow .dot{
+      width:8px; height:8px; border-radius:999px;
       background: rgba(34,197,94,.95);
-      box-shadow: 0 0 12px rgba(34,197,94,.28);
+      box-shadow: 0 0 10px rgba(34,197,94,.26);
       animation: pulse 1.2s ease-in-out infinite;
     }
 
-    .kv{
-      display:flex; flex-direction:column; gap:8px;
-      font-size:13px; color:var(--muted); line-height:1.25;
-      position:relative; z-index:1;
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:950;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
     }
-    .kv b{ color: rgba(245,250,255,.95); }
+    .chip .dot{
+      width:9px; height:9px;
+      border-radius:999px;
+      background:#9ca3af;
+      box-shadow: 0 0 10px rgba(156,163,175,.22);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .chip-ok{
+      color:#d7ffe5;
+      background: linear-gradient(180deg, rgba(34,197,94,.18), rgba(34,197,94,.10));
+      border-color: rgba(34,197,94,.28);
+    }
+    .chip-ok .dot{
+      background: rgba(34,197,94,.98);
+      box-shadow: 0 0 10px rgba(34,197,94,.35);
+    }
+    .chip-warn{
+      color:#fff0c7;
+      background: linear-gradient(180deg, rgba(245,158,11,.18), rgba(245,158,11,.10));
+      border-color: rgba(245,158,11,.28);
+    }
+    .chip-warn .dot{
+      background: rgba(245,158,11,.98);
+      box-shadow: 0 0 10px rgba(245,158,11,.35);
+    }
+    .chip-bad{
+      color:#ffdadd;
+      background: linear-gradient(180deg, rgba(239,68,68,.18), rgba(239,68,68,.10));
+      border-color: rgba(239,68,68,.28);
+    }
+    .chip-bad .dot{
+      background: rgba(239,68,68,.98);
+      box-shadow: 0 0 10px rgba(239,68,68,.35);
+    }
+    .chip-run{
+      color:#d9ebff;
+      background: linear-gradient(180deg, rgba(91,140,255,.18), rgba(91,140,255,.10));
+      border-color: rgba(91,140,255,.28);
+    }
+    .chip-run .dot{
+      background: rgba(91,140,255,.98);
+      box-shadow: 0 0 10px rgba(91,140,255,.35);
+    }
 
-    .statsGrid{
+    .statusMsg{
       margin-top:10px;
-      display:grid; grid-template-columns:1fr 1fr; gap:8px;
-      position:relative; z-index:1;
+      min-height:44px;
+      font-size:14px;
+      line-height:1.35;
+      color: rgba(245,250,255,.94);
+      font-weight:800;
     }
-    .statMini{
-      border-radius:12px;
+
+    .miniGrid{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:10px;
+    }
+
+    .metric{
+      padding:12px;
+      border-radius:16px;
       border:1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.02);
-      padding:9px 10px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+      min-width:0;
+    }
+    .metric .k{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+    }
+    .metric .v{
+      margin-top:4px;
+      font-size:20px;
+      font-weight:950;
+      line-height:1;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .metric .s{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.25;
+    }
+
+    .panel{
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
+      box-shadow: 0 14px 26px rgba(0,0,0,.18);
       position:relative;
       overflow:hidden;
     }
-    .statMini::after{
+    .panel::after{
       content:"";
       position:absolute; left:0; right:0; top:0; height:1px;
-      background: linear-gradient(90deg, transparent, rgba(34,211,238,.20), transparent);
-      opacity:.7;
-    }
-    .statMini .k{
-      font-size:11px; color:rgba(210,225,245,.72); font-weight:850;
-    }
-    .statMini .v{
-      margin-top:2px;
-      font-size:13px; font-weight:950; color:rgba(240,248,255,.96);
+      background: linear-gradient(90deg, transparent, rgba(168,85,247,.38), transparent);
+      opacity:.72;
     }
 
-    .rangeRow{
-      display:flex; align-items:center; gap:10px;
-      margin-top:12px;
-      position:relative; z-index:1;
-    }
-    .rangeRow input[type="range"]{
-      width:100%;
-      accent-color: rgba(34,211,238,.95);
-    }
-    .rangeVal{
-      min-width:42px; text-align:right;
-      font-size:12px; font-weight:950;
-      color: rgba(240,248,255,.94);
-    }
-
-    /* RESULT TOAST CARD */
-    .toastCard{
-      margin-top:12px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
-      padding:12px;
-      box-shadow: 0 16px 28px rgba(0,0,0,.20);
-      animation: pop .14s ease-out;
-      position:relative;
-      z-index:1;
-      overflow:hidden;
-    }
-    .toastCard::before{
-      content:"";
-      position:absolute; inset:0;
-      background: linear-gradient(120deg, transparent 25%, rgba(255,255,255,.02), transparent 70%);
-      animation: cardSweep 3.4s linear infinite;
-      pointer-events:none;
-    }
-    @keyframes pop{
-      from{ transform: translateY(4px); opacity:.65; }
-      to{ transform: translateY(0); opacity:1; }
-    }
-    @keyframes cardSweep{
-      from{ transform: translateX(-110%); }
-      to{ transform: translateX(120%); }
-    }
-
-    .toastHead{
+    .panelHead{
       display:flex; align-items:center; justify-content:space-between; gap:10px;
-      margin-bottom:8px;
-      position:relative; z-index:1;
+      margin-bottom:10px;
     }
-    .toastTag{
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      font-size:12px; font-weight:950;
-      background: rgba(255,255,255,.04);
-      white-space:nowrap;
+    .panelTitle{
+      font-size:14px; font-weight:950;
+      display:flex; align-items:center; gap:9px;
     }
-    .tag-ok{ background: rgba(34,197,94,.16); border-color: rgba(34,197,94,.34); }
-    .tag-warn{ background: rgba(245,158,11,.16); border-color: rgba(245,158,11,.34); }
-    .tag-bad{ background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.34); }
-
-    .toastName{
-      font-size:14px; font-weight:950; line-height:1.2;
-      color: rgba(240,248,255,.96);
-      word-break: break-word;
-      position:relative; z-index:1;
-    }
-    .toastMeta{
-      margin-top:6px;
-      display:grid; grid-template-columns:1fr 1fr; gap:8px;
-      font-size:12px; font-weight:850;
-      color: rgba(210,225,245,.72);
-      position:relative; z-index:1;
-    }
-    .toastMeta b{ color: rgba(240,248,255,.93); word-break: break-word; }
-
-    .miniList{
-      margin-top:12px;
-      padding-top:10px;
-      border-top:1px solid rgba(255,255,255,.08);
-      position:relative; z-index:1;
-    }
-    .miniTitle{
-      margin:0 0 8px;
-      font-size:12px; font-weight:950; letter-spacing:.2px;
-      color: rgba(210,225,245,.78);
-    }
-    .miniItem{
-      display:flex; justify-content:space-between; gap:10px;
-      padding:8px 10px;
-      border-radius:12px;
+    .panelTitle i{
+      width:26px; height:26px;
+      border-radius:9px;
+      display:grid; place-items:center;
+      background: linear-gradient(135deg, rgba(91,140,255,.18), rgba(168,85,247,.16));
       border:1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.02);
-      margin-bottom:8px;
-      font-size:12px; font-weight:850;
-      color: rgba(220,235,255,.82);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+      font-style:normal;
+    }
+    .subtle{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .lastList{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height:345px;
+      overflow:auto;
+      padding-right:2px;
+    }
+    .lastList::-webkit-scrollbar{ width:8px; }
+    .lastList::-webkit-scrollbar-thumb{
+      background: rgba(255,255,255,.10);
+      border-radius:999px;
+    }
+    .lastList::-webkit-scrollbar-track{
+      background: transparent;
+    }
+
+    .miniItem{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      align-items:center;
+      padding:10px 11px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+      animation: fadeIn .16s ease;
+      min-width:0;
     }
     .miniLeft{
-      min-width:0; flex:1; display:flex; flex-direction:column; gap:2px;
+      min-width:0;
     }
     .miniName{
-      color: rgba(240,248,255,.95);
-      font-weight:950;
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      font-size:13px; font-weight:900;
+      line-height:1.2;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
     }
     .miniSub{
-      color: rgba(210,225,245,.68);
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      margin-top:4px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.2;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
     }
     .miniRight{
-      flex:0 0 auto;
+      font-size:12px;
+      color:rgba(240,248,255,.92);
+      font-weight:900;
       white-space:nowrap;
-      color: rgba(210,225,245,.72);
-      text-align:right;
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .ctrl{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+      min-width:0;
+    }
+    .ctrl .t{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:900;
+      letter-spacing:.25px;
+    }
+    .ctrl .v{
+      margin-top:8px;
+      font-size:13px;
+      font-weight:900;
+    }
+    .range{
+      width:100%;
+      margin-top:10px;
+      accent-color:#5b8cff;
     }
 
     /* ======================
-       MOBILE
+       TOAST / LOG
        ====================== */
-    @media (max-width: 980px){
-      .wrap{ padding:10px 10px 18px; }
+    .toastDock{
+      position:fixed;
+      right:14px;
+      bottom:14px;
+      z-index:30;
+      width:min(92vw, 390px);
+      pointer-events:none;
+    }
+    .toastCard{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:
+        linear-gradient(180deg, rgba(8,12,24,.92), rgba(8,12,24,.78));
+      box-shadow: 0 20px 45px rgba(0,0,0,.34);
+      backdrop-filter: blur(14px);
+      overflow:hidden;
+      animation: toastIn .22s ease;
+    }
+    .toastCard.hidden{ display:none !important; }
 
+    .toastTop{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background: linear-gradient(90deg, rgba(91,140,255,.08), rgba(168,85,247,.06));
+    }
+    .toastTag{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:11px; font-weight:950;
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .tag-ok{
+      background: linear-gradient(180deg, rgba(34,197,94,.18), rgba(34,197,94,.10));
+      color:#d9ffe7;
+      border-color: rgba(34,197,94,.28);
+    }
+    .tag-warn{
+      background: linear-gradient(180deg, rgba(245,158,11,.18), rgba(245,158,11,.10));
+      color:#fff0c7;
+      border-color: rgba(245,158,11,.28);
+    }
+    .tag-bad{
+      background: linear-gradient(180deg, rgba(239,68,68,.18), rgba(239,68,68,.10));
+      color:#ffdadd;
+      border-color: rgba(239,68,68,.28);
+    }
+
+    .toastBody{
+      padding:13px 14px 14px;
+      display:grid;
+      gap:10px;
+    }
+
+    .person{
+      display:flex; align-items:flex-start; gap:11px;
+      min-width:0;
+    }
+    .avatar{
+      width:42px; height:42px;
+      border-radius:14px;
+      display:grid; place-items:center;
+      font-size:18px;
+      background:
+        linear-gradient(135deg, rgba(91,140,255,.20), rgba(168,85,247,.16));
+      border:1px solid rgba(255,255,255,.08);
+      flex:0 0 auto;
+    }
+    .personInfo{
+      min-width:0;
+    }
+    .pName{
+      font-size:15px; font-weight:950;
+      line-height:1.15;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .pSub{
+      margin-top:4px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.3;
+      word-break:break-word;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:8px;
+    }
+    .kv .box{
+      padding:10px 11px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      min-width:0;
+    }
+    .kv .label{
+      font-size:11px;
+      color:var(--muted);
+      font-weight:900;
+      letter-spacing:.25px;
+      text-transform:uppercase;
+    }
+    .kv .value{
+      margin-top:4px;
+      font-size:13px;
+      font-weight:950;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    @keyframes toastIn{
+      from{ opacity:0; transform: translateY(10px) scale(.98); }
+      to{ opacity:1; transform: translateY(0) scale(1); }
+    }
+    @keyframes fadeIn{
+      from{ opacity:0; transform: translateY(4px); }
+      to{ opacity:1; transform: translateY(0); }
+    }
+    @keyframes pulse{
+      0%,100%{ transform: scale(1); opacity:1; }
+      50%{ transform: scale(1.18); opacity:.86; }
+    }
+
+    /* ======================
+       RESPONSIVE
+       ====================== */
+    @media (max-width: 760px){
+      .wrap{ padding:10px 10px 18px; }
       .topbar{
         grid-template-columns: 1fr;
-        padding:10px;
-        border-radius:16px;
+        gap:10px;
       }
+      .actions{ justify-content:flex-start; }
+      .videoWrap, .side{ padding:10px; }
+      .miniGrid{ grid-template-columns: 1fr 1fr; }
+      .controls{ grid-template-columns: 1fr; }
+      .winQR{ width:72%; }
+      .winBar{ width:92%; min-height:72px; }
+      .guideText{
+        width:min(95%, 600px);
+        font-size:11px;
+        padding:9px 10px;
+      }
+      .toastDock{
+        left:10px; right:10px; bottom:10px;
+        width:auto;
+      }
+      .kv{ grid-template-columns: 1fr 1fr; }
+    }
 
+    @media (max-width: 480px){
       .titles .h1{ font-size:17px; }
       .titles .sub{ font-size:12px; }
-
-      .actions{
-        width:100%;
-        justify-content:stretch;
-      }
-      .actions .pill{
-        order:-1;
-        width:100%;
-        justify-content:center;
-      }
-      .actions .btn, .actions form{
-        flex:1 1 calc(50% - 6px);
-      }
-      .actions form .btn{ width:100%; }
-
-      .videoWrap{ padding:10px; }
-      .videoShell{ border-radius:14px; }
-      .videoShell::before{ padding-top:72%; }
-
-      .overlayGrid{ padding:8px; }
-      .hudLeft{ top:8px; left:8px; }
-      .hudRight{ top:8px; right:8px; }
-
-      .winQR{ width:74%; border-radius:18px; }
-      .winQR::before{ inset:10px; border-radius:12px; }
-      .winBar{ width:92%; min-height:66px; border-radius:16px; }
-      .winBar::before{ inset:8px; border-radius:10px; }
-      .winBar::after{ left:6%; right:6%; }
-
-      .corner{ width:22px; height:22px; border-width:2px !important; }
-
-      .status{
-        margin:0 10px 10px;
-        padding:10px;
-      }
-      .statusRight{
-        width:100%;
-        justify-content:space-between;
-        font-size:11px;
-      }
-      #msg{ font-size:12px; line-height:1.25; }
-
-      .side{ padding:10px; }
-      .toastMeta{ grid-template-columns:1fr; }
-
-      .miniItem{ flex-direction:column; gap:4px; }
-      .miniRight{ text-align:left; }
-
-      .overlayGrid.mode-qr .winQR{ width:80%; }
-    }
-
-    @media (max-width: 520px){
-      .brandBadge{
-        width:40px; height:40px;
-        border-radius:12px;
-        font-size:18px;
-      }
-      .titles .h1{ font-size:15px; }
-      .titles .sub{ font-size:11px; }
-
-      .btn{ padding:9px 10px; font-size:12px; border-radius:10px; }
-      .pill{ padding:8px 10px; font-size:11px; }
-
-      .videoShell::before{ padding-top:78%; }
-
+      .pill{ font-size:11px; padding:8px 10px; }
+      .btn{ font-size:12px; padding:9px 11px; }
+      .metric .v{ font-size:18px; }
+      .panelTitle{ font-size:13px; }
       .winQR{ width:80%; }
-      .winBar{ width:95%; min-height:60px; }
-    }
-
-    @media (prefers-reduced-motion: reduce){
-      *{
-        animation-duration:.01ms !important;
-        animation-iteration-count:1 !important;
-        transition-duration:.01ms !important;
-      }
+      .winBar{ width:96%; }
+      .corner{ width:25px; height:25px; }
+      .guideText{ bottom:10px; }
     }
   </style>
-
-  <script src="{% static 'asistencias/js/zxing-browser.min.js' %}"></script>
 </head>
-
 <body>
-  <!-- FX Fondo -->
   <div class="scene" aria-hidden="true">
     <div class="orb o1"></div>
     <div class="orb o2"></div>
@@ -984,479 +1058,442 @@
   </div>
 
   <div class="wrap">
-    <!-- Header -->
-    <div class="topbar">
+    <header class="topbar">
       <div class="brand">
-        <div class="brandBadge">🛰️</div>
+        <div class="brandBadge">⟡</div>
         <div class="titles">
-          <p class="h1">Escaneo de Asistencia • V3 Hybrid Quantum</p>
-          <p class="sub">QR + Barras • Auto-scan • <b>Registro de entrada por DNI (Profesores)</b></p>
+          <h1 class="h1">Escaneo de Asistencia</h1>
+          <p class="sub">Proyecto Manhattan • Hybrid Quantum V3 • QR / Código de barras / DNI</p>
         </div>
       </div>
 
       <div class="actions">
-        <span class="pill">👤 <b>{{ request.user.username }}</b></span>
+        <div class="pill" title="Usuario actual">
+          👤 <b>{{ request.user.get_full_name|default:request.user.username }}</b>
+        </div>
+        <div class="pill" title="Fecha y hora">
+          🕒 <b id="clockText">--:--:--</b>
+        </div>
 
         <button id="btnFlip" class="btn btn-blue" type="button">🔄 Cámara</button>
         <button id="btnTorch" class="btn btn-blue hidden" type="button">🔦 Linterna</button>
-        <button id="btnStop" class="btn btn-stop" type="button" disabled>⏸ Detener</button>
-
-        <form method="post" action="{% url 'logout' %}" style="margin:0">
-          {% csrf_token %}
-          <button class="btn" type="submit">🚪 Cerrar sesión</button>
-        </form>
+        <button id="btnStop" class="btn btn-stop" type="button" disabled>⏹ Detener</button>
       </div>
-    </div>
+    </header>
 
-    <div class="grid">
-      <!-- Panel principal -->
-      <div class="card">
+    <section class="grid">
+      <!-- PANEL VIDEO -->
+      <article class="card">
         <div class="videoWrap">
           <div class="videoShell">
-            <video id="video" autoplay playsinline muted></video>
+            <video id="video" playsinline muted autoplay></video>
 
             <div class="overlay" id="overlay">
               <div class="overlayGrid mode-qr" id="overlayGrid">
                 <div class="hudLeft">
-                  <div class="hudPill"><span class="ldot"></span> AUTO-SCAN ACTIVO</div>
-                  <div class="hudPill small">HYBRID-QUANTUM / DNI-INPUT / READY</div>
+                  <div class="hudPill">
+                    <span class="ldot"></span>
+                    DETECCIÓN ACTIVA
+                  </div>
+                  <div class="hudPill small">
+                    SOLO VISUAL QR • LEE QR + BARRAS
+                  </div>
                 </div>
-                <div class="hudRight">V3 HYBRID</div>
 
-                <div class="winQR">
+                <div class="hudRight" id="camText">Cámara</div>
+
+                <div class="winQR" aria-hidden="true">
+                  <div class="mesh"></div>
                   <span class="corner c-tl"></span>
                   <span class="corner c-tr"></span>
                   <span class="corner c-bl"></span>
                   <span class="corner c-br"></span>
-                  <span class="mesh"></span>
-                  <span class="scanGlow"></span>
-                  <span class="scanLine"></span>
-                  <span class="centerDot"></span>
+                  <div class="scanGlow"></div>
+                  <div class="scanLine"></div>
+                  <div class="centerDot"></div>
                 </div>
 
-                <div class="winBar">
-                  <span class="corner c-tl"></span>
-                  <span class="corner c-tr"></span>
-                  <span class="corner c-bl"></span>
-                  <span class="corner c-br"></span>
+                <div class="winBar" aria-hidden="true"></div>
+
+                <div class="guideText">
+                  Coloca el código dentro del recuadro. El sistema detecta y registra automáticamente la entrada.
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </article>
 
-        <div id="status" class="status">
-          <div class="statusLeft">
-            <span id="chip" class="chip chip-run"><span class="dot"></span> Iniciando…</span>
-            <span class="hintMarquee">
-              <span class="miniSpinner" id="spinnerMini"></span>
-              <span id="msg">Abriendo cámara…</span>
-            </span>
+      <!-- PANEL DERECHO -->
+      <aside class="side">
+        <div class="statusCard">
+          <div class="eyebrow">
+            <span class="dot"></span>
+            Estado del motor de escaneo
           </div>
 
-          <div class="statusRight">
-            <span>Último: <b id="lastText">—</b></span>
-            <span>Hoy: <b id="countToday">0</b></span>
+          <div id="statusChip" class="chip chip-run">
+            <span class="dot"></span>
+            <span id="statusText">Iniciando…</span>
+          </div>
+
+          <div id="statusMsg" class="statusMsg">
+            Preparando cámara y detección…
+          </div>
+
+          <div class="miniGrid">
+            <div class="metric">
+              <div class="k">Escaneos hoy</div>
+              <div class="v" id="kpiScans">0</div>
+              <div class="s">Registros correctos de esta sesión</div>
+            </div>
+            <div class="metric">
+              <div class="k">Último</div>
+              <div class="v" id="kpiLast">—</div>
+              <div class="s">DNI y hora del último intento</div>
+            </div>
+            <div class="metric">
+              <div class="k">Backend</div>
+              <div class="v" id="kpiBackend">—</div>
+              <div class="s">Conectividad con API</div>
+            </div>
+            <div class="metric">
+              <div class="k">Sesión</div>
+              <div class="v" id="kpiTimer">00:00</div>
+              <div class="s">Tiempo desde apertura</div>
+            </div>
           </div>
         </div>
+
+        <div class="panel">
+          <div class="panelHead">
+            <div class="panelTitle"><i>⚡</i> Últimos 5 escaneos</div>
+            <div class="subtle">Se limpian solos en 10 s</div>
+          </div>
+
+          <div id="lastList" class="lastList"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panelHead">
+            <div class="panelTitle"><i>🎛</i> Ajustes de cámara</div>
+            <div class="subtle">Auto</div>
+          </div>
+
+          <div class="controls">
+            <div class="ctrl">
+              <div class="t">Zoom</div>
+              <div class="v" id="zoomText">No disponible</div>
+              <div id="zoomBox" class="hidden">
+                <input id="zoomRange" class="range" type="range" min="1" max="1" step="0.1" value="1">
+              </div>
+            </div>
+
+            <div class="ctrl">
+              <div class="t">Detección</div>
+              <div class="v">QR + Barras + extracción DNI</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </div>
+
+  <!-- TOAST / LOG -->
+  <div class="toastDock">
+    <div id="toastCard" class="toastCard hidden">
+      <div class="toastTop">
+        <div id="toastTag" class="toastTag tag-ok">✅ OK</div>
+        <div class="subtle" id="toastTime">--:--</div>
       </div>
 
-      <!-- Panel lateral -->
-      <div class="card side">
-        <div class="sideBox">
-          <p class="sideTitle">
-            <span>Panel en vivo</span>
-            <span class="badgeLive"><i></i> Activo</span>
-          </p>
-
-          <div class="kv">
-            <div>⚡ Estado: <b id="stateText">Iniciando</b></div>
-            <div>📷 Cámara: <b id="camText">—</b></div>
-            <div>🕒 Hora: <b id="clockText">--:--:--</b></div>
-            <div>⏱ Sesión: <b id="sessionText">00:00</b></div>
-            <div>🧠 Tip: centra QR o barras dentro del recuadro.</div>
+      <div class="toastBody">
+        <div class="person">
+          <div class="avatar">🪪</div>
+          <div class="personInfo">
+            <div class="pName" id="toastName">—</div>
+            <div class="pSub" id="toastMeta">Registro procesado</div>
           </div>
+        </div>
 
-          <div class="statsGrid">
-            <div class="statMini">
-              <div class="k">Escaneos hoy</div>
-              <div class="v" id="kpiToday">0</div>
-            </div>
-            <div class="statMini">
-              <div class="k">Modo</div>
-              <div class="v">AUTO</div>
-            </div>
-            <div class="statMini">
-              <div class="k">Backend</div>
-              <div class="v" id="kpiBackend">Local</div>
-            </div>
-            <div class="statMini">
-              <div class="k">Red</div>
-              <div class="v" id="kpiNet">Online</div>
-            </div>
+        <div class="kv">
+          <div class="box">
+            <div class="label">Código</div>
+            <div class="value" id="toastCod">—</div>
           </div>
-
-          <div id="zoomBox" class="rangeRow hidden">
-            <span style="font-weight:950;color:rgba(240,248,255,.92);font-size:12px;">🔍</span>
-            <input id="zoomRange" type="range" min="1" max="3" step="0.1" value="1" />
-            <span id="zoomVal" class="rangeVal">1.0x</span>
+          <div class="box">
+            <div class="label">Condición</div>
+            <div class="value" id="toastCond">—</div>
           </div>
-
-          <div id="toastCard" class="toastCard hidden">
-            <div class="toastHead">
-              <div id="toastTag" class="toastTag tag-ok">✅ OK</div>
-              <div style="font-size:12px;color:rgba(210,225,245,.72);font-weight:900;">
-                <span id="toastTime">—</span>
-              </div>
-            </div>
-
-            <div class="toastName" id="toastName">—</div>
-
-            <div class="toastMeta">
-              <div>Código: <b id="toastCod">—</b></div>
-              <div>Cond.: <b id="toastCond">—</b></div>
-              <div>DNI: <b id="toastDni">—</b></div>
-              <div>Estado: <b id="toastState">—</b></div>
-            </div>
+          <div class="box">
+            <div class="label">DNI</div>
+            <div class="value" id="toastDni">—</div>
           </div>
-
-          <div class="miniList">
-            <p class="miniTitle">Últimos 5 escaneos</p>
-            <div id="lastList"></div>
+          <div class="box">
+            <div class="label">Estado</div>
+            <div class="value" id="toastState">—</div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <canvas id="canvas" class="hidden"></canvas>
+
+  <script src="https://unpkg.com/@zxing/browser@latest"></script>
   <script>
     // ===========================
-    // FX Canvas partículas + líneas
+    // Fondo animado
     // ===========================
-    (function initFX(){
-      const cvs = document.getElementById("fxCanvas");
-      if (!cvs) return;
-      const ctx = cvs.getContext("2d");
-      let w=0,h=0,dpr=1, raf=null;
-      const pts = [];
-      const COUNT_D = 52;
-      const COUNT_M = 30;
+    (() => {
+      const c = document.getElementById("fxCanvas");
+      const ctx = c.getContext("2d");
+      let w = 0, h = 0, dpr = Math.max(1, devicePixelRatio || 1);
 
-      function rand(a,b){ return Math.random()*(b-a)+a; }
-
-      function make(){
-        return {
-          x: rand(0, w || 1),
-          y: rand(0, h || 1),
-          r: rand(.7, 2.0),
-          vx: rand(-.12, .12),
-          vy: rand(-.10, .10),
-          a: rand(.12, .40),
-          hue: Math.random() > .45 ? "34,211,238" : (Math.random() > .5 ? "91,140,255" : "168,85,247")
-        };
-      }
+      const particles = Array.from({ length: 58 }, () => ({
+        x: Math.random(),
+        y: Math.random(),
+        r: Math.random() * 1.9 + .5,
+        a: Math.random() * .55 + .12,
+        s: Math.random() * .00065 + .00018,
+        t: Math.random() * Math.PI * 2
+      }));
 
       function resize(){
-        w = innerWidth;
-        h = innerHeight;
-        dpr = Math.min(devicePixelRatio || 1, 2);
-
-        cvs.width = Math.floor(w*dpr);
-        cvs.height = Math.floor(h*dpr);
-        cvs.style.width = w + "px";
-        cvs.style.height = h + "px";
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        const target = innerWidth < 700 ? COUNT_M : COUNT_D;
-        while (pts.length < target) pts.push(make());
-        while (pts.length > target) pts.pop();
+        w = c.width = Math.floor(innerWidth * dpr);
+        h = c.height = Math.floor(innerHeight * dpr);
+        c.style.width = innerWidth + "px";
+        c.style.height = innerHeight + "px";
       }
 
-      function step(){
+      function draw(){
         ctx.clearRect(0,0,w,h);
 
-        for (const p of pts){
-          p.x += p.vx;
-          p.y += p.vy;
+        for(const p of particles){
+          p.t += p.s * 14;
+          const px = (p.x + Math.sin(p.t) * .01) * w;
+          const py = (p.y + Math.cos(p.t * .85) * .01) * h;
 
-          if (p.x < -10 || p.x > w + 10) p.vx *= -1;
-          if (p.y < -10 || p.y > h + 10) p.vy *= -1;
-
+          const g = ctx.createRadialGradient(px, py, 0, px, py, p.r * 8 * dpr);
+          g.addColorStop(0, `rgba(180,220,255,${p.a})`);
+          g.addColorStop(1, "rgba(180,220,255,0)");
+          ctx.fillStyle = g;
           ctx.beginPath();
-          ctx.fillStyle = `rgba(${p.hue},${p.a})`;
-          ctx.shadowColor = `rgba(${p.hue},0.25)`;
-          ctx.shadowBlur = 8;
-          ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+          ctx.arc(px, py, p.r * 8 * dpr, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        ctx.shadowBlur = 0;
-        for (let i=0; i<pts.length; i++){
-          for (let j=i+1; j<pts.length; j++){
-            const a = pts[i], b = pts[j];
-            const d = Math.hypot(a.x-b.x, a.y-b.y);
-            if (d < 120){
-              const alpha = (1 - d/120) * .07;
-              ctx.beginPath();
-              ctx.strokeStyle = `rgba(170,225,255,${alpha})`;
+        for(let i=0;i<particles.length;i++){
+          for(let j=i+1;j<particles.length;j++){
+            const a = particles[i], b = particles[j];
+            const ax = a.x * w, ay = a.y * h;
+            const bx = b.x * w, by = b.y * h;
+            const dx = ax - bx, dy = ay - by;
+            const dist = Math.hypot(dx,dy);
+            if(dist < 170 * dpr){
+              ctx.strokeStyle = `rgba(160,190,255,${(1 - dist/(170*dpr)) * .08})`;
               ctx.lineWidth = 1;
-              ctx.moveTo(a.x,a.y);
-              ctx.lineTo(b.x,b.y);
+              ctx.beginPath();
+              ctx.moveTo(ax, ay);
+              ctx.lineTo(bx, by);
               ctx.stroke();
             }
           }
         }
 
-        raf = requestAnimationFrame(step);
+        requestAnimationFrame(draw);
       }
 
-      resize();
-      step();
-
       addEventListener("resize", resize, { passive:true });
-      document.addEventListener("visibilitychange", () => {
-        if (document.hidden && raf){
-          cancelAnimationFrame(raf);
-          raf = null;
-        } else if (!document.hidden && !raf){
-          step();
-        }
-      });
+      resize();
+      draw();
     })();
 
     // ===========================
-    // CSRF
+    // Helpers
     // ===========================
+    const $ = (id) => document.getElementById(id);
+
     function getCookie(name){
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
+      const v = `; ${document.cookie}`;
+      const parts = v.split(`; ${name}=`);
       if (parts.length === 2) return parts.pop().split(";").shift();
       return "";
     }
-    const csrftoken = getCookie("csrftoken");
+
+    function pad(n){ return String(n).padStart(2, "0"); }
+    function mmss(ms){
+      const s = Math.max(0, Math.floor(ms / 1000));
+      const m = Math.floor(s / 60);
+      return `${pad(m)}:${pad(s % 60)}`;
+    }
+
+    function escapeHtml(str=""){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function maskDni(v=""){
+      v = String(v || "");
+      if (v.length !== 8) return v;
+      return v.slice(0,2) + "••••" + v.slice(-2);
+    }
+
+    function extractDni(raw){
+      if (!raw) return null;
+      const txt = String(raw).replace(/\s+/g, " ").trim();
+
+      const m1 = txt.match(/\b(\d{8})\b/);
+      if (m1) return m1[1];
+
+      const digits = txt.replace(/\D/g, "");
+      const m2 = digits.match(/(\d{8})/);
+      return m2 ? m2[1] : null;
+    }
 
     // ===========================
     // DOM refs
     // ===========================
-    const videoEl     = document.getElementById("video");
-    const overlayEl   = document.getElementById("overlay");
-    const overlayGrid = document.getElementById("overlayGrid");
+    const videoEl = $("video");
+    const overlayEl = $("overlay");
+    const overlayGrid = $("overlayGrid");
+    const camText = $("camText");
 
-    const btnStop  = document.getElementById("btnStop");
-    const btnFlip  = document.getElementById("btnFlip");
-    const btnTorch = document.getElementById("btnTorch");
+    const statusChip = $("statusChip");
+    const statusText = $("statusText");
+    const statusMsg = $("statusMsg");
 
-    const chipEl    = document.getElementById("chip");
-    const msgEl     = document.getElementById("msg");
-    const lastText  = document.getElementById("lastText");
-    const stateText = document.getElementById("stateText");
-    const camText   = document.getElementById("camText");
+    const kpiScansEl = $("kpiScans");
+    const kpiLastEl = $("kpiLast");
+    const kpiBackendEl = $("kpiBackend");
+    const kpiTimerEl = $("kpiTimer");
 
-    const countTodayEl = document.getElementById("countToday");
-    const kpiTodayEl   = document.getElementById("kpiToday");
-    const kpiBackendEl = document.getElementById("kpiBackend");
-    const kpiNetEl     = document.getElementById("kpiNet");
-    const clockText    = document.getElementById("clockText");
-    const sessionText  = document.getElementById("sessionText");
+    const lastList = $("lastList");
 
-    const zoomBox   = document.getElementById("zoomBox");
-    const zoomRange = document.getElementById("zoomRange");
-    const zoomVal   = document.getElementById("zoomVal");
+    const btnFlip = $("btnFlip");
+    const btnTorch = $("btnTorch");
+    const btnStop = $("btnStop");
 
-    const toastCard  = document.getElementById("toastCard");
-    const toastTag   = document.getElementById("toastTag");
-    const toastTime  = document.getElementById("toastTime");
-    const toastName  = document.getElementById("toastName");
-    const toastCod   = document.getElementById("toastCod");
-    const toastCond  = document.getElementById("toastCond");
-    const toastDni   = document.getElementById("toastDni");
-    const toastState = document.getElementById("toastState");
-    const lastList   = document.getElementById("lastList");
+    const zoomBox = $("zoomBox");
+    const zoomText = $("zoomText");
+    const zoomRange = $("zoomRange");
 
-    // ===========================
-    // Config
-    // ===========================
-    const COOLDOWN_MS = 2200;
-    const MESSAGE_MS  = 2200;
-    const LOOP_MS     = 75;
+    const toastCard = $("toastCard");
+    const toastTag = $("toastTag");
+    const toastTime = $("toastTime");
+    const toastName = $("toastName");
+    const toastMeta = $("toastMeta");
+    const toastCod = $("toastCod");
+    const toastCond = $("toastCond");
+    const toastDni = $("toastDni");
+    const toastState = $("toastState");
+
+    const clockText = $("clockText");
+
+    const canvas = $("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
     // ===========================
     // Estado
     // ===========================
     let stream = null;
     let track = null;
-    let running = false;
-
-    let busy = false;
-    let cooldownUntil = 0;
-    let loopTimer = null;
-
-    let lastKey = null;
-    let lastTs = 0;
-
     let detector = null;
     let zxingReader = null;
-
     let cameras = [];
     let camIndex = 0;
+
+    let running = false;
+    let busy = false;
+    let loopTimer = null;
+    let cooldownUntil = 0;
+    let lastKey = "";
+    let lastTs = 0;
     let torchOn = false;
 
-    let detectedFlashTimer = null;
-
-    let sessionStartedAt = Date.now();
     let scansToday = 0;
+    let recent = [];
+    let sessionStartedAt = Date.now();
 
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const LOOP_MS = 220;
+    const COOLDOWN_MS = 1500;
+    const MESSAGE_MS = 1000;
+    const ITEM_LIFE_MS = 10000;
+    const TOAST_LIFE_MS = 10000;
 
     // ===========================
-    // AUDIO + VIB
+    // Reloj
+    // ===========================
+    function tickClock(){
+      const d = new Date();
+      clockText.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      kpiTimerEl.textContent = mmss(Date.now() - sessionStartedAt);
+    }
+    setInterval(tickClock, 1000);
+    tickClock();
+
+    // ===========================
+    // Audio / vibración
     // ===========================
     let audioCtx = null;
-    let master = null;
 
     function ensureAudioCtx(){
       if (!audioCtx){
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        master = audioCtx.createGain();
-        master.gain.value = 0.9;
-        master.connect(audioCtx.destination);
+        try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch(e){}
       }
-      return audioCtx;
     }
 
-    async function unlockAudioOnce(){
+    function beep(freq=880, time=0.08, type="sine", gain=0.03){
       try{
-        const c = ensureAudioCtx();
-        if (c.state === "suspended") await c.resume();
-        const o = c.createOscillator();
-        const g = c.createGain();
-        g.gain.value = 0.0001;
-        o.connect(g); g.connect(master);
-        o.start();
-        o.stop(c.currentTime + 0.02);
-      }catch(e){}
-    }
-    window.addEventListener("pointerdown", unlockAudioOnce, { passive:true });
-    window.addEventListener("touchstart", unlockAudioOnce, { passive:true });
-
-    function tone(freq, durMs, vol){
-      try{
-        if (!audioCtx || audioCtx.state !== "running") return;
-        const t0 = audioCtx.currentTime;
+        ensureAudioCtx();
+        if (!audioCtx) return;
         const o = audioCtx.createOscillator();
         const g = audioCtx.createGain();
-
-        o.type = "square";
-        o.frequency.setValueAtTime(freq, t0);
-
-        const v = Math.min(Math.max(vol, 0.05), 1);
-        g.gain.setValueAtTime(0.0001, t0);
-        g.gain.exponentialRampToValueAtTime(v, t0 + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, t0 + durMs/1000);
-
-        o.connect(g); g.connect(master);
-        o.start(t0);
-        o.stop(t0 + durMs/1000 + 0.02);
+        o.type = type;
+        o.frequency.value = freq;
+        g.gain.value = gain;
+        o.connect(g).connect(audioCtx.destination);
+        o.start();
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + time);
+        o.stop(audioCtx.currentTime + time);
       }catch(e){}
     }
 
-    function beepOk(){ tone(1460,95,0.75); setTimeout(()=>tone(1020,130,0.75),110); }
-    function beepWarn(){ tone(740,170,0.65); setTimeout(()=>tone(620,170,0.65),190); }
-    function beepBad(){ tone(280,180,0.85); setTimeout(()=>tone(220,180,0.85),210); }
-
-    function vibOk(){ try{ navigator.vibrate?.([55]); }catch(e){} }
-    function vibWarn(){ try{ navigator.vibrate?.([55,30,55]); }catch(e){} }
-    function vibBad(){ try{ navigator.vibrate?.([90,40,90]); }catch(e){} }
+    function beepOk(){ beep(1046, .08, "sine", .035); setTimeout(()=>beep(1318,.07,"triangle",.028),70); }
+    function beepWarn(){ beep(560,.09,"square",.028); }
+    function beepBad(){ beep(220,.11,"sawtooth",.024); }
+    function vibOk(){ navigator.vibrate?.([40,20,40]); }
+    function vibWarn(){ navigator.vibrate?.([60]); }
+    function vibBad(){ navigator.vibrate?.([110,40,110]); }
 
     // ===========================
-    // UI helpers
+    // UI
     // ===========================
     function setChip(kind, text){
-      chipEl.className = "chip " + (kind ? ("chip-" + kind) : "");
-      chipEl.innerHTML = '<span class="dot"></span> ' + text;
-      stateText.textContent = text.replace("…","").trim();
+      statusChip.className = "chip";
+      if (kind === "ok") statusChip.classList.add("chip-ok");
+      else if (kind === "warn") statusChip.classList.add("chip-warn");
+      else if (kind === "bad") statusChip.classList.add("chip-bad");
+      else if (kind === "run") statusChip.classList.add("chip-run");
+      statusText.textContent = text;
     }
 
-    function setMsg(t){
-      msgEl.textContent = t;
-    }
-
-    function setDetectedFlash(){
-      overlayGrid.classList.add("detected");
-      clearTimeout(detectedFlashTimer);
-      detectedFlashTimer = setTimeout(() => overlayGrid.classList.remove("detected"), 320);
+    function setMsg(text){
+      statusMsg.textContent = text;
     }
 
     function updateScansTodayUI(){
-      countTodayEl.textContent = String(scansToday);
-      kpiTodayEl.textContent = String(scansToday);
-    }
-
-    function tickInfoPanel(){
-      const now = new Date();
-      clockText.textContent = now.toLocaleTimeString();
-
-      const sec = Math.max(0, Math.floor((Date.now() - sessionStartedAt) / 1000));
-      const mm = String(Math.floor(sec / 60)).padStart(2, "0");
-      const ss = String(sec % 60).padStart(2, "0");
-      sessionText.textContent = `${mm}:${ss}`;
-
-      kpiNetEl.textContent = navigator.onLine ? "Online" : "Offline";
-    }
-    setInterval(tickInfoPanel, 1000);
-    tickInfoPanel();
-
-    window.addEventListener("online",  () => { kpiNetEl.textContent = "Online"; });
-    window.addEventListener("offline", () => { kpiNetEl.textContent = "Offline"; });
-
-    const recent = [];
-
-    function maskDni(dni){
-      if (!dni) return "—";
-      const s = String(dni);
-      if (s.length < 4) return "—";
-      return "****" + s.slice(-4);
-    }
-
-    function escapeHtml(str){
-      return String(str ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function showToast(kind, data){
-      toastTag.className = "toastTag " + (kind === "ok" ? "tag-ok" : kind === "warn" ? "tag-warn" : "tag-bad");
-      toastTag.textContent = kind === "ok" ? "✅ OK" : kind === "warn" ? "⚠️ DUPLICADO" : "❌ ERROR";
-
-      toastTime.textContent = new Date().toLocaleTimeString();
-
-      toastName.textContent = data.name || "—";
-      toastCod.textContent = data.codigo || "—";
-      toastCond.textContent = data.condicion || "—";
-      toastDni.textContent = maskDni(data.dni);
-      toastState.textContent = data.estado || "—";
-
-      toastCard.classList.remove("hidden");
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => toastCard.classList.add("hidden"), 3600);
+      kpiScansEl.textContent = scansToday;
     }
 
     function renderRecent(){
       lastList.innerHTML = "";
       if (!recent.length){
-        lastList.innerHTML = `
-          <div class="miniItem">
-            <div class="miniLeft">
-              <div class="miniName">—</div>
-              <div class="miniSub">Aún no hay escaneos</div>
-            </div>
-            <div class="miniRight">—</div>
-          </div>
-        `;
         return;
       }
 
@@ -1473,107 +1510,98 @@
         lastList.appendChild(el);
       }
     }
-    renderRecent();
 
     function pushRecent(item){
-      recent.unshift(item);
+      const entry = {
+        ...item,
+        _id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + Math.random())
+      };
+
+      recent.unshift(entry);
       if (recent.length > 5) recent.pop();
       renderRecent();
+
+      setTimeout(() => {
+        const idx = recent.findIndex(x => x._id === entry._id);
+        if (idx !== -1){
+          recent.splice(idx, 1);
+          renderRecent();
+        }
+      }, ITEM_LIFE_MS);
     }
 
-    function extractDni(text){
-      const s = (text || "").toString();
-      const m = s.match(/(\d{8})/);
-      if (m) return m[1];
+    function showToast(kind, data){
+      toastTag.className = "toastTag " + (kind === "ok" ? "tag-ok" : kind === "warn" ? "tag-warn" : "tag-bad");
+      toastTag.textContent = kind === "ok" ? "✅ OK" : kind === "warn" ? "⚠️ DUPLICADO" : "❌ ERROR";
 
-      const digits = s.replace(/\D/g,"");
-      if (digits.length === 7) return digits.padStart(8,"0");
-      if (digits.length === 8) return digits;
-      if (digits.length > 8) return digits.slice(-8);
-      return "";
+      toastTime.textContent = new Date().toLocaleTimeString();
+
+      toastName.textContent = data.name || "—";
+      toastMeta.textContent = `${data.codigo || "—"} • ${data.condicion || "—"} • ${data.estado || "—"}`;
+      toastCod.textContent = data.codigo || "—";
+      toastCond.textContent = data.condicion || "—";
+      toastDni.textContent = maskDni(data.dni);
+      toastState.textContent = data.estado || "—";
+
+      toastCard.classList.remove("hidden");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toastCard.classList.add("hidden"), TOAST_LIFE_MS);
+    }
+
+    function flashDetected(){
+      overlayGrid.classList.add("detected");
+      clearTimeout(flashDetected._t);
+      flashDetected._t = setTimeout(() => overlayGrid.classList.remove("detected"), 320);
     }
 
     // ===========================
     // Cámara
     // ===========================
-    async function ensureCameraPermissionOnce(){
-      try{
-        const tmp = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
-        tmp.getTracks().forEach(t => t.stop());
-      }catch(e){}
-    }
-
     async function loadCameras(){
-      await ensureCameraPermissionOnce();
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      cameras = devices.filter(d => d.kind === "videoinput");
-      if (!cameras.length) throw new Error("No hay cámaras disponibles");
-
-      const backIdx = cameras.findIndex(c => /back|rear|environment|trasera/i.test(c.label || ""));
-      camIndex = backIdx >= 0 ? backIdx : 0;
-    }
-
-    function currentCameraLabel(){
-      const d = cameras[camIndex];
-      if (!d) return "—";
-      return (d.label && d.label.trim()) ? d.label : `Cámara ${camIndex+1}/${cameras.length}`;
-    }
-
-    function setupDetector(){
-      if ("BarcodeDetector" in window){
-        try{
-          detector = new BarcodeDetector({
-            formats: ["qr_code","code_128","code_39","ean_13","ean_8","itf","upc_a","upc_e"]
-          });
-        }catch(e){
-          detector = null;
+      try{
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        cameras = devices.filter(d => d.kind === "videoinput");
+        if (!cameras.length){
+          cameras = [];
         }
-      } else detector = null;
-
-      if (!zxingReader && typeof ZXingBrowser !== "undefined"){
-        zxingReader = new ZXingBrowser.BrowserMultiFormatReader();
+      }catch(e){
+        cameras = [];
       }
     }
 
-    async function setupZoom(track){
-      try{
-        const caps = track.getCapabilities ? track.getCapabilities() : null;
-        if (!caps || !caps.zoom){
-          zoomBox.classList.add("hidden");
+    function currentCameraLabel(){
+      return cameras[camIndex]?.label || `Cámara ${camIndex + 1}`;
+    }
+
+    async function setupDetector(){
+      detector = null;
+      zxingReader = null;
+
+      if ("BarcodeDetector" in window){
+        try{
+          const formats = await BarcodeDetector.getSupportedFormats();
+          const wanted = ["qr_code","code_128","code_39","ean_13","ean_8","upc_a","upc_e","itf","codabar","pdf417","aztec","data_matrix"];
+          const supported = wanted.filter(f => formats.includes(f));
+          detector = new BarcodeDetector({ formats: supported.length ? supported : formats });
           return;
-        }
+        }catch(e){}
+      }
 
-        const min = caps.zoom.min ?? 1;
-        const max = caps.zoom.max ?? 3;
-        const step = caps.zoom.step ?? 0.1;
-
-        zoomRange.min = min;
-        zoomRange.max = max;
-        zoomRange.step = step;
-
-        const start = Math.min(Math.max(1, min), max);
-        zoomRange.value = start;
-        zoomVal.textContent = parseFloat(start).toFixed(1) + "x";
-        zoomBox.classList.remove("hidden");
-
-        zoomRange.oninput = async () => {
-          const z = parseFloat(zoomRange.value);
-          zoomVal.textContent = z.toFixed(1) + "x";
-          try{ await track.applyConstraints({ advanced:[{ zoom:z }] }); }catch(e){}
-        };
+      try{
+        zxingReader = new ZXingBrowser.BrowserMultiFormatReader();
       }catch(e){
-        zoomBox.classList.add("hidden");
+        zxingReader = null;
       }
     }
 
     async function setupTorch(track){
       try{
-        const caps = track.getCapabilities ? track.getCapabilities() : null;
-        if (!caps || !caps.torch){
+        const caps = track.getCapabilities?.();
+        if (caps && caps.torch){
+          btnTorch.classList.remove("hidden");
+        } else {
           btnTorch.classList.add("hidden");
-          return;
         }
-        btnTorch.classList.remove("hidden");
       }catch(e){
         btnTorch.classList.add("hidden");
       }
@@ -1583,48 +1611,88 @@
       if (!track) return;
       try{
         torchOn = !torchOn;
-        await track.applyConstraints({ advanced:[{ torch: torchOn }] });
-        btnTorch.textContent = torchOn ? "🔦 Linterna ON" : "🔦 Linterna";
+        await track.applyConstraints({ advanced: [{ torch: torchOn }] });
+        btnTorch.textContent = torchOn ? "💡 Linterna on" : "🔦 Linterna";
       }catch(e){
-        btnTorch.classList.add("hidden");
+        torchOn = false;
+        btnTorch.textContent = "🔦 Linterna";
       }
     }
 
-    // ROI adaptado a video real
-    function roiQR(){
-      const vw = videoEl.videoWidth || 1280;
-      const vh = videoEl.videoHeight || 720;
-      const size = Math.floor(Math.min(vw, vh) * 0.52);
-      return {
-        sx: Math.floor((vw - size)/2),
-        sy: Math.floor((vh - size)/2),
-        sw: size,
-        sh: size
-      };
-    }
+    async function setupZoom(track){
+      try{
+        const caps = track.getCapabilities?.();
+        if (!caps || !("zoom" in caps)){
+          zoomText.textContent = "No disponible";
+          zoomBox.classList.add("hidden");
+          return;
+        }
 
-    function roiBAR(){
-      const vw = videoEl.videoWidth || 1280;
-      const vh = videoEl.videoHeight || 720;
-      const sw = Math.floor(vw * 0.84);
-      const sh = Math.floor(vh * 0.22);
-      return {
-        sx: Math.floor((vw - sw)/2),
-        sy: Math.floor((vh - sh)/2),
-        sw, sh
-      };
+        const settings = track.getSettings?.() || {};
+        const min = caps.zoom.min ?? 1;
+        const max = caps.zoom.max ?? 1;
+        const step = caps.zoom.step ?? 0.1;
+        const current = settings.zoom ?? min;
+
+        zoomRange.min = min;
+        zoomRange.max = max;
+        zoomRange.step = step;
+        zoomRange.value = current;
+
+        zoomText.textContent = `${current.toFixed(1)}x`;
+        zoomBox.classList.remove("hidden");
+
+        zoomRange.oninput = async () => {
+          const z = parseFloat(zoomRange.value);
+          try{
+            await track.applyConstraints({ advanced: [{ zoom: z }] });
+            zoomText.textContent = `${z.toFixed(1)}x`;
+          }catch(e){}
+        };
+      }catch(e){
+        zoomText.textContent = "No disponible";
+        zoomBox.classList.add("hidden");
+      }
     }
 
     // ===========================
-    // API registrar DNI
+    // ROI
+    // ===========================
+    function videoBox(){
+      return {
+        vw: videoEl.videoWidth || 1280,
+        vh: videoEl.videoHeight || 720
+      };
+    }
+
+    function roiQR(){
+      const { vw, vh } = videoBox();
+      const size = Math.floor(Math.min(vw, vh) * 0.44);
+      const sx = Math.floor((vw - size) / 2);
+      const sy = Math.floor((vh - size) / 2);
+      return { sx, sy, sw: size, sh: size };
+    }
+
+    function roiBAR(){
+      const { vw, vh } = videoBox();
+      const sw = Math.floor(vw * 0.72);
+      const sh = Math.floor(vh * 0.18);
+      const sx = Math.floor((vw - sw) / 2);
+      const sy = Math.floor((vh - sh) / 2);
+      return { sx, sy, sw, sh };
+    }
+
+    // ===========================
+    // Registro API
     // ===========================
     async function registrarDni(dni){
       if (busy) return;
       busy = true;
 
-      setDetectedFlash();
-      setChip("run","Registrando…");
-      setMsg("Enviando…");
+      flashDetected();
+
+      const csrftoken = getCookie("csrftoken");
+      kpiLastEl.textContent = maskDni(dni);
 
       const now = new Date();
       const timeStr = now.toLocaleTimeString();
@@ -1665,7 +1733,7 @@
         }
 
         const data = await res.json();
-        lastText.textContent = `${dni} • ${timeStr}`;
+        kpiLastEl.textContent = `${maskDni(dni)} • ${timeStr}`;
         kpiBackendEl.textContent = (location.hostname.includes("127.0.0.1") || location.hostname.includes("localhost")) ? "Local" : "Remoto";
 
         const prof = data.profesor || {};
@@ -1903,7 +1971,7 @@
       zxingReader = null;
       detector = null;
 
-      clearTimeout(detectedFlashTimer);
+      clearTimeout(flashDetected._t);
       overlayGrid?.classList.remove("detected");
 
       torchOn = false;
