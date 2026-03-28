@@ -183,7 +183,8 @@ REPORT_TRIGGER_TOKEN = (os.environ.get("REPORT_TRIGGER_TOKEN") or "").strip()
 BREVO_API_KEY = (os.environ.get("BREVO_API_KEY") or "").strip()
 BREVO_SENDER_EMAIL = (os.environ.get("BREVO_SENDER_EMAIL") or DEFAULT_FROM_EMAIL).strip()
 BREVO_SENDER_NAME = (os.environ.get("BREVO_SENDER_NAME") or "Proyecto Manhattan").strip()
-
+BREVO_REPLY_TO_EMAIL = "dacbfic@uni.edu.pe"
+BREVO_REPLY_TO_NAME = "Departamento Académico de Ciencias Básicas"
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 
