@@ -38,9 +38,6 @@ class Command(BaseCommand):
         base = lunes_dt.replace(hour=0, minute=0, second=0, microsecond=0)
         return [base + timedelta(days=i) for i in range(5)]
 
-    # =========================
-    # Logo desde static (base64) - fallback
-    # =========================
     def _logo_data_uri(self) -> str:
         static_path = "asistencias/img/uni_logo.png"
         try:
@@ -53,9 +50,6 @@ class Command(BaseCommand):
         except Exception:
             return ""
 
-    # =========================
-    # Logo por URL público (Gmail-friendly)
-    # =========================
     def _logo_public_url(self) -> str:
         base = (getattr(settings, "PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
         if not base:
@@ -106,7 +100,7 @@ class Command(BaseCommand):
                 profesor=prof,
                 fecha_hora__gte=lunes,
                 fecha_hora__lte=viernes_fin,
-                tipo__in=["E", "J"],  # se ignora S
+                tipo__in=["E", "J"],
             )
             .order_by("fecha_hora")
         )
@@ -198,11 +192,6 @@ class Command(BaseCommand):
         }
 
     def _bloque_plazo_html(self, now, faltas):
-        """
-        Muestra aviso de plazo solo si:
-        - hoy es viernes
-        - y existen faltas en el reporte
-        """
         if now.weekday() != 4 or faltas <= 0:
             return ""
 
@@ -225,6 +214,18 @@ class Command(BaseCommand):
             a fin de mantener actualizado el control de asistencia institucional.
           </div>
         </div>
+        """.strip()
+
+    def _bloque_marcha_blanca_html(self):
+        return """
+        <div style="margin-top:18px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px 16px;">
+      <div style="font-size:14px;font-weight:800;color:#1d4ed8;margin-bottom:8px;">
+        ℹ️ Aviso importante
+      </div>
+      <div style="font-size:13px;color:#1e3a8a;line-height:1.7;">
+        Recordar que nos encontramos en <b>proceso de marcha blanca</b>.
+      </div>
+    </div>
         """.strip()
 
     def _brevo_send_email(self, to_email: str, subject: str, body_text: str, body_html: str):
@@ -395,6 +396,8 @@ class Command(BaseCommand):
 
             body_lines += [
                 "",
+                "Recordar que estamos en proceso de marcha blanca.",
+                "",
                 "Este reporte ha sido generado automáticamente por Proyecto Manhattan para fines de seguimiento y control institucional.",
                 "Si identifica alguna inconsistencia, comuníquese con el área administradora del sistema.",
                 "",
@@ -432,6 +435,7 @@ class Command(BaseCommand):
                 """.strip()
 
             bloque_plazo_html = self._bloque_plazo_html(now, faltas)
+            bloque_marcha_blanca_html = self._bloque_marcha_blanca_html()
 
             body_html = f"""
             <div style="margin:0;padding:0;background:#f3f4f6;">
@@ -514,6 +518,7 @@ class Command(BaseCommand):
                     </div>
 
                     {bloque_plazo_html}
+                    {bloque_marcha_blanca_html}
 
                     <div style="margin-top:18px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;">
                       <div style="font-size:12px;color:#475569;line-height:1.6;">
