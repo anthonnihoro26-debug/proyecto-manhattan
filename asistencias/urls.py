@@ -24,4 +24,8 @@ urlpatterns = [
 
     # ✅ Cron privado
     path("trigger-reporte/", views.trigger_reporte_asistencia, name="trigger_reporte_asistencia"),
+ 
+ # Estadísticas privadas solo para anthonny
+    path("privado/estadisticas/", views.estadisticas_privadas, name="estadisticas_privadas"),
+    path("privado/estadisticas/excel/", views.exportar_estadisticas_privadas_excel, name="exportar_estadisticas_privadas_excel"),
 ]

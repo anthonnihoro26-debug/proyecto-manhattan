@@ -11,7 +11,6 @@
 
   <style>
     :root{
-      /* 🎓 Paleta UNI */
       --uni-red:#a61d22;
       --uni-red-2:#c62828;
       --uni-red-3:#8b1519;
@@ -28,18 +27,16 @@
       --line: rgba(17,24,39,.10);
 
       --success:#138a43;
-      --success-2:#16a34a;
       --info:#1d4ed8;
       --violet:#7c3aed;
       --danger:#dc2626;
-
+      --amber:#c97a08;
       --radius: 22px;
       --shadow: 0 24px 60px rgba(0,0,0,.20);
       --shadow-soft: 0 14px 34px rgba(0,0,0,.10);
     }
 
     *{ box-sizing:border-box; }
-
     html, body{
       margin:0;
       min-height:100%;
@@ -58,20 +55,6 @@
         linear-gradient(145deg, #14090c 0%, #210d12 35%, #2a1015 100%);
     }
 
-    /* ✅ Canvas partículas visible */
-    #uniParticles{
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2 !important; /* encima del fondo/orbes */
-      pointer-events: none;
-      opacity: 1 !important;
-      mix-blend-mode: screen;
-      filter: saturate(1.15) brightness(1.08);
-    }
-
-    /* Orbes */
     .bg-orb{
       position: fixed;
       border-radius: 999px;
@@ -112,7 +95,6 @@
       50%{ transform: translate3d(18px,-10px,0); }
     }
 
-    /* ---------- TOPBAR ---------- */
     .topbar{
       position: sticky;
       top: 0;
@@ -250,22 +232,12 @@
       letter-spacing: .2px;
     }
 
-    /* ---------- LAYOUT ---------- */
     .page{
       position: relative;
-      z-index: 3; /* ✅ encima del canvas */
+      z-index: 3;
       max-width: 1320px;
       margin: 0 auto;
       padding: 22px 16px 42px;
-    }
-    .layout-grid{
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 300px;
-      gap: 16px;
-      align-items: start;
-    }
-    @media (max-width: 1180px){
-      .layout-grid{ grid-template-columns: 1fr; }
     }
 
     .cardx{
@@ -341,160 +313,6 @@
     }
     .privacy-note i{ color: var(--uni-red); }
 
-    /* Sidebar nuevo (sin bloque largo tipo foto) */
-    .side-panel{
-      position: sticky;
-      top: 92px;
-      background: linear-gradient(180deg, rgba(247,244,237,.92), rgba(242,236,226,.88));
-      border: 1px solid rgba(255,255,255,.34);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      backdrop-filter: blur(12px);
-    }
-    .side-panel::before{
-      content:"";
-      display:block;
-      height:4px;
-      background: linear-gradient(90deg, var(--uni-red), var(--uni-gold), var(--uni-red));
-    }
-
-    .side-head{
-      padding: 16px 16px 10px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    .side-head .ico{
-      width: 40px; height: 40px;
-      border-radius: 14px;
-      display:grid; place-items:center;
-      background: rgba(166,29,34,.09);
-      border: 1px solid rgba(166,29,34,.15);
-      color: var(--uni-red);
-      font-size: 20px;
-      flex: 0 0 auto;
-    }
-    .side-head h3{
-      margin:0;
-      font-size: 15px;
-      font-weight: 950;
-      color: #1f2937;
-      line-height: 1.15;
-    }
-    .side-head p{
-      margin:2px 0 0;
-      font-size: 12px;
-      color:#6b7280;
-      font-weight: 800;
-    }
-
-    .side-body{ padding: 6px 16px 16px; }
-
-    .status-box{
-      border-radius: 16px;
-      background: rgba(255,255,255,.66);
-      border: 1px solid rgba(17,24,39,.08);
-      padding: 12px;
-      box-shadow: 0 8px 18px rgba(0,0,0,.05);
-      display:grid;
-      gap:10px;
-    }
-    .status-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      font-size: 12px;
-      font-weight: 900;
-      color:#374151;
-    }
-    .status-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      border-radius:999px;
-      padding: 6px 10px;
-      font-size:11px;
-      font-weight:950;
-      border:1px solid rgba(17,24,39,.08);
-      background: rgba(255,255,255,.75);
-      color:#1f2937;
-    }
-    .status-pill.ok{
-      background: rgba(34,197,94,.14);
-      border-color: rgba(34,197,94,.20);
-      color:#14532d;
-    }
-    .status-pill.sec{
-      background: rgba(59,130,246,.12);
-      border-color: rgba(59,130,246,.18);
-      color:#1e3a8a;
-    }
-
-    .quick-grid{
-      margin-top: 12px;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:8px;
-    }
-    .quick-card{
-      border-radius: 12px;
-      background: rgba(255,255,255,.56);
-      border: 1px solid rgba(17,24,39,.06);
-      padding: 10px;
-      box-shadow: 0 6px 16px rgba(0,0,0,.04);
-    }
-    .quick-card .k{
-      font-size:11px;
-      font-weight:900;
-      color: rgba(31,41,55,.60);
-      margin-bottom: 3px;
-    }
-    .quick-card .v{
-      font-size:13px;
-      font-weight:950;
-      color:#1f2937;
-      line-height:1.2;
-    }
-
-    .side-list{
-      margin: 12px 0 0;
-      padding: 0;
-      list-style: none;
-      display:grid;
-      gap:8px;
-    }
-    .side-list li{
-      display:flex;
-      align-items:flex-start;
-      gap:8px;
-      border-radius: 12px;
-      padding: 9px 10px;
-      background: rgba(255,255,255,.55);
-      border: 1px solid rgba(17,24,39,.06);
-      font-size: 12px;
-      color:#374151;
-      font-weight: 800;
-    }
-    .side-list i{
-      color: var(--uni-red);
-      margin-top: 1px;
-    }
-
-    .side-mini{
-      margin-top: 12px;
-      border-radius: 14px;
-      padding: 10px;
-      background: linear-gradient(135deg, rgba(166,29,34,.08), rgba(201,162,39,.08));
-      border: 1px dashed rgba(166,29,34,.18);
-      font-size: 11.5px;
-      color:#4b5563;
-      font-weight: 800;
-      line-height: 1.35;
-    }
-
-    /* ---------- FILTERS / KPIs ---------- */
     .filters{ padding: 0 22px 20px; }
 
     .filter-card{
@@ -524,7 +342,24 @@
       border-color: rgba(166,29,34,.35);
       box-shadow: 0 0 0 .18rem rgba(166,29,34,.10);
     }
-    .form-control::placeholder{ font-weight: 750; color: rgba(107,114,128,.95); }
+
+    .input-group-text{
+      border-radius:14px 0 0 14px !important;
+      border:1px solid rgba(17,24,39,0.14) !important;
+      border-right:0 !important;
+      background:rgba(255,255,255,.94) !important;
+      color:var(--uni-red) !important;
+    }
+
+    .live-search-status{
+      margin-top:7px;
+      color:rgba(31,41,55,.70);
+      font-size:11.5px;
+      font-weight:950;
+      display:flex;
+      gap:6px;
+      align-items:center;
+    }
 
     .btn-apply{
       border-radius: 14px;
@@ -565,13 +400,10 @@
 
     .kpi-grid{
       display:grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(6, 1fr);
       gap:12px;
       padding: 0 22px 18px;
     }
-    @media (max-width: 980px){ .kpi-grid{ grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 520px){ .kpi-grid{ grid-template-columns: 1fr; } }
-
     .kpi{
       border-radius: 18px;
       background: rgba(255,255,255,0.80);
@@ -604,6 +436,44 @@
       font-weight: 950;
       color:#111827;
       letter-spacing: -0.35px;
+    }
+
+    .special-banner{
+      margin: 0 22px 16px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,247,237,.95), rgba(255,251,235,.95));
+      border: 1px solid rgba(201,122,8,.18);
+      box-shadow: 0 14px 30px rgba(0,0,0,.06);
+      overflow: hidden;
+    }
+    .special-banner-head{
+      padding: 14px 16px 10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:#7c2d12;
+      font-weight: 950;
+      border-bottom: 1px solid rgba(201,122,8,.10);
+      background: rgba(255,255,255,.28);
+    }
+    .special-banner-body{
+      padding: 12px 16px 16px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    .special-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(201,122,8,.14);
+      color:#7c2d12;
+      font-weight: 900;
+      font-size: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.04);
     }
 
     .active-filters{
@@ -646,7 +516,6 @@
     }
     .doc-chip i{ color: var(--uni-red); }
 
-    /* ---------- TABLE ---------- */
     .table-wrap{
       margin: 0 22px 16px;
       border-radius: 18px;
@@ -677,8 +546,18 @@
       border-top: 1px solid rgba(17,24,39,0.05);
       background-clip: padding-box;
     }
-    .table tbody tr{ transition: background-color .12s ease; }
-    .table tbody tr:hover{ background: rgba(166,29,34,0.03); }
+    .table tbody tr{
+      transition: background-color .12s ease;
+    }
+    .table tbody tr:hover{
+      background: rgba(166,29,34,0.03);
+    }
+
+    .tr-special{
+      background: linear-gradient(180deg, rgba(255,248,240,.75), rgba(255,251,235,.90));
+    }
+
+    .row-hidden-live{ display:none !important; }
 
     .doc-name{ font-weight: 950; color:#111827; }
     .doc-sub{
@@ -711,8 +590,11 @@
     .cond-n{ background: linear-gradient(135deg,#138a43,#16a34a); }
     .cond-c{ background: linear-gradient(135deg,#2563eb,#4f46e5); }
     .cond-otro{ background: linear-gradient(135deg,#64748b,#475569); }
+    .cond-inst{ background: linear-gradient(135deg,#b45309,#d97706); }
+
     .st-asistio{ background: linear-gradient(135deg,#138a43,#16a34a); }
     .st-just{ background: linear-gradient(135deg,#7c3aed,#a855f7); }
+    .st-special{ background: linear-gradient(135deg,#b45309,#f59e0b); }
 
     .date-main{
       font-weight: 950;
@@ -729,7 +611,6 @@
       color: rgba(31,41,55,.65);
     }
 
-    /* ---------- FOOTER / PAGER ---------- */
     .footer-row{
       padding: 0 22px 22px;
       display:flex;
@@ -797,7 +678,6 @@
       box-shadow: 0 0 0 4px rgba(166,29,34,.10);
     }
 
-    /* ---------- EMPTY ---------- */
     .empty-wrap{
       padding: 46px 14px;
       display:flex;
@@ -821,7 +701,6 @@
       max-width: 420px;
     }
 
-    /* ---------- TOASTS ---------- */
     .toast-wrap{
       position: fixed;
       top: 86px;
@@ -881,11 +760,17 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Rendimiento */
     .cv-auto{ content-visibility:auto; contain-intrinsic-size: 900px 650px; }
     .table-responsive{ will-change: scroll-position; }
 
-    /* Responsive */
+    @media (max-width: 1200px){
+      .kpi-grid{ grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 980px){
+      .kpi-grid{ grid-template-columns: repeat(2, 1fr); }
+    }
+
     @media (max-width: 768px){
       .title{ font-size: 24px; }
       .title i{ width: 36px; height: 36px; font-size: 18px; border-radius: 12px; }
@@ -893,31 +778,24 @@
       .filters{ padding: 0 16px 16px; }
       .kpi-grid{ padding: 0 16px 16px; }
       .active-filters{ padding: 0 16px 12px; }
+      .special-banner{ margin: 0 16px 14px; }
       .table-wrap{ margin: 0 16px 14px; }
       .footer-row{ padding: 0 16px 18px; }
       .brand h1{ font-size: 15px; }
       .brand small{ font-size: 11px; }
       .userpill{ display:none; }
-      .side-panel{
-        position: static;
-        order: -1;
-      }
       .topbar-inner{ padding: 10px 12px; }
       .btnx{ padding: 9px 12px; border-radius: 12px; }
       .btnx .subtxt{ display:none; }
-      .quick-grid{ grid-template-columns: 1fr 1fr; }
     }
 
     @media (prefers-reduced-motion: reduce){
       *{ animation:none !important; transition:none !important; }
-      #uniParticles{ display:none; }
     }
   </style>
 </head>
 
 <body>
-  <!-- Fondo -->
- 
   <div class="bg-orb orb-1" aria-hidden="true"></div>
   <div class="bg-orb orb-2" aria-hidden="true"></div>
   <div class="bg-orb orb-3" aria-hidden="true"></div>
@@ -925,13 +803,13 @@
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="brand-badge uni-badge">
+        <div class="uni-badge">
           <img src="{% static 'asistencias/img/uni_logo.png' %}" alt="UNI" class="uni-logo" />
         </div>
 
         <div>
           <h1>Universidad Nacional de Ingeniería</h1>
-          <small>Proyecto Manhattan • Control de Asistencia</small>
+          <small>Proyecto Manhattan • Historial de Asistencias</small>
         </div>
       </div>
 
@@ -981,378 +859,368 @@
   {% endif %}
 
   <div class="page">
-    <div class="layout-grid">
+    <div class="cardx">
+      <div class="cardx-head">
+        <div>
+          <h2 class="title">
+            <i class="bi bi-clock-history"></i>
+            Historial
+          </h2>
+          <p class="subtitle">Consulta rápida, filtros claros y exportación elegante para control institucional.</p>
 
-      <!-- PANEL PRINCIPAL -->
-<div class="cardx">
-  <div class="cardx-head">
-    <div>
-      <h2 class="title">
-        <i class="bi bi-clock-history"></i>
-        Historial
-      </h2>
-      <p class="subtitle">Filtra por docente, condición y rango de fechas</p>
+          <div class="privacy-note">
+            <i class="bi bi-shield-lock"></i>
+            Por privacidad, el DNI no se muestra en el historial.
+          </div>
+        </div>
 
-      <div class="privacy-note">
-        <i class="bi bi-shield-lock"></i>
-        Por privacidad, el DNI no se muestra en el historial.
-      </div>
-    </div>
-
-    <div class="d-flex gap-2 flex-wrap align-items-start">
-      <a class="btnx btnx-primary"
-         title="Registrar asistencia manualmente por DNI"
-         href="{% url 'registro_manual' %}">
-        <i class="bi bi-pencil-square"></i>
-        <span>
-          Registro manual
-          <span class="subtxt">Por DNI</span>
-        </span>
-      </a>
-
-      <a class="btnx btnx-success"
-         title="Exporta una MATRIZ por días: filas = docentes, columnas = cada día del filtro."
-         href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}">
-        <i class="bi bi-file-earmark-excel"></i>
-        <span>
-          Exportar Excel
-          <span class="subtxt">Matriz por días</span>
-        </span>
-      </a>
-
-      <div style="margin-top:6px; font-size:12px; font-weight:900; color:rgba(31,41,55,.75); display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-        <span class="doc-chip" style="margin:0;">
-          <i class="bi bi-calendar-range"></i>
-          {% if desde %}{{ desde }}{% else %}hoy{% endif %} — {% if hasta %}{{ hasta }}{% else %}hoy{% endif %}
-        </span>
-
-        {% if condicion %}
-          <span class="doc-chip" style="margin:0;">
-            <i class="bi bi-person-badge"></i> Condición: {{ condicion|upper }}
-          </span>
-        {% endif %}
-
-        {% if q %}
-          <span class="doc-chip" style="margin:0;">
-            <i class="bi bi-search"></i> "{{ q }}"
-          </span>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <div class="kpi-grid">
-    <div class="kpi">
-      <div class="k-title"><i class="bi bi-list-check"></i> Total registros</div>
-      <div class="k-val">{{ total_registros }}</div>
-    </div>
-    <div class="kpi">
-      <div class="k-title"><i class="bi bi-people"></i> Docentes únicos</div>
-      <div class="k-val">{{ docentes_unicos }}</div>
-    </div>
-    <div class="kpi">
-      <div class="k-title"><i class="bi bi-person-badge"></i> Registros condición N</div>
-      <div class="k-val">{{ registros_n }}</div>
-    </div>
-    <div class="kpi">
-      <div class="k-title"><i class="bi bi-person-badge-fill"></i> Registros condición C</div>
-      <div class="k-val">{{ registros_c }}</div>
-    </div>
-  </div>
-
-  <div class="active-filters">
-    {% if q %}
-      <span class="pill"><i class="bi bi-search"></i> <span class="muted">Búsqueda:</span> {{ q }}</span>
-    {% endif %}
-    {% if desde %}
-      <span class="pill"><i class="bi bi-calendar-event"></i> <span class="muted">Desde:</span> <span class="mono">{{ desde }}</span></span>
-    {% endif %}
-    {% if hasta %}
-      <span class="pill"><i class="bi bi-calendar-check"></i> <span class="muted">Hasta:</span> <span class="mono">{{ hasta }}</span></span>
-    {% endif %}
-    {% if condicion %}
-      <span class="pill"><i class="bi bi-person-badge"></i> <span class="muted">Condición:</span> {{ condicion|upper }}</span>
-    {% endif %}
-    <span class="pill"><i class="bi bi-eye"></i> <span class="muted">Mostrar:</span> {{ ps }} / pág</span>
-
-    {% if q or desde or hasta or condicion %}
-      <span class="pill"><i class="bi bi-funnel"></i> Filtros activos</span>
-    {% endif %}
-  </div>
-
-  <div class="filters">
-    <div class="filter-card">
-      <form method="get">
-        <div class="row g-3 align-items-end">
-          <div class="col-12 col-lg-5">
-            <label class="form-label">Búsqueda</label>
-            <div class="input-group">
-              <span class="input-group-text" style="border-radius:14px 0 0 14px; border:1px solid rgba(17,24,39,0.14); border-right:0; background:rgba(255,255,255,.94);">
-                <i class="bi bi-search" style="color: var(--uni-red);"></i>
+        <div class="d-flex gap-2 flex-wrap align-items-start">
+          {% if puede_volver_just %}
+            <a class="btnx btnx-primary" href="{{ url_volver_just }}">
+              <i class="bi bi-arrow-left-circle"></i>
+              <span>
+                Volver a justificaciones
+                <span class="subtxt">Regresar al panel</span>
               </span>
-              <input type="text" name="q" class="form-control"
-                     style="border-radius:0 14px 14px 0 !important;"
-                     placeholder="Código / Apellidos / Nombres"
-                     value="{{ q }}"
-                     autocomplete="off">
-            </div>
-          </div>
-
-          <div class="col-6 col-lg-2">
-            <label class="form-label">Desde</label>
-            <input type="date" name="desde" class="form-control" value="{{ desde }}">
-          </div>
-
-          <div class="col-6 col-lg-2">
-            <label class="form-label">Hasta</label>
-            <input type="date" name="hasta" class="form-control" value="{{ hasta }}">
-          </div>
-
-          <div class="col-6 col-lg-2">
-            <label class="form-label">Condición</label>
-            <select name="condicion" class="form-select">
-              <option value="" {% if not condicion %}selected{% endif %}>Todas</option>
-              <option value="N" {% if condicion == "N" or condicion == "n" %}selected{% endif %}>N</option>
-              <option value="C" {% if condicion == "C" or condicion == "c" %}selected{% endif %}>C</option>
-            </select>
-          </div>
-
-          <div class="col-6 col-lg-1">
-            <label class="form-label">Mostrar</label>
-            <select name="ps" class="form-select">
-              <option value="25" {% if ps == 25 %}selected{% endif %}>25</option>
-              <option value="50" {% if ps == 50 %}selected{% endif %}>50</option>
-              <option value="100" {% if ps == 100 %}selected{% endif %}>100</option>
-            </select>
-          </div>
-
-          <div class="col-12 col-lg-2 d-grid">
-            <button class="btn-apply" type="submit">
-              <i class="bi bi-funnel-fill"></i> Aplicar
-            </button>
-          </div>
-
-          <div class="col-12 d-flex justify-content-end">
-            <a class="btn-clear" href="{% url 'historial_asistencias' %}">
-              <i class="bi bi-x-circle"></i> Limpiar filtros
             </a>
+          {% endif %}
+
+          <a class="btnx btnx-primary"
+             title="Registrar asistencia manualmente por DNI"
+             href="{{ url_registro_manual }}">
+            <i class="bi bi-pencil-square"></i>
+            <span>
+              Registro manual
+              <span class="subtxt">Asistencia por DNI</span>
+            </span>
+          </a>
+
+          <a class="btnx btnx-success"
+             title="Exporta una matriz por días"
+             href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}">
+            <i class="bi bi-file-earmark-excel"></i>
+            <span>
+              Exportar Excel
+              <span class="subtxt">Reporte por días</span>
+            </span>
+          </a>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="k-title"><i class="bi bi-list-check"></i> Total registros</div>
+          <div class="k-val">{{ total_registros }}</div>
+        </div>
+        <div class="kpi">
+          <div class="k-title"><i class="bi bi-check2-circle"></i> Asistencias</div>
+          <div class="k-val">{{ total_asist|default:0 }}</div>
+        </div>
+        <div class="kpi">
+          <div class="k-title"><i class="bi bi-shield-check"></i> Justificaciones</div>
+          <div class="k-val">{{ total_just|default:0 }}</div>
+        </div>
+        <div class="kpi">
+          <div class="k-title"><i class="bi bi-stars"></i> Días especiales</div>
+          <div class="k-val">{{ total_especiales|default:0 }}</div>
+        </div>
+        <div class="kpi">
+          <div class="k-title"><i class="bi bi-people"></i> Docentes únicos</div>
+          <div class="k-val">{{ docentes_unicos }}</div>
+        </div>
+        <div class="kpi">
+          <div class="k-title"><i class="bi bi-person-badge"></i> N / C</div>
+          <div class="k-val">{{ registros_n }} / {{ registros_c }}</div>
+        </div>
+      </div>
+
+      {% if dias_especiales_rango %}
+        <div class="special-banner">
+          <div class="special-banner-head">
+            <i class="bi bi-calendar2-event-fill"></i>
+            Días especiales dentro del rango consultado
+          </div>
+          <div class="special-banner-body">
+            {% for d in dias_especiales_rango %}
+              <span class="special-chip">
+                <i class="bi bi-stars"></i>
+                {{ d.fecha|date:"d/m/Y" }} · {{ d.tipo_display|upper }}
+                {% if d.descripcion %} · {{ d.descripcion }}{% endif %}
+              </span>
+            {% endfor %}
           </div>
         </div>
-      </form>
-    </div>
-  </div>
+      {% endif %}
 
-  <div class="table-wrap cv-auto">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle">
-        <thead>
-          <tr>
-            <th style="width:60px;">#</th>
-            <th>Docente</th>
-            <th style="width:220px;">Condición</th>
-            <th style="width:220px;">Estado</th>
-            <th style="width:230px;">Fecha y hora</th>
-          </tr>
-        </thead>
+      <div class="active-filters">
+        {% if q %}
+          <span class="pill"><i class="bi bi-search"></i> <span class="muted">Búsqueda:</span> {{ q }}</span>
+        {% endif %}
+        {% if desde %}
+          <span class="pill"><i class="bi bi-calendar-event"></i> <span class="muted">Desde:</span> <span class="mono">{{ desde }}</span></span>
+        {% endif %}
+        {% if hasta %}
+          <span class="pill"><i class="bi bi-calendar-check"></i> <span class="muted">Hasta:</span> <span class="mono">{{ hasta }}</span></span>
+        {% endif %}
+        {% if condicion %}
+          <span class="pill"><i class="bi bi-person-badge"></i> <span class="muted">Condición:</span> {{ condicion|upper }}</span>
+        {% endif %}
+        <span class="pill"><i class="bi bi-eye"></i> <span class="muted">Mostrar:</span> {{ ps }} / pág</span>
+      </div>
 
-        <tbody>
-          {% for a in items %}
-            <tr>
-              <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
-
-              <td>
-                <div class="doc-name">{{ a.profesor.apellidos }}, {{ a.profesor.nombres }}</div>
-                <div class="doc-sub">
-                  <span class="doc-chip"><i class="bi bi-hash"></i> Código: {{ a.profesor.codigo }}</span>
+      <div class="filters">
+        <div class="filter-card">
+          <form method="get">
+            <div class="row g-3 align-items-end">
+              <div class="col-12 col-lg-5">
+                <label class="form-label">Búsqueda</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-search"></i>
+                  </span>
+                  <input
+                    type="text"
+                    name="q"
+                    id="liveSearchInput"
+                    class="form-control"
+                    style="border-radius:0 14px 14px 0 !important;"
+                    placeholder="Código / Apellidos / Nombres"
+                    value="{{ q }}"
+                    autocomplete="off"
+                  >
                 </div>
-              </td>
+                <div class="live-search-status" id="liveSearchStatus">
+                  <i class="bi bi-lightning-charge-fill"></i> Búsqueda en vivo activa
+                </div>
+              </div>
 
-              <td>
-                {% if a.profesor.condicion == "N" %}
-                  <span class="badge-cond cond-n">
-                    <i class="bi bi-check-circle-fill"></i> N • Nombrado
-                  </span>
-                {% elif a.profesor.condicion == "C" %}
-                  <span class="badge-cond cond-c">
-                    <i class="bi bi-briefcase-fill"></i> C • Contratado
-                  </span>
-                {% else %}
-                  <span class="badge-cond cond-otro">
-                    <i class="bi bi-info-circle-fill"></i> {{ a.profesor.condicion }}
-                  </span>
-                {% endif %}
-              </td>
+              <div class="col-6 col-lg-2">
+                <label class="form-label">Desde</label>
+                <input type="date" name="desde" class="form-control" value="{{ desde }}">
+              </div>
 
-              <td>
-                {% if "ASISTIÓ" in a.estado %}
-                  <span class="badge-cond st-asistio">
-                    <i class="bi bi-check2-circle"></i> ASISTIÓ
-                  </span>
-                {% elif "JUSTIFICADO" in a.estado %}
-                  <span class="badge-cond st-just">
-                    <i class="bi bi-shield-check"></i> {{ a.estado }}
-                  </span>
-                  {% if a.detalle %}
-                    <div class="date-sub" style="margin-top:6px;">
-                      <i class="bi bi-card-text"></i> {{ a.detalle }}
+              <div class="col-6 col-lg-2">
+                <label class="form-label">Hasta</label>
+                <input type="date" name="hasta" class="form-control" value="{{ hasta }}">
+              </div>
+
+              <div class="col-6 col-lg-2">
+                <label class="form-label">Condición</label>
+                <select name="condicion" class="form-select">
+                  <option value="" {% if not condicion %}selected{% endif %}>Todas</option>
+                  <option value="N" {% if condicion == "N" or condicion == "n" %}selected{% endif %}>N</option>
+                  <option value="C" {% if condicion == "C" or condicion == "c" %}selected{% endif %}>C</option>
+                </select>
+              </div>
+
+              <div class="col-6 col-lg-1">
+                <label class="form-label">Mostrar</label>
+                <select name="ps" class="form-select">
+                  <option value="25" {% if ps == 25 %}selected{% endif %}>25</option>
+                  <option value="50" {% if ps == 50 %}selected{% endif %}>50</option>
+                  <option value="100" {% if ps == 100 %}selected{% endif %}>100</option>
+                </select>
+              </div>
+
+              <div class="col-12 col-lg-2 d-grid">
+                <button class="btn-apply" type="submit">
+                  <i class="bi bi-funnel-fill"></i> Aplicar filtros
+                </button>
+              </div>
+
+              <div class="col-12 d-flex justify-content-end">
+                <a class="btn-clear" href="{% url 'historial_asistencias' %}">
+                  <i class="bi bi-x-circle"></i> Limpiar filtros
+                </a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="table-wrap cv-auto">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th style="width:60px;">#</th>
+                <th>Docente / Registro</th>
+                <th style="width:220px;">Condición</th>
+                <th style="width:240px;">Estado</th>
+                <th style="width:240px;">Fecha y hora</th>
+              </tr>
+            </thead>
+
+            <tbody id="historyBody">
+              {% for a in items %}
+                <tr
+                  class="history-row {% if a.es_dia_especial %}tr-special{% endif %}"
+                  data-search="{{ a.profesor.apellidos|default:'' }} {{ a.profesor.nombres|default:'' }} {{ a.profesor.codigo|default:'' }} {{ a.profesor.condicion|default:'' }} {{ a.estado|default:'' }} {{ a.detalle|default:'' }}"
+                >
+                  <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+
+                  <td>
+                    {% if a.es_dia_especial %}
+                      <div class="doc-name">
+                        <i class="bi bi-building me-1" style="color:#b45309;"></i>
+                        Registro institucional
+                      </div>
+                      <div class="doc-sub">
+                        <span class="doc-chip">
+                          <i class="bi bi-stars"></i>
+                          Evento general de la universidad
+                        </span>
+                      </div>
+                    {% else %}
+                      <div class="doc-name">{{ a.profesor.apellidos }}, {{ a.profesor.nombres }}</div>
+                      <div class="doc-sub">
+                        <span class="doc-chip"><i class="bi bi-hash"></i> Código: {{ a.profesor.codigo }}</span>
+                      </div>
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    {% if a.es_dia_especial %}
+                      <span class="badge-cond cond-inst">
+                        <i class="bi bi-bank2"></i> INSTITUCIONAL
+                      </span>
+                    {% else %}
+                      {% if a.profesor.condicion == "N" %}
+                        <span class="badge-cond cond-n">
+                          <i class="bi bi-check-circle-fill"></i> N • Nombrado
+                        </span>
+                      {% elif a.profesor.condicion == "C" %}
+                        <span class="badge-cond cond-c">
+                          <i class="bi bi-briefcase-fill"></i> C • Contratado
+                        </span>
+                      {% else %}
+                        <span class="badge-cond cond-otro">
+                          <i class="bi bi-info-circle-fill"></i> {{ a.profesor.condicion|default:"-" }}
+                        </span>
+                      {% endif %}
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    {% if a.es_dia_especial %}
+                      <span class="badge-cond st-special">
+                        <i class="bi bi-stars"></i> {{ a.estado }}
+                      </span>
+                      {% if a.detalle %}
+                        <div class="date-sub" style="margin-top:6px;">
+                          <i class="bi bi-card-text"></i> {{ a.detalle }}
+                        </div>
+                      {% endif %}
+                    {% elif "ASISTIÓ" in a.estado %}
+                      <span class="badge-cond st-asistio">
+                        <i class="bi bi-check2-circle"></i> ASISTIÓ
+                      </span>
+                    {% elif "JUSTIFICADO" in a.estado %}
+                      <span class="badge-cond st-just">
+                        <i class="bi bi-shield-check"></i> {{ a.estado }}
+                      </span>
+                      {% if a.detalle %}
+                        <div class="date-sub" style="margin-top:6px;">
+                          <i class="bi bi-card-text"></i> {{ a.detalle }}
+                        </div>
+                      {% endif %}
+                    {% else %}
+                      <span class="badge-cond cond-otro">
+                        <i class="bi bi-info-circle"></i> {{ a.estado }}
+                      </span>
+                      {% if a.detalle %}
+                        <div class="date-sub" style="margin-top:6px;">
+                          <i class="bi bi-card-text"></i> {{ a.detalle }}
+                        </div>
+                      {% endif %}
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    <div class="date-main">
+                      <i class="bi bi-clock-history" style="color:rgba(31,41,55,.55);"></i>
+                      {{ a.fecha_hora|date:"d/m/Y H:i" }}
                     </div>
-                  {% endif %}
-                {% else %}
-                  <span class="badge-cond cond-otro">
-                    <i class="bi bi-info-circle"></i> {{ a.estado }}
-                  </span>
-                {% endif %}
-              </td>
+                    <div class="date-sub">
+                      Hace {{ a.fecha_hora|timesince }}
+                    </div>
+                  </td>
+                </tr>
 
-              <td>
-                <div class="date-main">
-                  <i class="bi bi-clock-history" style="color:rgba(31,41,55,.55);"></i>
-                  {{ a.fecha_hora|date:"d/m/Y H:i" }}
-                </div>
-                <div class="date-sub">
-                  Hace {{ a.fecha_hora|timesince }}
-                </div>
-              </td>
-            </tr>
+              {% empty %}
+                <tr id="emptyServerRow">
+                  <td colspan="5">
+                    <div class="empty-wrap">
+                      <div class="empty-ico">
+                        <i class="bi bi-inbox" style="font-size:26px;color:rgba(166,29,34,.9);"></i>
+                      </div>
+                      <div class="empty-title">No hay registros con esos filtros</div>
+                      <div class="empty-sub">
+                        Prueba cambiando la búsqueda, la condición o el rango de fechas.
+                      </div>
+                      <a class="btn-clear mt-2" href="{% url 'historial_asistencias' %}">
+                        <i class="bi bi-arrow-counterclockwise"></i> Quitar filtros
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
 
-          {% empty %}
-            <tr>
-              <td colspan="5">
-                <div class="empty-wrap">
-                  <div class="empty-ico">
-                    <i class="bi bi-inbox" style="font-size:26px;color:rgba(166,29,34,.9);"></i>
-                  </div>
-                  <div class="empty-title">No hay registros con esos filtros</div>
-                  <div class="empty-sub">
-                    Prueba cambiando la búsqueda, la condición o el rango de fechas.
-                  </div>
-                  <a class="btn-clear mt-2" href="{% url 'historial_asistencias' %}">
-                    <i class="bi bi-arrow-counterclockwise"></i> Quitar filtros
-                  </a>
-                </div>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
+              <tr id="liveNoResultsRow" style="display:none;">
+                <td colspan="5" class="text-center text-muted p-4">
+                  <i class="bi bi-search"></i> No se encontraron coincidencias en la búsqueda en vivo.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-  <div class="footer-row">
-    <div class="d-flex gap-2 flex-wrap">
-      <span class="total">
-        <i class="bi bi-list-check"></i> Total: {{ total_registros }} registros
-      </span>
+      <div class="footer-row">
+        <div class="d-flex gap-2 flex-wrap">
+          <span class="total">
+            <i class="bi bi-list-check"></i> Total: {{ total_registros }} registros
+          </span>
 
-      <span class="pinfo">
-        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-      </span>
-    </div>
-
-    <div class="pager">
-      <a class="pbtn {% if not page_obj.has_previous %}disabled{% endif %}"
-         href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page=1">
-        <i class="bi bi-skip-backward-fill"></i> Inicio
-      </a>
-
-      {% if page_obj.has_previous %}
-        <a class="pbtn"
-           href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.previous_page_number }}">
-          <i class="bi bi-chevron-left"></i> Anterior
-        </a>
-      {% else %}
-        <span class="pbtn disabled"><i class="bi bi-chevron-left"></i> Anterior</span>
-      {% endif %}
-
-      {% if page_obj.has_next %}
-        <a class="pbtn"
-           href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.next_page_number }}">
-          Siguiente <i class="bi bi-chevron-right"></i>
-        </a>
-      {% else %}
-        <span class="pbtn disabled">Siguiente <i class="bi bi-chevron-right"></i></span>
-      {% endif %}
-
-      <a class="pbtn {% if not page_obj.has_next %}disabled{% endif %}"
-         href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.paginator.num_pages }}">
-        Fin <i class="bi bi-skip-forward-fill"></i>
-      </a>
-    </div>
-  </div>
-</div>
-
-      <!-- LATERAL NUEVO -->
-      <aside class="side-panel">
-        <div class="side-head">
-          <div class="ico"><i class="bi bi-columns-gap"></i></div>
-          <div>
-            <h3>Panel de apoyo</h3>
-            <p>Historial • Operación rápida</p>
-          </div>
+          <span class="pinfo">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+          </span>
         </div>
 
-        <div class="side-body">
-          <div class="status-box">
-            <div class="status-row">
-              <span><i class="bi bi-shield-check me-1" style="color:var(--uni-red);"></i>Estado del módulo</span>
-              <span class="status-pill ok"><i class="bi bi-check-circle-fill"></i> Activo</span>
-            </div>
-            <div class="status-row">
-              <span><i class="bi bi-lock me-1" style="color:var(--uni-red);"></i>Privacidad</span>
-              <span class="status-pill sec"><i class="bi bi-eye-slash-fill"></i> DNI oculto</span>
-            </div>
-          </div>
+        <div class="pager">
+          <a class="pbtn {% if not page_obj.has_previous %}disabled{% endif %}"
+             href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page=1">
+            <i class="bi bi-skip-backward-fill"></i> Inicio
+          </a>
 
-          <div class="quick-grid">
-            <div class="quick-card">
-              <div class="k">Facultad</div>
-              <div class="v">Ingeniería Civil</div>
-            </div>
-            <div class="quick-card">
-              <div class="k">Módulo</div>
-              <div class="v">Historial</div>
-            </div>
-            <div class="quick-card">
-              <div class="k">Exportación</div>
-              <div class="v">Excel</div>
-            </div>
-            <div class="quick-card">
-              <div class="k">Filtro</div>
-              <div class="v">Fecha / Condición</div>
-            </div>
-          </div>
+          {% if page_obj.has_previous %}
+            <a class="pbtn"
+               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.previous_page_number }}">
+              <i class="bi bi-chevron-left"></i> Anterior
+            </a>
+          {% else %}
+            <span class="pbtn disabled"><i class="bi bi-chevron-left"></i> Anterior</span>
+          {% endif %}
 
-          <ul class="side-list">
-            <li>
-              <i class="bi bi-lightning-charge"></i>
-              <span>Usa rangos cortos de fechas para consultas más rápidas.</span>
-            </li>
-            <li>
-              <i class="bi bi-funnel"></i>
-              <span>Combina búsqueda + condición para reportes más precisos.</span>
-            </li>
-            <li>
-              <i class="bi bi-file-earmark-excel"></i>
-              <span>Exporta con filtros aplicados para análisis académico.</span>
-            </li>
-            <li>
-              <i class="bi bi-clock-history"></i>
-              <span>Verifica la hora y el estado antes de reportar incidencias.</span>
-            </li>
-          </ul>
+          {% if page_obj.has_next %}
+            <a class="pbtn"
+               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.next_page_number }}">
+              Siguiente <i class="bi bi-chevron-right"></i>
+            </a>
+          {% else %}
+            <span class="pbtn disabled">Siguiente <i class="bi bi-chevron-right"></i></span>
+          {% endif %}
 
-          <div class="side-mini">
-            <i class="bi bi-stars"></i>
-            Tip pro: si vas a revisar un solo docente, usa primero la búsqueda por código/apellidos y luego ajusta fechas.
-          </div>
+          <a class="pbtn {% if not page_obj.has_next %}disabled{% endif %}"
+             href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.paginator.num_pages }}">
+            Fin <i class="bi bi-skip-forward-fill"></i>
+          </a>
         </div>
-      </aside>
-
+      </div>
     </div>
   </div>
 
   <script>
-    // ✅ Toast auto-hide
     (function(){
       const wrap = document.getElementById("toastWrap");
       if (wrap) {
@@ -1363,211 +1231,42 @@
       }
     })();
 
-  </script>
-  <script>
-(function () {
-  // Si ya existía uno previo, lo removemos para evitar duplicados
-  const old = document.getElementById("fxParticlesLive");
-  if (old) old.remove();
+    (function(){
+      const input = document.getElementById('liveSearchInput');
+      const rows = Array.from(document.querySelectorAll('#historyBody .history-row'));
+      const noResults = document.getElementById('liveNoResultsRow');
+      const serverEmpty = document.getElementById('emptyServerRow');
+      const status = document.getElementById('liveSearchStatus');
+      if (!input || !rows.length) return;
 
-  const canvas = document.createElement("canvas");
-  canvas.id = "fxParticlesLive";
-  canvas.style.position = "fixed";
-  canvas.style.inset = "0";
-  canvas.style.zIndex = "2";          // debajo del contenido (.page z-index:3)
-  canvas.style.pointerEvents = "none";
-  canvas.style.opacity = "1";
-  canvas.style.mixBlendMode = "screen";
-  canvas.setAttribute("aria-hidden", "true");
-
-  // ✅ lo insertamos al inicio del body para controlar mejor capas
-  document.body.insertBefore(canvas, document.body.firstChild);
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  let w = 0, h = 0, dpr = 1;
-  let particles = [];
-  let last = 0;
-  let rafId = 0;
-
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const mqLight = window.matchMedia("(prefers-color-scheme: light)");
-
-  function rand(min, max){ return Math.random() * (max - min) + min; }
-
-  function resize(){
-    w = Math.max(1, window.innerWidth);
-    h = Math.max(1, window.innerHeight);
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
-    canvas.style.width = w + "px";
-    canvas.style.height = h + "px";
-
-    ctx.setTransform(1,0,0,1,0,0);
-    ctx.scale(dpr, dpr);
-
-    // ✅ Más partículas para que se noten en este fondo rojo
-    const count = reduceMotion
-      ? 20
-      : Math.max(120, Math.min(230, Math.floor((w * h) / 9500)));
-
-    particles = Array.from({ length: count }, () => ({
-      x: rand(0, w),
-      y: rand(0, h),
-      r: rand(1.8, 4.2),                  // más grandes
-      vx: reduceMotion ? rand(-0.03, 0.03) : rand(-0.24, 0.24),
-      vy: reduceMotion ? rand(-0.03, 0.03) : rand(-0.20, 0.20),
-      tw: rand(0, Math.PI * 2),
-      tws: rand(0.012, 0.030),
-      a: rand(0.28, 0.62),
-      tone: (() => {
-        const p = Math.random();
-        if (p < 0.70) return "blue";   // dominante como login
-        if (p < 0.86) return "white";
-        if (p < 0.95) return "red";
-        return "gold";
-      })()
-    }));
-  }
-
-  function palette(light, tone){
-    if (tone === "blue"){
-      return light
-        ? { glow:"37,99,235", core:"29,78,216" }
-        : { glow:"147,197,253", core:"255,255,255" };
-    }
-    if (tone === "white") return { glow:"180,220,255", core:"255,255,255" };
-    if (tone === "red")   return { glow:"235,90,90",  core:"255,220,220" };
-    return { glow:"230,190,90", core:"255,240,180" }; // gold
-  }
-
-  function drawParticle(p, light){
-    const c = palette(light, p.tone);
-    const pulse = 0.78 + Math.sin(p.tw) * 0.22;
-    const alpha = p.a * pulse;
-
-    // halo fuerte tipo login
-    const R = p.r * 9.8;
-    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, R);
-    g.addColorStop(0,    `rgba(${c.glow},${Math.min(1, alpha * 1.35)})`);
-    g.addColorStop(0.35, `rgba(${c.glow},${alpha * 0.58})`);
-    g.addColorStop(1,    `rgba(${c.glow},0)`);
-
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, R, 0, Math.PI * 2);
-    ctx.fill();
-
-    // núcleo
-    ctx.fillStyle = `rgba(${c.core},${Math.min(1, alpha * 1.08)})`;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  function frame(ts){
-    const dt = Math.min(40, ts - (last || ts));
-    last = ts;
-
-    ctx.clearRect(0, 0, w, h);
-
-    // ✅ neblina base para que resalte sobre rojo oscuro
-    ctx.fillStyle = "rgba(120,170,255,0.06)";
-    ctx.fillRect(0, 0, w, h);
-
-    const fog1 = ctx.createRadialGradient(w * 0.18, h * 0.12, 10, w * 0.18, h * 0.12, w * 0.58);
-    fog1.addColorStop(0, "rgba(140,190,255,0.11)");
-    fog1.addColorStop(1, "rgba(140,190,255,0)");
-    ctx.fillStyle = fog1;
-    ctx.fillRect(0, 0, w, h);
-
-    const fog2 = ctx.createRadialGradient(w * 0.85, h * 0.18, 10, w * 0.85, h * 0.18, w * 0.45);
-    fog2.addColorStop(0, "rgba(235,90,90,0.06)");
-    fog2.addColorStop(1, "rgba(235,90,90,0)");
-    ctx.fillStyle = fog2;
-    ctx.fillRect(0, 0, w, h);
-
-    const light = mqLight.matches;
-    const maxD = reduceMotion ? 100 : 225;
-
-    // actualizar y dibujar partículas
-    for (const p of particles){
-      p.tw += p.tws * (dt * 0.06);
-
-      p.x += (p.vx + Math.sin(p.tw) * 0.024) * (dt * 0.11);
-      p.y += (p.vy + Math.cos(p.tw * 0.9) * 0.020) * (dt * 0.11);
-
-      if (p.x < -18) p.x = w + 18;
-      if (p.x > w + 18) p.x = -18;
-      if (p.y < -18) p.y = h + 18;
-      if (p.y > h + 18) p.y = -18;
-
-      drawParticle(p, light);
-    }
-
-    // conexiones visibles
-    for (let i = 0; i < particles.length; i++){
-      const a = particles[i];
-      for (let j = i + 1; j < particles.length; j++){
-        const b = particles[j];
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        const d2 = dx*dx + dy*dy;
-        if (d2 > maxD * maxD) continue;
-
-        const d = Math.sqrt(d2);
-        const alpha = (1 - d / maxD) * (light ? 0.15 : 0.30);
-
-        let lineRGB = "147,197,253"; // azul claro
-        if ((a.tone === "red" || b.tone === "red") && Math.random() < 0.35) {
-          lineRGB = "235,90,90";
-        } else if ((a.tone === "gold" || b.tone === "gold") && Math.random() < 0.28) {
-          lineRGB = "230,190,90";
-        }
-
-        ctx.strokeStyle = `rgba(${lineRGB},${alpha})`;
-        ctx.lineWidth = light ? 1.2 : 1.7;
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.stroke();
+      function normalize(s){
+        return (s || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
       }
-    }
 
-    rafId = requestAnimationFrame(frame);
-  }
+      function filterRows(){
+        const q = normalize(input.value);
+        let visible = 0;
 
-  function start(){
-    cancelAnimationFrame(rafId);
-    resize();
-    last = 0;
-    rafId = requestAnimationFrame(frame);
-  }
+        rows.forEach((tr) => {
+          const hay = normalize(tr.dataset.search);
+          const show = !q || hay.includes(q);
+          tr.classList.toggle('row-hidden-live', !show);
+          if (show) visible++;
+        });
 
-  start();
+        if (noResults) noResults.style.display = visible === 0 ? '' : 'none';
+        if (serverEmpty) serverEmpty.style.display = 'none';
 
-  let resizeTimer;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(start, 120);
-  }, { passive: true });
+        if (status) {
+          status.innerHTML = visible === rows.length
+            ? '<i class="bi bi-lightning-charge-fill"></i> Búsqueda en vivo activa'
+            : `<i class="bi bi-search"></i> Mostrando ${visible} de ${rows.length} registros visibles`;
+        }
+      }
 
-  try { mqLight.addEventListener("change", start); } catch(e) {}
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-      cancelAnimationFrame(rafId);
-    } else {
-      last = 0;
-      rafId = requestAnimationFrame(frame);
-    }
-  });
-
-  console.log("✅ Partículas login-style activas (historial)");
-})();
-</script>
+      input.addEventListener('input', filterRows, { passive:true });
+      filterRows();
+    })();
+  </script>
 </body>
 </html>

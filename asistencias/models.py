@@ -295,3 +295,33 @@ class LoginEvidencia(models.Model):
         nombre = self.usuario.username if self.usuario_id else (self.username_intentado or "sin_usuario")
         estado = "OK" if self.exito else "FAIL"
         return f"{nombre} - {estado} - {self.fecha_hora_servidor:%Y-%m-%d %H:%M:%S}"
+    
+    from django.db import models
+
+
+class DiaEspecial(models.Model):
+    TIPO_CHOICES = [
+        ("FERIADO", "Feriado"),
+        ("HUELGA", "Huelga"),
+        ("PARO", "Paro de transportistas"),
+        ("SUSPENSION", "Suspensión de actividades"),
+        ("REMOTO", "Trabajo remoto institucional"),
+        ("NO_LABORABLE", "No laborable"),
+        ("OTRO", "Otro"),
+    ]
+
+    fecha = models.DateField(unique=True)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default="FERIADO")
+    descripcion = models.CharField(max_length=255, blank=True)
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Día especial"
+        verbose_name_plural = "Días especiales"
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        base = f"{self.fecha} - {self.get_tipo_display()}"
+        if self.descripcion:
+            base += f" - {self.descripcion}"
+        return base

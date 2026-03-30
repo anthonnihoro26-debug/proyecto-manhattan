@@ -15,6 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
@@ -25,19 +26,19 @@ from asistencias import views as asist_views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # ✅ Login personalizado con geocerca (solo jorge)
+    # Login personalizado con geocerca
     path('login/', asist_views.login_view_geocerca, name='login'),
 
-    # ✅ Logout (te regresa al login)
+    # Logout
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 
-    # ✅ Post-login redirect por grupo
+    # Redirección post-login
     path('', asist_views.post_login_redirect, name='post_login'),
 
-    # ✅ CRON PRIVADO (DEBE ESTAR AQUÍ, EN EL ROOT)
+    # Cron privado
     path("cron/reporte-asistencia/", asist_views.trigger_reporte_asistencia, name="cron_reporte_asistencia"),
 
-    # ✅ App
+    # App
     path('asistencia/', include('asistencias.urls')),
 ]
 

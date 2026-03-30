@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.utils.html import format_html
 import csv
 
-from .models import Profesor, Asistencia, JustificacionAsistencia, LoginEvidencia
+from .models import Profesor, Asistencia, JustificacionAsistencia, LoginEvidencia, DiaEspecial
 
 # Opcional: ocultar modelos técnicos de axes del panel principal
 try:
@@ -154,8 +154,11 @@ class AsistenciaAdmin(ExportCsvMixin, admin.ModelAdmin):
         texto = tipo if tipo else "—"
 
         colores = {
+            "e": ("#16a34a", "rgba(22,163,74,.16)", "rgba(22,163,74,.28)"),
             "entrada": ("#16a34a", "rgba(22,163,74,.16)", "rgba(22,163,74,.28)"),
+            "s": ("#dc2626", "rgba(220,38,38,.16)", "rgba(220,38,38,.28)"),
             "salida": ("#dc2626", "rgba(220,38,38,.16)", "rgba(220,38,38,.28)"),
+            "j": ("#7c3aed", "rgba(124,58,237,.16)", "rgba(124,58,237,.28)"),
             "justificación": ("#7c3aed", "rgba(124,58,237,.16)", "rgba(124,58,237,.28)"),
             "justificacion": ("#7c3aed", "rgba(124,58,237,.16)", "rgba(124,58,237,.28)"),
             "manual": ("#2563eb", "rgba(37,99,235,.16)", "rgba(37,99,235,.28)"),
@@ -174,7 +177,7 @@ class AsistenciaAdmin(ExportCsvMixin, admin.ModelAdmin):
             color,
             bg,
             border,
-            texto,
+            texto.upper(),
         )
 
     def get_csv_rows(self, queryset):
@@ -243,6 +246,9 @@ class JustificacionAsistenciaAdmin(ExportCsvMixin, admin.ModelAdmin):
 
         colores = {
             "dm": ("#2563eb", "rgba(37,99,235,.16)", "rgba(37,99,235,.28)"),
+            "c": ("#7c3aed", "rgba(124,58,237,.16)", "rgba(124,58,237,.28)"),
+            "p": ("#16a34a", "rgba(22,163,74,.16)", "rgba(22,163,74,.28)"),
+            "o": ("#ca8a04", "rgba(202,138,4,.16)", "rgba(202,138,4,.28)"),
             "oficio": ("#7c3aed", "rgba(124,58,237,.16)", "rgba(124,58,237,.28)"),
             "citt": ("#16a34a", "rgba(22,163,74,.16)", "rgba(22,163,74,.28)"),
         }
@@ -252,6 +258,11 @@ class JustificacionAsistenciaAdmin(ExportCsvMixin, admin.ModelAdmin):
             ("#ca8a04", "rgba(202,138,4,.16)", "rgba(202,138,4,.28)")
         )
 
+        try:
+            texto_mostrar = obj.get_tipo_display()
+        except Exception:
+            texto_mostrar = texto.upper()
+
         return format_html(
             '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
             'font-weight:700;font-size:12px;color:{};background:{};border:1px solid {};">'
@@ -260,7 +271,7 @@ class JustificacionAsistenciaAdmin(ExportCsvMixin, admin.ModelAdmin):
             color,
             bg,
             border,
-            texto.upper(),
+            texto_mostrar,
         )
 
     @admin.display(description="Detalle")
@@ -296,6 +307,94 @@ class JustificacionAsistenciaAdmin(ExportCsvMixin, admin.ModelAdmin):
                 str(obj.creado_por) if obj.creado_por else "",
                 obj.creado_en,
             ]
+
+
+# =========================================================
+# DÍAS ESPECIALES
+# =========================================================
+@admin.register(DiaEspecial)
+class DiaEspecialAdmin(admin.ModelAdmin):
+    list_display = (
+        "fecha",
+        "tipo_badge",
+        "descripcion_resumen",
+        "activo_badge",
+    )
+    list_filter = (
+        ("fecha", admin.DateFieldListFilter),
+        ("tipo", admin.ChoicesFieldListFilter),
+        "activo",
+    )
+    search_fields = ("descripcion",)
+    ordering = ("-fecha",)
+    list_per_page = 20
+    list_display_links = ("fecha",)
+    actions_on_top = True
+    actions_on_bottom = True
+    save_on_top = True
+    show_full_result_count = False
+    empty_value_display = "—"
+
+    @admin.display(description="Tipo", ordering="tipo")
+    def tipo_badge(self, obj):
+        tipo = (obj.tipo or "").strip().upper()
+        texto = tipo if tipo else "—"
+
+        colores = {
+            "FERIADO": ("#b45309", "rgba(245,158,11,.16)", "rgba(245,158,11,.28)"),
+            "HUELGA": ("#9a3412", "rgba(234,88,12,.16)", "rgba(234,88,12,.28)"),
+            "PARO": ("#c2410c", "rgba(249,115,22,.16)", "rgba(249,115,22,.28)"),
+            "SUSPENSION": ("#92400e", "rgba(245,158,11,.16)", "rgba(245,158,11,.28)"),
+            "REMOTO": ("#1d4ed8", "rgba(37,99,235,.16)", "rgba(37,99,235,.28)"),
+            "NO_LABORABLE": ("#475569", "rgba(100,116,139,.16)", "rgba(100,116,139,.28)"),
+            "OTRO": ("#7c3aed", "rgba(124,58,237,.16)", "rgba(124,58,237,.28)"),
+        }
+
+        color, bg, border = colores.get(
+            texto,
+            ("#475569", "rgba(100,116,139,.16)", "rgba(100,116,139,.28)")
+        )
+
+        try:
+            texto_mostrar = obj.get_tipo_display()
+        except Exception:
+            texto_mostrar = texto.replace("_", " ").title()
+
+        return format_html(
+            '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+            'font-weight:700;font-size:12px;color:{};background:{};border:1px solid {};">'
+            '{}'
+            "</span>",
+            color,
+            bg,
+            border,
+            texto_mostrar,
+        )
+
+    @admin.display(description="Descripción")
+    def descripcion_resumen(self, obj):
+        detalle = (obj.descripcion or "").strip()
+        if not detalle:
+            return "—"
+        if len(detalle) <= 80:
+            return detalle
+        return f"{detalle[:80]}..."
+
+    @admin.display(description="Activo", ordering="activo")
+    def activo_badge(self, obj):
+        if obj.activo:
+            return format_html(
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'font-weight:700;font-size:12px;color:#16a34a;'
+                'background:rgba(22,163,74,.16);border:1px solid rgba(22,163,74,.28);">'
+                'Activo</span>'
+            )
+        return format_html(
+            '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+            'font-weight:700;font-size:12px;color:#dc2626;'
+            'background:rgba(220,38,38,.16);border:1px solid rgba(220,38,38,.28);">'
+            'Inactivo</span>'
+        )
 
 
 # =========================================================

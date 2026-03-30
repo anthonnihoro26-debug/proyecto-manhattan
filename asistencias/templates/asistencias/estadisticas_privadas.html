@@ -1,0 +1,867 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Estadísticas privadas - Proyecto Manhattan</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --uni-red:#a61d22;
+      --uni-red-2:#c62828;
+      --uni-red-3:#8b1519;
+      --uni-gold:#c9a227;
+
+      --bg-dark:#190c0f;
+      --bg-dark-2:#2a1015;
+      --ink:#171717;
+      --muted:#6b7280;
+
+      --card:rgba(255,255,255,.90);
+      --line:rgba(17,24,39,.10);
+
+      --success:#138a43;
+      --success-2:#16a34a;
+      --info:#1d4ed8;
+      --violet:#7c3aed;
+      --danger:#dc2626;
+      --amber:#d97706;
+      --radius:22px;
+      --shadow:0 24px 60px rgba(0,0,0,.20);
+      --shadow-soft:0 14px 34px rgba(0,0,0,.10);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{
+      margin:0;
+      min-height:100%;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg-dark);
+    }
+
+    body{
+      position: relative;
+      overflow-x: hidden;
+      background:
+        radial-gradient(1100px 600px at 8% 8%, rgba(198,40,40,.18), transparent 60%),
+        radial-gradient(900px 540px at 88% 14%, rgba(201,162,39,.10), transparent 60%),
+        radial-gradient(1000px 700px at 50% 100%, rgba(166,29,34,.10), transparent 60%),
+        linear-gradient(145deg, #14090c 0%, #210d12 35%, #2a1015 100%);
+    }
+
+    .bg-orb{
+      position: fixed;
+      border-radius: 999px;
+      filter: blur(40px);
+      z-index: 0 !important;
+      pointer-events: none;
+      opacity: .28;
+    }
+    .orb-1{
+      width: 260px; height: 260px;
+      left: -60px; top: 110px;
+      background: rgba(198,40,40,.65);
+      animation: floatOrb1 16s ease-in-out infinite;
+    }
+    .orb-2{
+      width: 220px; height: 220px;
+      right: -50px; top: 220px;
+      background: rgba(201,162,39,.42);
+      animation: floatOrb2 18s ease-in-out infinite;
+    }
+    .orb-3{
+      width: 320px; height: 320px;
+      right: 10%; bottom: -80px;
+      background: rgba(166,29,34,.35);
+      animation: floatOrb3 20s ease-in-out infinite;
+    }
+
+    @keyframes floatOrb1{
+      0%,100%{ transform: translate3d(0,0,0); }
+      50%{ transform: translate3d(14px,-16px,0); }
+    }
+    @keyframes floatOrb2{
+      0%,100%{ transform: translate3d(0,0,0); }
+      50%{ transform: translate3d(-16px,10px,0); }
+    }
+    @keyframes floatOrb3{
+      0%,100%{ transform: translate3d(0,0,0); }
+      50%{ transform: translate3d(18px,-10px,0); }
+    }
+
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: linear-gradient(180deg, rgba(247,244,237,.92), rgba(244,239,230,.88));
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(166,29,34,.10);
+      box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    }
+    .topbar::after{
+      content:"";
+      display:block;
+      height: 4px;
+      background: linear-gradient(90deg, var(--uni-red-3), var(--uni-red), var(--uni-gold), var(--uni-red));
+      opacity:.95;
+    }
+
+    .topbar-inner{
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 260px;
+    }
+    .uni-badge{
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+    .uni-logo{
+      width: 46px;
+      height: 46px;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 12px rgba(166,29,34,.14));
+    }
+
+    .brand h1{
+      font-size: 17px;
+      line-height: 1.08;
+      margin: 0;
+      font-weight: 950;
+      color:#111827;
+      letter-spacing: .12px;
+    }
+    .brand small{
+      display:block;
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 800;
+      margin-top: 3px;
+    }
+
+    .userbox{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .userpill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 10px 13px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid rgba(166,29,34,.10);
+      color:#111827;
+      font-weight: 900;
+      font-size: 13px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.06);
+    }
+
+    .btnx{
+      border:0;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-weight: 950;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      text-decoration:none;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease, filter .12s ease;
+      box-shadow: 0 12px 26px rgba(0,0,0,.10);
+      user-select:none;
+      white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+    }
+    .btnx:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 16px 34px rgba(0,0,0,.14);
+      filter: saturate(1.03);
+    }
+    .btnx:active{ transform: translateY(0px); opacity:.94; }
+    .btnx::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.18) 40%, transparent 70%);
+      transform: translateX(-120%);
+      transition: transform .6s ease;
+      pointer-events:none;
+    }
+    .btnx:hover::before{ transform: translateX(120%); }
+
+    .btnx-success{ background: linear-gradient(135deg, #138a43, #16a34a); color:#fff; }
+    .btnx-danger{ background: linear-gradient(135deg, #bf1f24, #e53935); color:#fff; }
+    .btnx-primary{ background: linear-gradient(135deg, var(--uni-red), #d73636); color:#fff; }
+    .btnx-dark{
+      background: rgba(255,255,255,0.82);
+      border: 1px solid rgba(17,24,39,0.12);
+      color:#1f2937;
+    }
+
+    .page{
+      position: relative;
+      z-index: 3;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 22px 16px 42px;
+    }
+
+    .cardx{
+      background: linear-gradient(180deg, rgba(247,244,237,.90), rgba(243,239,230,.86));
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .cardx::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--uni-red-3), var(--uni-red), var(--uni-gold), var(--uni-red));
+      opacity: .95;
+      z-index: 0;
+    }
+    .cardx > *{ position: relative; z-index: 1; }
+
+    .hero{
+      padding:22px 22px 18px;
+      margin-bottom:18px;
+    }
+
+    .hero-top{
+      display:flex;
+      justify-content:space-between;
+      gap:18px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+
+    .title{
+      margin:0;
+      font-weight: 950;
+      font-size: 32px;
+      letter-spacing: -0.7px;
+      color: #1f2937;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      line-height: 1.05;
+    }
+    .title i{
+      color: var(--uni-red);
+      background: rgba(166,29,34,.08);
+      border: 1px solid rgba(166,29,34,.14);
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+    }
+    .sub{
+      margin:6px 0 0;
+      color:#6b7280;
+      font-weight:800;
+      max-width:900px;
+    }
+
+    .badge-private{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(34,197,94,.12);
+      border:1px solid rgba(34,197,94,.25);
+      color:#166534;
+      font-weight:900;
+      box-shadow:0 8px 18px rgba(0,0,0,.05);
+    }
+
+    .filters{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0,1fr));
+      gap:12px;
+    }
+
+    .form-label{
+      font-weight:950;
+      color:#1f2937;
+      font-size:13px;
+      letter-spacing:.18px;
+    }
+
+    .form-control, .form-select{
+      border-radius: 14px !important;
+      padding: 11px 12px;
+      border: 1px solid rgba(17,24,39,0.14);
+      font-weight: 850;
+      background: rgba(255,255,255,.92);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+      min-height:48px;
+    }
+    .form-control:focus, .form-select:focus{
+      border-color: rgba(166,29,34,.35);
+      box-shadow: 0 0 0 .18rem rgba(166,29,34,.10);
+    }
+
+    .live-search-status{
+      margin-top:7px;
+      color:rgba(31,41,55,.70);
+      font-size:11.5px;
+      font-weight:950;
+      display:flex;
+      gap:6px;
+      align-items:center;
+    }
+
+    .btn-apply{
+      border-radius: 14px;
+      padding: 11px 12px;
+      font-weight: 950;
+      background: linear-gradient(135deg, var(--uni-red), #d73636);
+      border:0;
+      color:#fff;
+      box-shadow: 0 14px 30px rgba(166,29,34,.22);
+      height: 100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .btn-apply:hover{ transform: translateY(-1px); box-shadow: 0 18px 34px rgba(166,29,34,.28); }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .kpi{
+      border-radius: 18px;
+      background: rgba(255,255,255,0.80);
+      border: 1px solid rgba(17,24,39,0.08);
+      padding: 14px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.07);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi::after{
+      content:"";
+      position:absolute;
+      top:0; left:0; right:0;
+      height: 3px;
+      background: linear-gradient(90deg, rgba(166,29,34,.85), rgba(201,162,39,.85));
+      opacity:.9;
+    }
+    .kpi .label{
+      font-size: 12px;
+      color: rgba(31,41,55,.68);
+      font-weight: 900;
+      margin-bottom: 6px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .kpi .label i{ color: var(--uni-red); }
+    .kpi .value{
+      font-size: 24px;
+      font-weight: 950;
+      color:#111827;
+      letter-spacing: -0.35px;
+    }
+
+    .table-card{
+      padding:16px;
+    }
+
+    .table-responsive{
+      border-radius:18px;
+      overflow:auto;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+      background:rgba(255,255,255,.92);
+    }
+
+    table{
+      width:100%;
+      min-width:900px;
+      border-collapse:separate;
+      border-spacing:0;
+    }
+
+    thead th{
+      position:sticky;
+      top:0;
+      z-index:1;
+      background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(243,239,230,.92));
+      color:#1f2937;
+      font-size:.92rem;
+      padding:14px 12px;
+      border-bottom:1px solid rgba(17,24,39,0.09);
+      text-align:center;
+      white-space:nowrap;
+      font-weight:950;
+    }
+
+    tbody td{
+      padding:13px 12px;
+      border-bottom:1px solid rgba(17,24,39,.06);
+      text-align:center;
+      color:#111827;
+      background:rgba(255,255,255,.80);
+      font-weight:850;
+    }
+
+    tbody tr:hover td{
+      background:rgba(166,29,34,.03);
+    }
+
+    tbody td.name{
+      text-align:left;
+      font-weight:950;
+    }
+
+    .stat-row-hidden{ display:none !important; }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:86px;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:.88rem;
+      font-weight:900;
+      border:1px solid transparent;
+      box-shadow:0 8px 18px rgba(0,0,0,.04);
+    }
+
+    .pill.green{background:rgba(34,197,94,.14); color:#166534; border-color:rgba(34,197,94,.22)}
+    .pill.amber{background:rgba(245,158,11,.14); color:#92400e; border-color:rgba(245,158,11,.22)}
+    .pill.red{background:rgba(239,68,68,.12); color:#991b1b; border-color:rgba(239,68,68,.18)}
+    .pill.blue{background:rgba(59,130,246,.12); color:#1d4ed8; border-color:rgba(59,130,246,.18)}
+    .pill.violet{background:rgba(124,58,237,.12); color:#6d28d9; border-color:rgba(124,58,237,.18)}
+
+    .footer-note{
+      margin-top:14px;
+      color:#6b7280;
+      font-size:.93rem;
+      font-weight:850;
+      line-height:1.55;
+    }
+
+    @media (max-width: 1100px){
+      .filters{grid-template-columns: repeat(2, minmax(0,1fr));}
+      .kpis{grid-template-columns: repeat(2, minmax(0,1fr));}
+    }
+
+    @media (max-width: 768px){
+      .title{ font-size: 24px; }
+      .title i{ width: 36px; height: 36px; font-size: 18px; border-radius: 12px; }
+      .hero{ padding:18px 16px 16px; }
+      .brand h1{ font-size:15px; }
+      .brand small{ font-size:11px; }
+      .userpill{ display:none; }
+      .topbar-inner{ padding:10px 12px; }
+      .btnx{ padding:9px 12px; border-radius:12px; }
+    }
+
+    @media (max-width: 640px){
+      .filters{grid-template-columns: 1fr;}
+      .kpis{grid-template-columns: 1fr;}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ animation:none !important; transition:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orb orb-1" aria-hidden="true"></div>
+  <div class="bg-orb orb-2" aria-hidden="true"></div>
+  <div class="bg-orb orb-3" aria-hidden="true"></div>
+
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="uni-badge">
+          <img src="{% static 'asistencias/img/uni_logo.png' %}" alt="UNI" class="uni-logo">
+        </div>
+        <div>
+          <h1>Universidad Nacional de Ingeniería</h1>
+          <small>Proyecto Manhattan • Estadísticas privadas</small>
+        </div>
+      </div>
+
+      <div class="userbox">
+        <div class="userpill">
+          <i class="bi bi-person-circle"></i>
+          Usuario: <span style="font-weight:950;">{{ request.user.username }}</span>
+        </div>
+
+        <form method="post" action="{% url 'logout' %}" class="m-0">
+          {% csrf_token %}
+          <button type="submit" class="btnx btnx-danger">
+            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <section class="cardx hero">
+      <div class="hero-top">
+        <div>
+          <h1 class="title">
+            <i class="bi bi-bar-chart-line-fill"></i>
+            Estadísticas privadas de asistencia
+          </h1>
+          <p class="sub">
+            Panel interno exclusivo para <strong>anthonny</strong>. Se evalúan lunes a viernes y se excluyen los días especiales institucionales.
+          </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <div class="badge-private">
+            <i class="bi bi-shield-lock-fill"></i> Acceso privado
+          </div>
+
+          <a href="{% url 'exportar_estadisticas_privadas_excel' %}?inicio={{ fecha_inicio|date:'Y-m-d' }}&fin={{ fecha_fin|date:'Y-m-d' }}&q={{ q|urlencode }}&condicion={{ condicion|urlencode }}" class="btnx btnx-success">
+            <i class="bi bi-file-earmark-excel-fill"></i> Exportar Excel
+          </a>
+        </div>
+      </div>
+
+      <form method="get" class="filters">
+        <div>
+          <label class="form-label">Fecha inicio</label>
+          <input type="date" name="inicio" class="form-control" value="{{ fecha_inicio|date:'Y-m-d' }}">
+        </div>
+
+        <div>
+          <label class="form-label">Fecha fin</label>
+          <input type="date" name="fin" class="form-control" value="{{ fecha_fin|date:'Y-m-d' }}">
+        </div>
+
+        <div>
+          <label class="form-label">Buscar docente</label>
+          <input id="liveSearchInput" type="text" name="q" class="form-control" placeholder="DNI, código, apellidos o nombres" value="{{ q }}" autocomplete="off">
+          <div class="live-search-status" id="liveSearchStatus">
+            <i class="bi bi-lightning-charge-fill"></i> Búsqueda en vivo activa
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Condición</label>
+          <select name="condicion" class="form-select">
+            <option value="">Todas</option>
+            <option value="N" {% if condicion == 'N' %}selected{% endif %}>Nombrado (N)</option>
+            <option value="C" {% if condicion == 'C' %}selected{% endif %}>Contratado (C)</option>
+          </select>
+        </div>
+
+        <div class="d-flex align-items-end gap-2">
+          <button class="btn-apply w-100" type="submit">
+            <i class="bi bi-funnel-fill"></i> Aplicar filtros
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="kpis">
+      <div class="kpi">
+        <div class="label"><i class="bi bi-people"></i> Docentes evaluados</div>
+        <div class="value">{{ docentes_total }}</div>
+      </div>
+
+      <div class="kpi">
+        <div class="label"><i class="bi bi-check2-circle"></i> Total asistió</div>
+        <div class="value">{{ total_asistio }}</div>
+      </div>
+
+      <div class="kpi">
+        <div class="label"><i class="bi bi-file-medical"></i> Total justificó</div>
+        <div class="value">{{ total_justifico }}</div>
+      </div>
+
+      <div class="kpi">
+        <div class="label"><i class="bi bi-x-circle"></i> Total faltó</div>
+        <div class="value">{{ total_falto }}</div>
+      </div>
+
+      <div class="kpi">
+        <div class="label"><i class="bi bi-percent"></i> % general de asistencia</div>
+        <div class="value">{{ porcentaje_general }}%</div>
+      </div>
+    </section>
+
+    <section class="cardx table-card">
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Docente</th>
+              <th>Condición</th>
+              <th>Asistió</th>
+              <th>Justificó</th>
+              <th>Faltó</th>
+              <th>Total días</th>
+              <th>% Asistencia</th>
+            </tr>
+          </thead>
+
+          <tbody id="statsBody">
+            {% for item in rows %}
+              <tr
+                class="stat-row"
+                data-search="{{ item.profesor.apellidos|default:'' }} {{ item.profesor.nombres|default:'' }} {{ item.profesor.dni|default:'' }} {{ item.profesor.codigo|default:'' }} {{ item.profesor.condicion|default:'' }} {{ item.asistio }} {{ item.justifico }} {{ item.falto }} {{ item.porcentaje }}"
+              >
+                <td class="name">
+                  {{ item.profesor.apellidos }}, {{ item.profesor.nombres }}
+                </td>
+                <td>
+                  <span class="pill blue">{{ item.profesor.condicion|default:"-" }}</span>
+                </td>
+                <td>
+                  <span class="pill green">{{ item.asistio }}</span>
+                </td>
+                <td>
+                  <span class="pill amber">{{ item.justifico }}</span>
+                </td>
+                <td>
+                  <span class="pill red">{{ item.falto }}</span>
+                </td>
+                <td>
+                  <span class="pill violet">{{ item.total_dias }}</span>
+                </td>
+                <td><strong>{{ item.porcentaje }}%</strong></td>
+              </tr>
+            {% empty %}
+              <tr id="emptyServerRow">
+                <td colspan="7" class="text-center p-4 text-muted">
+                  No se encontraron resultados para el rango seleccionado.
+                </td>
+              </tr>
+            {% endfor %}
+
+            <tr id="liveNoResultsRow" style="display:none;">
+              <td colspan="7" class="text-center p-4 text-muted">
+                <i class="bi bi-search"></i> No se encontraron coincidencias en la búsqueda en vivo.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer-note">
+        Se consideran únicamente días hábiles de lunes a viernes.
+        <br>
+        Criterio: <strong>Asistencia = Asistió</strong>, <strong>Justificación = Justificó</strong>, sin ambos = <strong>Faltó</strong>.
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    (function(){
+      const input = document.getElementById('liveSearchInput');
+      const rows = Array.from(document.querySelectorAll('#statsBody .stat-row'));
+      const noResults = document.getElementById('liveNoResultsRow');
+      const serverEmpty = document.getElementById('emptyServerRow');
+      const status = document.getElementById('liveSearchStatus');
+      if (!input || !rows.length) return;
+
+      function normalize(s){
+        return (s || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+      }
+
+      function filterRows(){
+        const q = normalize(input.value);
+        let visible = 0;
+
+        rows.forEach((tr) => {
+          const hay = normalize(tr.dataset.search);
+          const show = !q || hay.includes(q);
+          tr.classList.toggle('stat-row-hidden', !show);
+          if (show) visible++;
+        });
+
+        if (noResults) noResults.style.display = visible === 0 ? '' : 'none';
+        if (serverEmpty) serverEmpty.style.display = 'none';
+
+        if (status) {
+          status.innerHTML = visible === rows.length
+            ? '<i class="bi bi-lightning-charge-fill"></i> Búsqueda en vivo activa'
+            : `<i class="bi bi-search"></i> Mostrando ${visible} de ${rows.length} docentes`;
+        }
+      }
+
+      input.addEventListener('input', filterRows, { passive:true });
+      filterRows();
+    })();
+
+    (function () {
+      const old = document.getElementById("fxParticlesStats");
+      if (old) old.remove();
+
+      const canvas = document.createElement("canvas");
+      canvas.id = "fxParticlesStats";
+      canvas.style.position = "fixed";
+      canvas.style.inset = "0";
+      canvas.style.zIndex = "2";
+      canvas.style.pointerEvents = "none";
+      canvas.style.opacity = "1";
+      canvas.style.mixBlendMode = "screen";
+      canvas.setAttribute("aria-hidden", "true");
+      document.body.insertBefore(canvas, document.body.firstChild);
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      let w = 0, h = 0, dpr = 1;
+      let particles = [];
+      let last = 0;
+      let rafId = 0;
+
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      function rand(min, max){ return Math.random() * (max - min) + min; }
+
+      function resize(){
+        w = Math.max(1, window.innerWidth);
+        h = Math.max(1, window.innerHeight);
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + "px";
+        canvas.style.height = h + "px";
+
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.scale(dpr, dpr);
+
+        const count = reduceMotion ? 18 : Math.max(90, Math.min(160, Math.floor((w * h) / 13000)));
+        particles = Array.from({ length: count }, () => ({
+          x: rand(0, w),
+          y: rand(0, h),
+          r: rand(1.4, 3.2),
+          vx: reduceMotion ? rand(-0.03, 0.03) : rand(-0.16, 0.16),
+          vy: reduceMotion ? rand(-0.03, 0.03) : rand(-0.12, 0.12),
+          tw: rand(0, Math.PI * 2),
+          tws: rand(0.012, 0.028),
+          a: rand(0.20, 0.50),
+          tone: Math.random() > 0.80 ? "gold" : "red"
+        }));
+      }
+
+      function drawParticle(p){
+        const glowColor = p.tone === "gold" ? "230,190,90" : "235,90,90";
+        const coreColor = p.tone === "gold" ? "255,240,180" : "255,230,230";
+        const pulse = 0.78 + Math.sin(p.tw) * 0.22;
+        const alpha = p.a * pulse;
+
+        const R = p.r * 8.4;
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, R);
+        g.addColorStop(0, `rgba(${glowColor},${Math.min(1, alpha * 1.25)})`);
+        g.addColorStop(0.35, `rgba(${glowColor},${alpha * 0.52})`);
+        g.addColorStop(1, `rgba(${glowColor},0)`);
+
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, R, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(${coreColor},${Math.min(1, alpha)})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function frame(ts){
+        const dt = Math.min(40, ts - (last || ts));
+        last = ts;
+
+        ctx.clearRect(0, 0, w, h);
+
+        for (const p of particles){
+          p.tw += p.tws * (dt * 0.06);
+          p.x += (p.vx + Math.sin(p.tw) * 0.02) * (dt * 0.11);
+          p.y += (p.vy + Math.cos(p.tw * 0.9) * 0.018) * (dt * 0.11);
+
+          if (p.x < -18) p.x = w + 18;
+          if (p.x > w + 18) p.x = -18;
+          if (p.y < -18) p.y = h + 18;
+          if (p.y > h + 18) p.y = -18;
+
+          drawParticle(p);
+        }
+
+        rafId = requestAnimationFrame(frame);
+      }
+
+      function start(){
+        cancelAnimationFrame(rafId);
+        resize();
+        last = 0;
+        rafId = requestAnimationFrame(frame);
+      }
+
+      start();
+
+      let resizeTimer;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(start, 120);
+      }, { passive: true });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") {
+          cancelAnimationFrame(rafId);
+        } else {
+          last = 0;
+          rafId = requestAnimationFrame(frame);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

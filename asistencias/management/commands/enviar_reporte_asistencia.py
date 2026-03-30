@@ -10,13 +10,13 @@ from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.templatetags.static import static
 
-from asistencias.models import Profesor, Asistencia
+from asistencias.models import Profesor, Asistencia, JustificacionAsistencia, DiaEspecial
 
 
 class Command(BaseCommand):
     help = (
         "Envía por email un reporte profesional de asistencia (Lun-Vie) a cada profesor "
-        "con evaluación diaria: ASISTIÓ / JUSTIFICACIÓN / FALTA (Brevo API)."
+        "con evaluación diaria: ASISTIÓ / JUSTIFICACIÓN / FALTA / DÍA ESPECIAL (Brevo API)."
     )
 
     def add_arguments(self, parser):
@@ -81,18 +81,116 @@ class Command(BaseCommand):
                 'font-size:12px;font-weight:700;">FALTA</span>'
             )
 
+        if t == "FERIADO":
+            return (
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'background:#fff7ed;border:1px solid #fdba74;color:#9a3412;'
+                'font-size:12px;font-weight:700;">FERIADO</span>'
+            )
+
+        if t == "HUELGA":
+            return (
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'background:#fff7ed;border:1px solid #fdba74;color:#7c2d12;'
+                'font-size:12px;font-weight:700;">HUELGA</span>'
+            )
+
+        if t == "PARO":
+            return (
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'background:#fff7ed;border:1px solid #fdba74;color:#9a3412;'
+                'font-size:12px;font-weight:700;">PARO DE TRANSPORTISTAS</span>'
+            )
+
+        if t == "SUSPENSIÓN":
+            return (
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'background:#fffbeb;border:1px solid #fcd34d;color:#92400e;'
+                'font-size:12px;font-weight:700;">SUSPENSIÓN</span>'
+            )
+
+        if t == "REMOTO":
+            return (
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'background:#eff6ff;border:1px solid #93c5fd;color:#1d4ed8;'
+                'font-size:12px;font-weight:700;">JORNADA REMOTA</span>'
+            )
+
+        if t == "NO LABORABLE":
+            return (
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'background:#f8fafc;border:1px solid #cbd5e1;color:#475569;'
+                'font-size:12px;font-weight:700;">NO LABORABLE</span>'
+            )
+
         return (
             '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
             'background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;'
             'font-size:12px;font-weight:700;">REGISTRO</span>'
         )
 
+    def _obtener_dia_especial(self, fecha_date):
+        return DiaEspecial.objects.filter(fecha=fecha_date, activo=True).first()
+
+    def _estado_dia_especial(self, dia_especial):
+        tipo = (dia_especial.tipo or "").strip().upper()
+        detalle = (dia_especial.descripcion or "").strip()
+
+        if tipo == "FERIADO":
+            return {
+                "estado": "FERIADO",
+                "hora_registrada": "-",
+                "observacion": detalle or "No hubo actividades académicas por feriado.",
+            }
+
+        if tipo == "HUELGA":
+            return {
+                "estado": "HUELGA",
+                "hora_registrada": "-",
+                "observacion": detalle or "No se considera falta por huelga o medida de fuerza.",
+            }
+
+        if tipo == "PARO":
+            return {
+                "estado": "PARO",
+                "hora_registrada": "-",
+                "observacion": detalle or "No se considera falta por paro de transportistas o dificultades de traslado.",
+            }
+
+        if tipo == "SUSPENSION":
+            return {
+                "estado": "SUSPENSIÓN",
+                "hora_registrada": "-",
+                "observacion": detalle or "Se suspendieron las actividades académicas o institucionales.",
+            }
+
+        if tipo == "REMOTO":
+            return {
+                "estado": "REMOTO",
+                "hora_registrada": "-",
+                "observacion": detalle or "La jornada fue desarrollada en modalidad remota institucional.",
+            }
+
+        if tipo == "NO_LABORABLE":
+            return {
+                "estado": "NO LABORABLE",
+                "hora_registrada": "-",
+                "observacion": detalle or "No corresponde registrar asistencia ni falta en esta fecha.",
+            }
+
+        return {
+            "estado": "DÍA ESPECIAL",
+            "hora_registrada": "-",
+            "observacion": detalle or "No corresponde registrar falta en esta fecha.",
+        }
+
     def _estado_diario_profesional(self, prof, lunes, viernes_fin):
         """
         Evalúa los 5 días (Lun-Vie) y devuelve estado por día:
+        - FERIADO / HUELGA / PARO / SUSPENSIÓN / REMOTO / NO LABORABLE (si existe DíaEspecial activo)
         - ASISTIÓ (si hay E)
         - JUSTIFICACIÓN (si no hay E pero sí J)
-        - FALTA (si no hay E ni J)
+        - FALTA (si no hay E ni J ni día especial)
         """
         qs = (
             Asistencia.objects
@@ -111,63 +209,122 @@ class Command(BaseCommand):
             key = dt_local.date()
             por_fecha.setdefault(key, []).append((a, dt_local))
 
+        justis_qs = (
+            JustificacionAsistencia.objects
+            .filter(
+                profesor=prof,
+                fecha__gte=lunes.date(),
+                fecha__lte=viernes_fin.date(),
+            )
+            .order_by("fecha", "creado_en")
+        )
+
+        justis_por_fecha = {}
+        for j in justis_qs:
+            justis_por_fecha.setdefault(j.fecha, []).append(j)
+
         dias = self._dias_lun_vie(lunes)
         dias_eval = []
 
         asistio = 0
         justificaciones = 0
         faltas = 0
+        dias_especiales = 0
+
         nombres_dia = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
 
         for idx, d in enumerate(dias):
             fecha_date = d.date()
             regs = por_fecha.get(fecha_date, [])
+            justis = justis_por_fecha.get(fecha_date, [])
+            dia_especial = self._obtener_dia_especial(fecha_date)
 
             estado = "FALTA"
             observacion = "No se registró asistencia ni justificación en la fecha evaluada."
             hora_registrada = "-"
 
-            if regs:
-                tiene_e = False
-                tiene_j = False
-                primer_e = None
-                primer_j = None
-
-                for a, dt_local in regs:
-                    tipo = (a.tipo or "").strip().upper()
-                    if tipo == "E" and not tiene_e:
-                        tiene_e = True
-                        primer_e = (a, dt_local)
-                    elif tipo == "J" and not tiene_j:
-                        tiene_j = True
-                        primer_j = (a, dt_local)
-
-                if tiene_e and primer_e:
-                    _, dt_local = primer_e
-                    estado = "ASISTIÓ"
-                    asistio += 1
-                    hora_registrada = dt_local.strftime("%H:%M")
-                    observacion = "Se registró asistencia en la fecha evaluada."
-                    if tiene_j:
-                        observacion = "Se registró asistencia en la fecha evaluada (existe además una justificación en la fecha)."
-
-                elif tiene_j and primer_j:
-                    a, dt_local = primer_j
-                    estado = "JUSTIFICACIÓN"
-                    justificaciones += 1
-                    hora_registrada = dt_local.strftime("%H:%M")
-                    try:
-                        motivo = a.get_motivo_display()
-                    except Exception:
-                        motivo = (getattr(a, "motivo", "") or "").strip() or "Sin motivo"
-
-                    detalle = (getattr(a, "detalle", "") or "").strip()
-                    observacion = f"Justificación registrada ({motivo})."
-                    if detalle:
-                        observacion = f"Justificación registrada ({motivo}): {detalle}"
+            if dia_especial:
+                info_especial = self._estado_dia_especial(dia_especial)
+                estado = info_especial["estado"]
+                observacion = info_especial["observacion"]
+                hora_registrada = info_especial["hora_registrada"]
+                dias_especiales += 1
 
             else:
-                faltas += 1
+                if regs:
+                    tiene_e = False
+                    tiene_j = False
+                    primer_e = None
+                    primer_j = None
+
+                    for a, dt_local in regs:
+                        tipo = (a.tipo or "").strip().upper()
+                        if tipo == "E" and not tiene_e:
+                            tiene_e = True
+                            primer_e = (a, dt_local)
+                        elif tipo == "J" and not tiene_j:
+                            tiene_j = True
+                            primer_j = (a, dt_local)
+
+                    if tiene_e and primer_e:
+                        _, dt_local = primer_e
+                        estado = "ASISTIÓ"
+                        asistio += 1
+                        hora_registrada = dt_local.strftime("%H:%M")
+                        observacion = "Se registró asistencia en la fecha evaluada."
+                        if tiene_j or justis:
+                            observacion = "Se registró asistencia en la fecha evaluada (existe además una justificación en la fecha)."
+
+                    elif tiene_j and primer_j:
+                        a, dt_local = primer_j
+                        estado = "JUSTIFICACIÓN"
+                        justificaciones += 1
+                        hora_registrada = dt_local.strftime("%H:%M")
+                        try:
+                            motivo = a.get_motivo_display()
+                        except Exception:
+                            motivo = (getattr(a, "motivo", "") or "").strip() or "Sin motivo"
+
+                        detalle = (getattr(a, "detalle", "") or "").strip()
+                        observacion = f"Justificación registrada ({motivo})."
+                        if detalle:
+                            observacion = f"Justificación registrada ({motivo}): {detalle}"
+
+                    elif justis:
+                        j = justis[0]
+                        estado = "JUSTIFICACIÓN"
+                        justificaciones += 1
+                        hora_registrada = "-"
+                        try:
+                            motivo = j.get_tipo_display()
+                        except Exception:
+                            motivo = (getattr(j, "tipo", "") or "").strip() or "Sin motivo"
+
+                        detalle = (getattr(j, "detalle", "") or "").strip()
+                        observacion = f"Justificación registrada ({motivo})."
+                        if detalle:
+                            observacion = f"Justificación registrada ({motivo}): {detalle}"
+
+                    else:
+                        faltas += 1
+
+                else:
+                    if justis:
+                        j = justis[0]
+                        estado = "JUSTIFICACIÓN"
+                        justificaciones += 1
+                        hora_registrada = "-"
+                        try:
+                            motivo = j.get_tipo_display()
+                        except Exception:
+                            motivo = (getattr(j, "tipo", "") or "").strip() or "Sin motivo"
+
+                        detalle = (getattr(j, "detalle", "") or "").strip()
+                        observacion = f"Justificación registrada ({motivo})."
+                        if detalle:
+                            observacion = f"Justificación registrada ({motivo}): {detalle}"
+                    else:
+                        faltas += 1
 
             dias_eval.append({
                 "dia_nombre": nombres_dia[idx],
@@ -179,13 +336,15 @@ class Command(BaseCommand):
             })
 
         total_dias = 5
-        cumplimiento = round((asistio + justificaciones) * 100 / total_dias, 1) if total_dias else 0
+        cumplimiento_base = asistio + justificaciones + dias_especiales
+        cumplimiento = round(cumplimiento_base * 100 / total_dias, 1) if total_dias else 0
 
         return {
             "dias_eval": dias_eval,
             "asistio": asistio,
             "justificaciones": justificaciones,
             "faltas": faltas,
+            "dias_especiales": dias_especiales,
             "total_dias": total_dias,
             "cumplimiento": cumplimiento,
             "total_registros_eyj": qs.count(),
@@ -219,13 +378,13 @@ class Command(BaseCommand):
     def _bloque_marcha_blanca_html(self):
         return """
         <div style="margin-top:18px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px 16px;">
-      <div style="font-size:14px;font-weight:800;color:#1d4ed8;margin-bottom:8px;">
-        ℹ️ Aviso importante
-      </div>
-      <div style="font-size:13px;color:#1e3a8a;line-height:1.7;">
-        Recordar que nos encontramos en <b>proceso de marcha blanca</b>.
-      </div>
-    </div>
+          <div style="font-size:14px;font-weight:800;color:#1d4ed8;margin-bottom:8px;">
+            ℹ️ Aviso importante
+          </div>
+          <div style="font-size:13px;color:#1e3a8a;line-height:1.7;">
+            Recordar que nos encontramos en <b>proceso de marcha blanca</b>.
+          </div>
+        </div>
         """.strip()
 
     def _brevo_send_email(self, to_email: str, subject: str, body_text: str, body_html: str):
@@ -328,13 +487,14 @@ class Command(BaseCommand):
             asistio = resultado["asistio"]
             justificaciones = resultado["justificaciones"]
             faltas = resultado["faltas"]
+            dias_especiales = resultado["dias_especiales"]
             total_dias = resultado["total_dias"]
             cumplimiento = resultado["cumplimiento"]
             total_registros_eyj = resultado["total_registros_eyj"]
 
-            if solo_con_registros and total_registros_eyj == 0:
+            if solo_con_registros and total_registros_eyj == 0 and dias_especiales == 0:
                 saltados_sin_registros += 1
-                self.stdout.write(f"[SKIP] {email_prof} -> sin registros (E/J) en el rango (--solo-con-registros)")
+                self.stdout.write(f"[SKIP] {email_prof} -> sin registros (E/J) ni días especiales en el rango (--solo-con-registros)")
                 continue
 
             nombre = (
@@ -360,6 +520,7 @@ class Command(BaseCommand):
                 f"- Días evaluados: {total_dias}",
                 f"- Asistió: {asistio}",
                 f"- Justificaciones: {justificaciones}",
+                f"- Días especiales: {dias_especiales}",
                 f"- Faltas: {faltas}",
                 f"- Cumplimiento: {cumplimiento}%",
                 "",
@@ -461,7 +622,7 @@ class Command(BaseCommand):
                     <div style="font-size:14px;color:#4b5563;line-height:1.65;margin-top:10px;">
                       Reciba un cordial saludo. A continuación, se remite su <b>reporte semanal de asistencia docente</b>,
                       correspondiente al periodo indicado. La evaluación considera los días hábiles de <b>lunes a viernes</b>,
-                      clasificando cada fecha como <b>Asistió</b>, <b>Justificación</b> o <b>Falta</b> según los registros del sistema.
+                      clasificando cada fecha como <b>Asistió</b>, <b>Justificación</b>, <b>Día especial</b> o <b>Falta</b> según los registros del sistema.
                     </div>
                     <div style="margin-top:10px;font-size:13px;color:#6b7280;line-height:1.55;">
                       Este reporte ha sido generado automáticamente por <b>Proyecto Manhattan</b> para fines de seguimiento y control institucional.
@@ -481,6 +642,11 @@ class Command(BaseCommand):
                       <div style="flex:1;min-width:140px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:14px;padding:14px;">
                         <div style="font-size:12px;color:#5b21b6;">Justificaciones</div>
                         <div style="font-size:26px;font-weight:900;color:#5b21b6;line-height:1.1;margin-top:4px;">{justificaciones}</div>
+                      </div>
+
+                      <div style="flex:1;min-width:140px;background:#fff7ed;border:1px solid #fdba74;border-radius:14px;padding:14px;">
+                        <div style="font-size:12px;color:#9a3412;">Días especiales</div>
+                        <div style="font-size:26px;font-weight:900;color:#9a3412;line-height:1.1;margin-top:4px;">{dias_especiales}</div>
                       </div>
 
                       <div style="flex:1;min-width:140px;background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px;">
@@ -544,7 +710,7 @@ class Command(BaseCommand):
             if dry_run:
                 bloqueados += 1
                 self.stdout.write(self.style.WARNING(
-                    f"[DRY-RUN] to={email_prof} A={asistio} J={justificaciones} F={faltas} "
+                    f"[DRY-RUN] to={email_prof} A={asistio} J={justificaciones} DE={dias_especiales} F={faltas} "
                     f"cumpl={cumplimiento_text} registros_EJ={total_registros_eyj} logo_url={'ok' if logo_url else 'no'}"
                 ))
                 continue
@@ -553,7 +719,7 @@ class Command(BaseCommand):
                 bloqueados += 1
                 self.stdout.write(self.style.WARNING(
                     f"[BLOQUEADO] No se enviará correo a {email_prof}. "
-                    f"A={asistio} J={justificaciones} F={faltas} "
+                    f"A={asistio} J={justificaciones} DE={dias_especiales} F={faltas} "
                     f"cumpl={cumplimiento_text} registros_EJ={total_registros_eyj} "
                     f"logo_url={'ok' if logo_url else 'no'}"
                 ))
@@ -563,7 +729,7 @@ class Command(BaseCommand):
                 self._brevo_send_email(email_prof, subject, body_text, body_html)
                 enviados += 1
                 self.stdout.write(self.style.SUCCESS(
-                    f"[SEND] to={email_prof} A={asistio} J={justificaciones} F={faltas} "
+                    f"[SEND] to={email_prof} A={asistio} J={justificaciones} DE={dias_especiales} F={faltas} "
                     f"cumpl={cumplimiento_text} registros_EJ={total_registros_eyj} logo_url={'ok' if logo_url else 'no'}"
                 ))
             except Exception as e:
