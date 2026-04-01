@@ -226,3 +226,207 @@ label{
 *{
   scrollbar-color: rgba(212,175,55,.25) transparent;
 }
+
+/* =========================================================
+   ACCIONES DEL CHANGELIST
+   ========================================================= */
+#changelist-form .actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  margin: 14px 0 !important;
+  padding: 14px 16px !important;
+  background: linear-gradient(135deg, rgba(123, 30, 43, 0.30), rgba(212, 175, 55, 0.14)) !important;
+  border: 1px solid rgba(212, 175, 55, 0.18) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18) !important;
+  z-index: 50 !important;
+}
+
+#changelist-form .actions label,
+#changelist-form .actions span,
+#changelist-form .actions small {
+  color: var(--uni-text, #f8fbff) !important;
+  font-weight: 600 !important;
+}
+
+#changelist-form .actions select {
+  min-width: 320px !important;
+  min-height: 42px !important;
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: rgba(7, 20, 38, 0.95) !important;
+  color: var(--uni-text, #f8fbff) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  border-radius: 14px !important;
+}
+
+#changelist-form .actions button,
+#changelist-form .actions input[type="submit"],
+#changelist-form .actions input[type="button"],
+#changelist-form .actions .button,
+#changelist-form .actions a.button {
+  min-height: 42px !important;
+  padding: 0 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  border-radius: 13px !important;
+  border: 1px solid rgba(212, 175, 55, 0.18) !important;
+  background: linear-gradient(135deg, #7b1e2b, #9a2534) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 10px 24px rgba(123, 30, 43, 0.22) !important;
+}
+
+/* =========================================================
+   FILTROS LATERALES
+   ========================================================= */
+#changelist-filter {
+  background: var(--uni-card-2, rgba(19, 39, 70, 0.98)) !important;
+  border: 1px solid var(--uni-line, rgba(255, 255, 255, 0.08)) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--uni-shadow, 0 14px 35px rgba(0, 0, 0, 0.22)) !important;
+  padding: 12px !important;
+}
+
+#changelist-filter h2 {
+  background: transparent !important;
+  color: var(--uni-text, #f8fbff) !important;
+  font-size: 18px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 10px !important;
+}
+
+#changelist-filter ul,
+#changelist-filter ol {
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+#changelist-filter li {
+  margin: 0 0 6px 0 !important;
+}
+
+#changelist-filter li a {
+  display: block !important;
+  border-radius: 12px !important;
+  padding: 8px 10px !important;
+  color: var(--uni-text-soft, #d6e1ee) !important;
+  text-decoration: none !important;
+  transition: all 0.18s ease !important;
+}
+
+#changelist-filter li a:hover {
+  background: rgba(212, 175, 55, 0.08) !important;
+  color: #ffffff !important;
+}
+
+#changelist-filter li.selected a {
+  background: linear-gradient(90deg, rgba(123, 30, 43, 0.58), rgba(212, 175, 55, 0.12)) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(212, 175, 55, 0.20) !important;
+}
+
+/* =========================================================
+   BREADCRUMBS
+   ========================================================= */
+div.breadcrumbs {
+  background: rgba(8, 23, 42, 0.72) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 16px !important;
+  margin-bottom: 16px !important;
+  box-shadow: var(--uni-shadow, 0 14px 35px rgba(0, 0, 0, 0.22)) !important;
+  padding: 10px 14px !important;
+}
+
+div.breadcrumbs,
+div.breadcrumbs a {
+  color: var(--uni-text-soft, #d6e1ee) !important;
+}
+
+div.breadcrumbs a:hover {
+  color: var(--uni-gold-soft, #e8cb72) !important;
+}
+
+/* =========================================================
+   FORMULARIOS
+   ========================================================= */
+fieldset.module {
+  background: var(--uni-card, rgba(14, 31, 58, 0.96)) !important;
+  border: 1px solid var(--uni-line, rgba(255, 255, 255, 0.08)) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--uni-shadow, 0 14px 35px rgba(0, 0, 0, 0.22)) !important;
+  padding: 14px !important;
+}
+
+fieldset.module h2 {
+  border-radius: 14px !important;
+  margin-bottom: 14px !important;
+}
+
+.form-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  padding: 12px 0 !important;
+}
+
+.aligned label {
+  color: var(--uni-text, #f8fbff) !important;
+  font-weight: 700 !important;
+}
+
+/* =========================================================
+   TABLAS
+   ========================================================= */
+#result_list {
+  border-radius: 18px !important;
+  overflow: hidden !important;
+}
+
+#result_list thead th:first-child {
+  border-top-left-radius: 16px !important;
+}
+
+#result_list thead th:last-child {
+  border-top-right-radius: 16px !important;
+}
+
+#result_list tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 16px !important;
+}
+
+#result_list tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 16px !important;
+}
+
+/* =========================================================
+   MENSAJES
+   ========================================================= */
+ul.messagelist li {
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: var(--uni-shadow, 0 14px 35px rgba(0, 0, 0, 0.22)) !important;
+}
+
+ul.messagelist li.success {
+  background: rgba(22, 163, 74, 0.18) !important;
+  color: #d1fae5 !important;
+}
+
+ul.messagelist li.warning {
+  background: rgba(245, 158, 11, 0.18) !important;
+  color: #fef3c7 !important;
+}
+
+ul.messagelist li.error {
+  background: rgba(220, 38, 38, 0.18) !important;
+  color: #fee2e2 !important;
+}

@@ -4,13 +4,27 @@ from django.conf import settings
 
 
 class Profesor(models.Model):
+    TIPO_JORNADA_CHOICES = [
+        ("TC", "Tiempo completo"),
+        ("TP", "Tiempo parcial"),
+    ]
+
     codigo = models.CharField("Código", max_length=20, blank=True, null=True)
     dni = models.CharField("DNI", max_length=8, unique=True)
     apellidos = models.CharField("Apellidos", max_length=120)
     nombres = models.CharField("Nombres", max_length=120)
     condicion = models.CharField("Condición", max_length=20)
 
-    # ✅ correo para enviar reportes
+    tipo_jornada = models.CharField(
+        "Tipo de jornada",
+        max_length=2,
+        choices=TIPO_JORNADA_CHOICES,
+        blank=True,
+        default="",
+    )
+
+    activo = models.BooleanField("Activo", default=True)
+
     email = models.EmailField("Correo", blank=True, null=True)
 
     @property
@@ -20,7 +34,8 @@ class Profesor(models.Model):
         return f"{ap} {nom}".strip() or "Profesor(a)"
 
     def __str__(self):
-        return f"{self.apellidos} {self.nombres}"
+        estado = "" if self.activo else " [INACTIVO]"
+        return f"{self.apellidos} {self.nombres}{estado}"
 
     class Meta:
         verbose_name = "Profesor"

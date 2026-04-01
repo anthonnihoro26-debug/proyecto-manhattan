@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.http import HttpResponse
 from django.utils.html import format_html
 import csv
@@ -62,18 +62,63 @@ class ProfesorAdmin(admin.ModelAdmin):
         "apellidos",
         "nombres",
         "condicion_badge",
+        "jornada_badge",
+        "activo_badge",
         "email",
     )
-    search_fields = ("dni", "apellidos", "nombres", "email")
-    list_filter = ("condicion",)
+    search_fields = ("dni", "apellidos", "nombres", "email", "codigo")
+    list_filter = ("condicion", "tipo_jornada", "activo")
     ordering = ("apellidos", "nombres")
     list_per_page = 25
     list_display_links = ("dni", "apellidos", "nombres")
+    actions = ["activar_profesores", "desactivar_profesores", "delete_selected"]
     actions_on_top = True
     actions_on_bottom = True
     save_on_top = True
     show_full_result_count = False
     empty_value_display = "—"
+    list_editable = ()
+    readonly_fields = ()
+    fieldsets = (
+        (
+            "Datos del profesor",
+            {
+                "fields": (
+                    "codigo",
+                    "dni",
+                    ("apellidos", "nombres"),
+                    ("condicion", "tipo_jornada"),
+                    "email",
+                    "activo",
+                )
+            },
+        ),
+    )
+
+    class Media:
+        css = {
+            "all": (
+                "admin/css/manhattan_admin_dark.css",
+            )
+        }
+
+    @admin.action(description="✅ Activar profesores seleccionados")
+    def activar_profesores(self, request, queryset):
+        actualizados = queryset.update(activo=True)
+        self.message_user(
+            request,
+            f"Se activaron {actualizados} profesor(es).",
+            level=messages.SUCCESS,
+        )
+
+    @admin.action(description="⛔ Desactivar profesores seleccionados")
+    def desactivar_profesores(self, request, queryset):
+        actualizados = queryset.update(activo=False)
+        self.message_user(
+            request,
+            f"Se desactivaron {actualizados} profesor(es).",
+            level=messages.WARNING,
+        )
 
     @admin.display(description="Condición", ordering="condicion")
     def condicion_badge(self, obj):
@@ -103,6 +148,49 @@ class ProfesorAdmin(admin.ModelAdmin):
             bg,
             border,
             texto,
+        )
+
+    @admin.display(description="Jornada", ordering="tipo_jornada")
+    def jornada_badge(self, obj):
+        valor = (obj.tipo_jornada or "").strip().upper()
+
+        if valor == "TC":
+            return format_html(
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'font-weight:700;font-size:12px;color:#16a34a;'
+                'background:rgba(22,163,74,.16);border:1px solid rgba(22,163,74,.28);">'
+                'TC · Tiempo completo</span>'
+            )
+
+        if valor == "TP":
+            return format_html(
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'font-weight:700;font-size:12px;color:#2563eb;'
+                'background:rgba(37,99,235,.16);border:1px solid rgba(37,99,235,.28);">'
+                'TP · Tiempo parcial</span>'
+            )
+
+        return format_html(
+            '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+            'font-weight:700;font-size:12px;color:#64748b;'
+            'background:rgba(100,116,139,.16);border:1px solid rgba(100,116,139,.28);">'
+            'Sin definir</span>'
+        )
+
+    @admin.display(description="Estado", ordering="activo")
+    def activo_badge(self, obj):
+        if obj.activo:
+            return format_html(
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'font-weight:700;font-size:12px;color:#16a34a;'
+                'background:rgba(22,163,74,.16);border:1px solid rgba(22,163,74,.28);">'
+                'Activo</span>'
+            )
+        return format_html(
+            '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+            'font-weight:700;font-size:12px;color:#dc2626;'
+            'background:rgba(220,38,38,.16);border:1px solid rgba(220,38,38,.28);">'
+            'Inactivo</span>'
         )
 
 
@@ -145,6 +233,13 @@ class AsistenciaAdmin(ExportCsvMixin, admin.ModelAdmin):
     filename = "asistencias.csv"
     csv_headers = ["Profesor", "Fecha", "Fecha/Hora", "Tipo", "Registrado por", "IP"]
 
+    class Media:
+        css = {
+            "all": (
+                "admin/css/manhattan_admin_dark.css",
+            )
+        }
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("profesor", "registrado_por")
 
@@ -156,8 +251,6 @@ class AsistenciaAdmin(ExportCsvMixin, admin.ModelAdmin):
         colores = {
             "e": ("#16a34a", "rgba(22,163,74,.16)", "rgba(22,163,74,.28)"),
             "entrada": ("#16a34a", "rgba(22,163,74,.16)", "rgba(22,163,74,.28)"),
-            "s": ("#dc2626", "rgba(220,38,38,.16)", "rgba(220,38,38,.28)"),
-            "salida": ("#dc2626", "rgba(220,38,38,.16)", "rgba(220,38,38,.28)"),
             "j": ("#7c3aed", "rgba(124,58,237,.16)", "rgba(124,58,237,.28)"),
             "justificación": ("#7c3aed", "rgba(124,58,237,.16)", "rgba(124,58,237,.28)"),
             "justificacion": ("#7c3aed", "rgba(124,58,237,.16)", "rgba(124,58,237,.28)"),
@@ -233,6 +326,13 @@ class JustificacionAsistenciaAdmin(ExportCsvMixin, admin.ModelAdmin):
     empty_value_display = "—"
     filename = "justificaciones.csv"
     csv_headers = ["Fecha", "Profesor", "Tipo", "Detalle", "PDF", "Creado por", "Creado en"]
+
+    class Media:
+        css = {
+            "all": (
+                "admin/css/manhattan_admin_dark.css",
+            )
+        }
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
@@ -329,11 +429,50 @@ class DiaEspecialAdmin(admin.ModelAdmin):
     ordering = ("-fecha",)
     list_per_page = 20
     list_display_links = ("fecha",)
+    actions = ["activar_dias", "desactivar_dias", "delete_selected"]
     actions_on_top = True
     actions_on_bottom = True
     save_on_top = True
     show_full_result_count = False
     empty_value_display = "—"
+    fieldsets = (
+        (
+            "Configuración del día especial",
+            {
+                "fields": (
+                    "fecha",
+                    "tipo",
+                    "descripcion",
+                    "activo",
+                )
+            },
+        ),
+    )
+
+    class Media:
+        css = {
+            "all": (
+                "admin/css/manhattan_admin_dark.css",
+            )
+        }
+
+    @admin.action(description="✅ Activar días especiales seleccionados")
+    def activar_dias(self, request, queryset):
+        actualizados = queryset.update(activo=True)
+        self.message_user(
+            request,
+            f"Se activaron {actualizados} día(s) especial(es).",
+            level=messages.SUCCESS,
+        )
+
+    @admin.action(description="⛔ Desactivar días especiales seleccionados")
+    def desactivar_dias(self, request, queryset):
+        actualizados = queryset.update(activo=False)
+        self.message_user(
+            request,
+            f"Se desactivaron {actualizados} día(s) especial(es).",
+            level=messages.WARNING,
+        )
 
     @admin.display(description="Tipo", ordering="tipo")
     def tipo_badge(self, obj):
@@ -440,6 +579,13 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
     list_select_related = ("usuario",)
     show_full_result_count = False
     empty_value_display = "—"
+
+    class Media:
+        css = {
+            "all": (
+                "admin/css/manhattan_admin_dark.css",
+            )
+        }
 
     fieldsets = (
         (
@@ -621,3 +767,4 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
             'loading="lazy"></iframe>',
             src,
         )
+
