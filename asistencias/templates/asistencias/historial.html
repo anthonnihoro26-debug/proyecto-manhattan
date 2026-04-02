@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Proyecto Manhattan - Historial</title>
+  <title>Proyecto Manhattan - Historial diario</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -14,18 +14,12 @@
       --uni-red:#a61d22;
       --uni-red-2:#c62828;
       --uni-red-3:#8b1519;
-      --uni-cream:#f5f1e8;
-      --uni-cream-2:#efe8da;
       --uni-gold:#c9a227;
-
       --bg-dark:#190c0f;
       --bg-dark-2:#2a1015;
       --ink:#171717;
       --muted:#6b7280;
-
-      --card: rgba(255,255,255,.90);
       --line: rgba(17,24,39,.10);
-
       --success:#138a43;
       --info:#1d4ed8;
       --violet:#7c3aed;
@@ -113,7 +107,7 @@
     }
 
     .topbar-inner{
-      max-width: 1320px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 12px 16px;
       display:flex;
@@ -202,6 +196,7 @@
       white-space: nowrap;
       position: relative;
       overflow: hidden;
+      cursor:pointer;
     }
     .btnx:hover{
       transform: translateY(-1px);
@@ -223,6 +218,8 @@
     .btnx-success{ background: linear-gradient(135deg, #138a43, #16a34a); color:#fff; }
     .btnx-danger{ background: linear-gradient(135deg, #bf1f24, #e53935); color:#fff; }
     .btnx-primary{ background: linear-gradient(135deg, var(--uni-red), #d73636); color:#fff; }
+    .btnx-violet{ background: linear-gradient(135deg, #6d28d9, #9333ea); color:#fff; }
+    .btnx-amber{ background: linear-gradient(135deg, #b45309, #f59e0b); color:#fff; }
     .btnx .subtxt{
       display:block;
       font-size: 11px;
@@ -235,7 +232,7 @@
     .page{
       position: relative;
       z-index: 3;
-      max-width: 1320px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 22px 16px 42px;
     }
@@ -351,16 +348,6 @@
       color:var(--uni-red) !important;
     }
 
-    .live-search-status{
-      margin-top:7px;
-      color:rgba(31,41,55,.70);
-      font-size:11.5px;
-      font-weight:950;
-      display:flex;
-      gap:6px;
-      align-items:center;
-    }
-
     .btn-apply{
       border-radius: 14px;
       padding: 11px 12px;
@@ -458,22 +445,8 @@
     }
     .special-banner-body{
       padding: 12px 16px 16px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-    .special-chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.72);
-      border: 1px solid rgba(201,122,8,.14);
       color:#7c2d12;
-      font-weight: 900;
-      font-size: 12px;
-      box-shadow: 0 6px 16px rgba(0,0,0,.04);
+      font-weight:900;
     }
 
     .active-filters{
@@ -497,24 +470,6 @@
       box-shadow: 0 6px 16px rgba(0,0,0,.04);
     }
     .pill i{ color: var(--uni-red); }
-    .pill .muted{ color: rgba(31,41,55,.65); font-weight: 900; }
-    .pill .mono{ font-variant-numeric: tabular-nums; }
-
-    .doc-chip{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.64);
-      border: 1px solid rgba(17,24,39,0.09);
-      color:#1f2937;
-      font-weight: 900;
-      font-size: 12px;
-      width: fit-content;
-      box-shadow: 0 6px 16px rgba(0,0,0,.04);
-    }
-    .doc-chip i{ color: var(--uni-red); }
 
     .table-wrap{
       margin: 0 22px 16px;
@@ -546,9 +501,6 @@
       border-top: 1px solid rgba(17,24,39,0.05);
       background-clip: padding-box;
     }
-    .table tbody tr{
-      transition: background-color .12s ease;
-    }
     .table tbody tr:hover{
       background: rgba(166,29,34,0.03);
     }
@@ -556,8 +508,6 @@
     .tr-special{
       background: linear-gradient(180deg, rgba(255,248,240,.75), rgba(255,251,235,.90));
     }
-
-    .row-hidden-live{ display:none !important; }
 
     .doc-name{ font-weight: 950; color:#111827; }
     .doc-sub{
@@ -569,6 +519,21 @@
       align-items:center;
       gap:8px;
       flex-wrap:wrap;
+    }
+
+    .doc-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.64);
+      border: 1px solid rgba(17,24,39,0.09);
+      color:#1f2937;
+      font-weight: 900;
+      font-size: 12px;
+      width: fit-content;
+      box-shadow: 0 6px 16px rgba(0,0,0,.04);
     }
 
     .badge-cond{
@@ -590,10 +555,10 @@
     .cond-n{ background: linear-gradient(135deg,#138a43,#16a34a); }
     .cond-c{ background: linear-gradient(135deg,#2563eb,#4f46e5); }
     .cond-otro{ background: linear-gradient(135deg,#64748b,#475569); }
-    .cond-inst{ background: linear-gradient(135deg,#b45309,#d97706); }
 
     .st-asistio{ background: linear-gradient(135deg,#138a43,#16a34a); }
     .st-just{ background: linear-gradient(135deg,#7c3aed,#a855f7); }
+    .st-falto{ background: linear-gradient(135deg,#b91c1c,#ef4444); }
     .st-special{ background: linear-gradient(135deg,#b45309,#f59e0b); }
 
     .date-main{
@@ -609,6 +574,16 @@
       font-size: 12px;
       font-weight: 850;
       color: rgba(31,41,55,.65);
+    }
+
+    .action-box{
+      min-width: 250px;
+    }
+    .mini-form{
+      background: rgba(255,255,255,.65);
+      border: 1px solid rgba(17,24,39,.08);
+      border-radius: 16px;
+      padding: 12px;
     }
 
     .footer-row{
@@ -633,7 +608,6 @@
       gap:8px;
       box-shadow: 0 8px 18px rgba(0,0,0,.05);
     }
-    .total i{ color: var(--uni-red); }
 
     .pager{
       display:flex;
@@ -663,44 +637,6 @@
     }
     .pbtn.disabled{ opacity: .55; pointer-events: none; }
 
-    .pinfo{
-      font-weight: 900;
-      color: rgba(31,41,55,.75);
-      font-size: 13px;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-    }
-    .pinfo::before{
-      content:"";
-      width:8px;height:8px;border-radius:999px;
-      background: linear-gradient(135deg, var(--uni-red), var(--uni-gold));
-      box-shadow: 0 0 0 4px rgba(166,29,34,.10);
-    }
-
-    .empty-wrap{
-      padding: 46px 14px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:10px;
-      text-align:center;
-    }
-    .empty-ico{
-      width:56px;height:56px;border-radius:18px;
-      background: rgba(166,29,34,.08);
-      border: 1px solid rgba(166,29,34,.14);
-      display:grid;place-items:center;
-      box-shadow: 0 8px 18px rgba(166,29,34,.08);
-    }
-    .empty-title{ font-weight: 950; color:#1f2937; font-size: 16px; }
-    .empty-sub{
-      font-weight: 850;
-      color: rgba(31,41,55,.68);
-      font-size: 13px;
-      max-width: 420px;
-    }
-
     .toast-wrap{
       position: fixed;
       top: 86px;
@@ -719,11 +655,15 @@
       border-radius: 14px;
       box-shadow: 0 16px 38px rgba(0,0,0,.18);
       backdrop-filter: blur(10px);
-      animation: toastIn .18s ease-out;
       border: 1px solid rgba(255,255,255,.25);
       font-weight: 850;
       background: rgba(255,255,255,.80);
     }
+    .toastx-success{ background: rgba(34,197,94,.20); border-color: rgba(34,197,94,.30); }
+    .toastx-warning{ background: rgba(245,158,11,.20); border-color: rgba(245,158,11,.30); }
+    .toastx-error{ background: rgba(239,68,68,.20); border-color: rgba(239,68,68,.30); }
+    .toastx-info{ background: rgba(59,130,246,.20); border-color: rgba(59,130,246,.30); }
+
     .toastx-icon{
       width: 34px; height: 34px;
       display: grid;
@@ -733,7 +673,6 @@
       font-size: 18px;
       color: #1f2937;
     }
-    .toastx-text{ color: #1f2937; line-height: 1.2; }
     .toastx-close{
       border: 0;
       background: transparent;
@@ -742,55 +681,24 @@
       border-radius: 10px;
       cursor: pointer;
     }
-    .toastx-close:hover{ background: rgba(255,255,255,.28); }
-
-    .toastx-success{ background: rgba(34,197,94,.20); border-color: rgba(34,197,94,.30); }
-    .toastx-warning{ background: rgba(245,158,11,.20); border-color: rgba(245,158,11,.30); }
-    .toastx-error{ background: rgba(239,68,68,.20); border-color: rgba(239,68,68,.30); }
-    .toastx-info{ background: rgba(59,130,246,.20); border-color: rgba(59,130,246,.30); }
-
-    .toastx-hide{
-      opacity: 0;
-      transform: translateY(-6px);
-      transition: opacity .28s ease, transform .28s ease;
-    }
-
-    @keyframes toastIn{
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .cv-auto{ content-visibility:auto; contain-intrinsic-size: 900px 650px; }
-    .table-responsive{ will-change: scroll-position; }
 
     @media (max-width: 1200px){
       .kpi-grid{ grid-template-columns: repeat(3, 1fr); }
     }
-
     @media (max-width: 980px){
       .kpi-grid{ grid-template-columns: repeat(2, 1fr); }
     }
-
     @media (max-width: 768px){
       .title{ font-size: 24px; }
-      .title i{ width: 36px; height: 36px; font-size: 18px; border-radius: 12px; }
       .cardx-head{ padding: 18px 16px 10px; }
       .filters{ padding: 0 16px 16px; }
       .kpi-grid{ padding: 0 16px 16px; }
       .active-filters{ padding: 0 16px 12px; }
-      .special-banner{ margin: 0 16px 14px; }
       .table-wrap{ margin: 0 16px 14px; }
       .footer-row{ padding: 0 16px 18px; }
-      .brand h1{ font-size: 15px; }
-      .brand small{ font-size: 11px; }
       .userpill{ display:none; }
       .topbar-inner{ padding: 10px 12px; }
-      .btnx{ padding: 9px 12px; border-radius: 12px; }
       .btnx .subtxt{ display:none; }
-    }
-
-    @media (prefers-reduced-motion: reduce){
-      *{ animation:none !important; transition:none !important; }
     }
   </style>
 </head>
@@ -806,10 +714,9 @@
         <div class="uni-badge">
           <img src="{% static 'asistencias/img/uni_logo.png' %}" alt="UNI" class="uni-logo" />
         </div>
-
         <div>
           <h1>Universidad Nacional de Ingeniería</h1>
-          <small>Proyecto Manhattan • Historial de Asistencias</small>
+          <small>Proyecto Manhattan • Historial diario de asistencias</small>
         </div>
       </div>
 
@@ -836,8 +743,7 @@
           {% if message.tags == 'success' %} toastx-success
           {% elif message.tags == 'warning' %} toastx-warning
           {% elif message.tags == 'error' %} toastx-error
-          {% else %} toastx-info {% endif %}
-        " role="alert">
+          {% else %} toastx-info {% endif %}">
           <div class="toastx-icon">
             {% if message.tags == 'success' %}
               <i class="bi bi-check-circle-fill"></i>
@@ -849,8 +755,8 @@
               <i class="bi bi-info-circle-fill"></i>
             {% endif %}
           </div>
-          <div class="toastx-text">{{ message }}</div>
-          <button type="button" class="toastx-close" aria-label="Cerrar" onclick="this.parentElement.remove()">
+          <div>{{ message }}</div>
+          <button type="button" class="toastx-close" onclick="this.parentElement.remove()">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -863,14 +769,16 @@
       <div class="cardx-head">
         <div>
           <h2 class="title">
-            <i class="bi bi-clock-history"></i>
-            Historial
+            <i class="bi bi-calendar3"></i>
+            Historial diario
           </h2>
-          <p class="subtitle">Consulta rápida, filtros claros y exportación elegante para control institucional.</p>
+          <p class="subtitle">
+            Aquí ves un solo día completo: todos los profesores, quién asistió, quién faltó y quién está justificado.
+          </p>
 
           <div class="privacy-note">
             <i class="bi bi-shield-lock"></i>
-            Por privacidad, el DNI no se muestra en el historial.
+            Por privacidad, el DNI no se muestra en el historial visual.
           </div>
         </div>
 
@@ -878,16 +786,11 @@
           {% if puede_volver_just %}
             <a class="btnx btnx-primary" href="{{ url_volver_just }}">
               <i class="bi bi-arrow-left-circle"></i>
-              <span>
-                Volver a justificaciones
-                <span class="subtxt">Regresar al panel</span>
-              </span>
+              <span>Volver a justificaciones</span>
             </a>
           {% endif %}
 
-          <a class="btnx btnx-primary"
-             title="Registrar asistencia manualmente por DNI"
-             href="{{ url_registro_manual }}">
+          <a class="btnx btnx-primary" href="{{ url_registro_manual }}">
             <i class="bi bi-pencil-square"></i>
             <span>
               Registro manual
@@ -896,12 +799,11 @@
           </a>
 
           <a class="btnx btnx-success"
-             title="Exporta una matriz por días"
-             href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}">
+             href="{% url 'exportar_reporte_excel' %}?q={{ q|urlencode }}&fecha={{ fecha|date:'Y-m-d' }}&condicion={{ condicion|urlencode }}">
             <i class="bi bi-file-earmark-excel"></i>
             <span>
               Exportar Excel
-              <span class="subtxt">Reporte por días</span>
+              <span class="subtxt">Reporte diario</span>
             </span>
           </a>
         </div>
@@ -909,24 +811,24 @@
 
       <div class="kpi-grid">
         <div class="kpi">
-          <div class="k-title"><i class="bi bi-list-check"></i> Total registros</div>
+          <div class="k-title"><i class="bi bi-people"></i> Total docentes</div>
           <div class="k-val">{{ total_registros }}</div>
         </div>
         <div class="kpi">
-          <div class="k-title"><i class="bi bi-check2-circle"></i> Asistencias</div>
+          <div class="k-title"><i class="bi bi-check2-circle"></i> Asistieron</div>
           <div class="k-val">{{ total_asist|default:0 }}</div>
         </div>
         <div class="kpi">
-          <div class="k-title"><i class="bi bi-shield-check"></i> Justificaciones</div>
+          <div class="k-title"><i class="bi bi-shield-check"></i> Justificados</div>
           <div class="k-val">{{ total_just|default:0 }}</div>
         </div>
         <div class="kpi">
-          <div class="k-title"><i class="bi bi-stars"></i> Días especiales</div>
-          <div class="k-val">{{ total_especiales|default:0 }}</div>
+          <div class="k-title"><i class="bi bi-x-circle"></i> Faltaron</div>
+          <div class="k-val">{{ total_falto|default:0 }}</div>
         </div>
         <div class="kpi">
-          <div class="k-title"><i class="bi bi-people"></i> Docentes únicos</div>
-          <div class="k-val">{{ docentes_unicos }}</div>
+          <div class="k-title"><i class="bi bi-stars"></i> Día especial</div>
+          <div class="k-val">{{ total_especiales|default:0 }}</div>
         </div>
         <div class="kpi">
           <div class="k-title"><i class="bi bi-person-badge"></i> N / C</div>
@@ -934,38 +836,28 @@
         </div>
       </div>
 
-      {% if dias_especiales_rango %}
+      {% if dia_especial %}
         <div class="special-banner">
           <div class="special-banner-head">
             <i class="bi bi-calendar2-event-fill"></i>
-            Días especiales dentro del rango consultado
+            Día especial institucional detectado
           </div>
           <div class="special-banner-body">
-            {% for d in dias_especiales_rango %}
-              <span class="special-chip">
-                <i class="bi bi-stars"></i>
-                {{ d.fecha|date:"d/m/Y" }} · {{ d.tipo_display|upper }}
-                {% if d.descripcion %} · {{ d.descripcion }}{% endif %}
-              </span>
-            {% endfor %}
+            {{ dia_especial.get_tipo_display|upper }}
+            {% if dia_especial.descripcion %} · {{ dia_especial.descripcion }}{% endif %}
           </div>
         </div>
       {% endif %}
 
       <div class="active-filters">
+        <span class="pill"><i class="bi bi-calendar-date"></i> Fecha: {{ fecha|date:"d/m/Y" }}</span>
         {% if q %}
-          <span class="pill"><i class="bi bi-search"></i> <span class="muted">Búsqueda:</span> {{ q }}</span>
-        {% endif %}
-        {% if desde %}
-          <span class="pill"><i class="bi bi-calendar-event"></i> <span class="muted">Desde:</span> <span class="mono">{{ desde }}</span></span>
-        {% endif %}
-        {% if hasta %}
-          <span class="pill"><i class="bi bi-calendar-check"></i> <span class="muted">Hasta:</span> <span class="mono">{{ hasta }}</span></span>
+          <span class="pill"><i class="bi bi-search"></i> Búsqueda: {{ q }}</span>
         {% endif %}
         {% if condicion %}
-          <span class="pill"><i class="bi bi-person-badge"></i> <span class="muted">Condición:</span> {{ condicion|upper }}</span>
+          <span class="pill"><i class="bi bi-person-badge"></i> Condición: {{ condicion|upper }}</span>
         {% endif %}
-        <span class="pill"><i class="bi bi-eye"></i> <span class="muted">Mostrar:</span> {{ ps }} / pág</span>
+        <span class="pill"><i class="bi bi-eye"></i> Mostrar: {{ ps }} / pág</span>
       </div>
 
       <div class="filters">
@@ -973,43 +865,31 @@
           <form method="get">
             <div class="row g-3 align-items-end">
               <div class="col-12 col-lg-5">
-                <label class="form-label">Búsqueda</label>
+                <label class="form-label">Buscar docente</label>
                 <div class="input-group">
-                  <span class="input-group-text">
-                    <i class="bi bi-search"></i>
-                  </span>
+                  <span class="input-group-text"><i class="bi bi-search"></i></span>
                   <input
                     type="text"
                     name="q"
-                    id="liveSearchInput"
                     class="form-control"
                     style="border-radius:0 14px 14px 0 !important;"
-                    placeholder="Código / Apellidos / Nombres"
+                    placeholder="Código / DNI / Apellidos / Nombres"
                     value="{{ q }}"
-                    autocomplete="off"
                   >
                 </div>
-                <div class="live-search-status" id="liveSearchStatus">
-                  <i class="bi bi-lightning-charge-fill"></i> Búsqueda en vivo activa
-                </div>
               </div>
 
-              <div class="col-6 col-lg-2">
-                <label class="form-label">Desde</label>
-                <input type="date" name="desde" class="form-control" value="{{ desde }}">
-              </div>
-
-              <div class="col-6 col-lg-2">
-                <label class="form-label">Hasta</label>
-                <input type="date" name="hasta" class="form-control" value="{{ hasta }}">
+              <div class="col-12 col-lg-3">
+                <label class="form-label">Fecha</label>
+                <input type="date" name="fecha" class="form-control" value="{{ fecha|date:'Y-m-d' }}">
               </div>
 
               <div class="col-6 col-lg-2">
                 <label class="form-label">Condición</label>
                 <select name="condicion" class="form-select">
                   <option value="" {% if not condicion %}selected{% endif %}>Todas</option>
-                  <option value="N" {% if condicion == "N" or condicion == "n" %}selected{% endif %}>N</option>
-                  <option value="C" {% if condicion == "C" or condicion == "c" %}selected{% endif %}>C</option>
+                  <option value="N" {% if condicion == "N" %}selected{% endif %}>N</option>
+                  <option value="C" {% if condicion == "C" %}selected{% endif %}>C</option>
                 </select>
               </div>
 
@@ -1022,15 +902,15 @@
                 </select>
               </div>
 
-              <div class="col-12 col-lg-2 d-grid">
+              <div class="col-12 col-lg-1 d-grid">
                 <button class="btn-apply" type="submit">
-                  <i class="bi bi-funnel-fill"></i> Aplicar filtros
+                  <i class="bi bi-funnel-fill"></i> Ver
                 </button>
               </div>
 
               <div class="col-12 d-flex justify-content-end">
                 <a class="btn-clear" href="{% url 'historial_asistencias' %}">
-                  <i class="bi bi-x-circle"></i> Limpiar filtros
+                  <i class="bi bi-arrow-counterclockwise"></i> Hoy
                 </a>
               </div>
             </div>
@@ -1038,102 +918,72 @@
         </div>
       </div>
 
-      <div class="table-wrap cv-auto">
+      <div class="table-wrap">
         <div class="table-responsive">
           <table class="table table-hover align-middle">
             <thead>
               <tr>
-                <th style="width:60px;">#</th>
-                <th>Docente / Registro</th>
-                <th style="width:220px;">Condición</th>
-                <th style="width:240px;">Estado</th>
-                <th style="width:240px;">Fecha y hora</th>
+                <th style="width:70px;">#</th>
+                <th>Docente</th>
+                <th style="width:180px;">Condición</th>
+                <th style="width:220px;">Estado</th>
+                <th style="width:220px;">Hora / referencia</th>
+                <th style="min-width:320px;">Acción</th>
               </tr>
             </thead>
 
-            <tbody id="historyBody">
+            <tbody>
               {% for a in items %}
-                <tr
-                  class="history-row {% if a.es_dia_especial %}tr-special{% endif %}"
-                  data-search="{{ a.profesor.apellidos|default:'' }} {{ a.profesor.nombres|default:'' }} {{ a.profesor.codigo|default:'' }} {{ a.profesor.condicion|default:'' }} {{ a.estado|default:'' }} {{ a.detalle|default:'' }}"
-                >
+                <tr class="{% if a.es_dia_especial %}tr-special{% endif %}">
                   <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
 
                   <td>
-                    {% if a.es_dia_especial %}
-                      <div class="doc-name">
-                        <i class="bi bi-building me-1" style="color:#b45309;"></i>
-                        Registro institucional
-                      </div>
-                      <div class="doc-sub">
-                        <span class="doc-chip">
-                          <i class="bi bi-stars"></i>
-                          Evento general de la universidad
-                        </span>
-                      </div>
+                    <div class="doc-name">{{ a.profesor.apellidos }}, {{ a.profesor.nombres }}</div>
+                    <div class="doc-sub">
+                      <span class="doc-chip">
+                        <i class="bi bi-hash"></i> Código: {{ a.profesor.codigo|default:"-" }}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td>
+                    {% if a.profesor.condicion == "N" %}
+                      <span class="badge-cond cond-n">
+                        <i class="bi bi-check-circle-fill"></i> N • Nombrado
+                      </span>
+                    {% elif a.profesor.condicion == "C" %}
+                      <span class="badge-cond cond-c">
+                        <i class="bi bi-briefcase-fill"></i> C • Contratado
+                      </span>
                     {% else %}
-                      <div class="doc-name">{{ a.profesor.apellidos }}, {{ a.profesor.nombres }}</div>
-                      <div class="doc-sub">
-                        <span class="doc-chip"><i class="bi bi-hash"></i> Código: {{ a.profesor.codigo }}</span>
-                      </div>
+                      <span class="badge-cond cond-otro">
+                        <i class="bi bi-info-circle-fill"></i> {{ a.profesor.condicion|default:"-" }}
+                      </span>
                     {% endif %}
                   </td>
 
                   <td>
-                    {% if a.es_dia_especial %}
-                      <span class="badge-cond cond-inst">
-                        <i class="bi bi-bank2"></i> INSTITUCIONAL
-                      </span>
-                    {% else %}
-                      {% if a.profesor.condicion == "N" %}
-                        <span class="badge-cond cond-n">
-                          <i class="bi bi-check-circle-fill"></i> N • Nombrado
-                        </span>
-                      {% elif a.profesor.condicion == "C" %}
-                        <span class="badge-cond cond-c">
-                          <i class="bi bi-briefcase-fill"></i> C • Contratado
-                        </span>
-                      {% else %}
-                        <span class="badge-cond cond-otro">
-                          <i class="bi bi-info-circle-fill"></i> {{ a.profesor.condicion|default:"-" }}
-                        </span>
-                      {% endif %}
-                    {% endif %}
-                  </td>
-
-                  <td>
-                    {% if a.es_dia_especial %}
-                      <span class="badge-cond st-special">
-                        <i class="bi bi-stars"></i> {{ a.estado }}
-                      </span>
-                      {% if a.detalle %}
-                        <div class="date-sub" style="margin-top:6px;">
-                          <i class="bi bi-card-text"></i> {{ a.detalle }}
-                        </div>
-                      {% endif %}
-                    {% elif "ASISTIÓ" in a.estado %}
+                    {% if a.estado_key == "ASISTIO" %}
                       <span class="badge-cond st-asistio">
                         <i class="bi bi-check2-circle"></i> ASISTIÓ
                       </span>
-                    {% elif "JUSTIFICADO" in a.estado %}
+                    {% elif a.estado_key == "JUSTIFICADO" %}
                       <span class="badge-cond st-just">
                         <i class="bi bi-shield-check"></i> {{ a.estado }}
                       </span>
-                      {% if a.detalle %}
-                        <div class="date-sub" style="margin-top:6px;">
-                          <i class="bi bi-card-text"></i> {{ a.detalle }}
-                        </div>
-                      {% endif %}
-                    {% else %}
-                      <span class="badge-cond cond-otro">
-                        <i class="bi bi-info-circle"></i> {{ a.estado }}
+                    {% elif a.estado_key == "FALTO" %}
+                      <span class="badge-cond st-falto">
+                        <i class="bi bi-x-circle"></i> FALTÓ
                       </span>
-                      {% if a.detalle %}
-                        <div class="date-sub" style="margin-top:6px;">
-                          <i class="bi bi-card-text"></i> {{ a.detalle }}
-                        </div>
-                      {% endif %}
+                    {% else %}
+                      <span class="badge-cond st-special">
+                        <i class="bi bi-stars"></i> {{ a.estado }}
+                      </span>
                     {% endif %}
+
+                    <div class="date-sub mt-2">
+                      <i class="bi bi-card-text"></i> {{ a.detalle }}
+                    </div>
                   </td>
 
                   <td>
@@ -1142,35 +992,84 @@
                       {{ a.fecha_hora|date:"d/m/Y H:i" }}
                     </div>
                     <div class="date-sub">
-                      Hace {{ a.fecha_hora|timesince }}
+                      {% if a.estado_key == "FALTO" %}
+                        Día evaluado sin asistencia
+                      {% elif a.estado_key == "DIA_ESPECIAL" %}
+                        Jornada institucional especial
+                      {% else %}
+                        Hace {{ a.fecha_hora|timesince }}
+                      {% endif %}
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="action-box">
+                      {% if can_justify_from_historial and a.puede_justificar %}
+                        <button class="btnx btnx-violet mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#jf{{ a.profesor.id }}">
+                          <i class="bi bi-shield-plus"></i>
+                          Justificar falta
+                        </button>
+
+                        <div class="collapse" id="jf{{ a.profesor.id }}">
+                          <div class="mini-form">
+                            <form method="post" action="{% url 'justificar_falta_historial' %}">
+                              {% csrf_token %}
+                              <input type="hidden" name="profesor_id" value="{{ a.profesor.id }}">
+                              <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+                              <input type="hidden" name="q" value="{{ q }}">
+                              <input type="hidden" name="condicion" value="{{ condicion }}">
+                              <input type="hidden" name="ps" value="{{ ps }}">
+                              <input type="hidden" name="page" value="{{ page_obj.number }}">
+
+                              <div class="row g-2">
+                                <div class="col-12">
+                                  <label class="form-label mb-1">Motivo</label>
+                                  <select name="tipo" class="form-select" required>
+                                    <option value="DM">Descanso médico</option>
+                                    <option value="C">Comisión / Encargo</option>
+                                    <option value="P">Permiso</option>
+                                    <option value="O">Otro</option>
+                                  </select>
+                                </div>
+
+                                <div class="col-12">
+                                  <label class="form-label mb-1">Detalle</label>
+                                  <textarea name="detalle" class="form-control" rows="2" placeholder="Escribe una observación breve"></textarea>
+                                </div>
+
+                                <div class="col-12 d-grid">
+                                  <button type="submit" class="btnx btnx-violet">
+                                    <i class="bi bi-check2-circle"></i>
+                                    Guardar justificación
+                                  </button>
+                                </div>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      {% elif a.estado_key == "ASISTIO" %}
+                        <span class="doc-chip">
+                          <i class="bi bi-check-circle"></i> Sin acción
+                        </span>
+                      {% elif a.estado_key == "JUSTIFICADO" %}
+                        <span class="doc-chip">
+                          <i class="bi bi-shield-check"></i> Ya justificado
+                        </span>
+                      {% else %}
+                        <span class="doc-chip">
+                          <i class="bi bi-stars"></i> Sin acción
+                        </span>
+                      {% endif %}
                     </div>
                   </td>
                 </tr>
-
               {% empty %}
-                <tr id="emptyServerRow">
-                  <td colspan="5">
-                    <div class="empty-wrap">
-                      <div class="empty-ico">
-                        <i class="bi bi-inbox" style="font-size:26px;color:rgba(166,29,34,.9);"></i>
-                      </div>
-                      <div class="empty-title">No hay registros con esos filtros</div>
-                      <div class="empty-sub">
-                        Prueba cambiando la búsqueda, la condición o el rango de fechas.
-                      </div>
-                      <a class="btn-clear mt-2" href="{% url 'historial_asistencias' %}">
-                        <i class="bi bi-arrow-counterclockwise"></i> Quitar filtros
-                      </a>
-                    </div>
+                <tr>
+                  <td colspan="6" class="text-center p-4 text-muted">
+                    No se encontraron docentes con esos filtros.
                   </td>
                 </tr>
               {% endfor %}
-
-              <tr id="liveNoResultsRow" style="display:none;">
-                <td colspan="5" class="text-center text-muted p-4">
-                  <i class="bi bi-search"></i> No se encontraron coincidencias en la búsqueda en vivo.
-                </td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -1179,23 +1078,22 @@
       <div class="footer-row">
         <div class="d-flex gap-2 flex-wrap">
           <span class="total">
-            <i class="bi bi-list-check"></i> Total: {{ total_registros }} registros
+            <i class="bi bi-list-check"></i> Total: {{ total_registros }} docentes
           </span>
-
-          <span class="pinfo">
-            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+          <span class="total">
+            <i class="bi bi-calendar-event"></i> Fecha: {{ fecha|date:"d/m/Y" }}
           </span>
         </div>
 
         <div class="pager">
           <a class="pbtn {% if not page_obj.has_previous %}disabled{% endif %}"
-             href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page=1">
+             href="?q={{ q|urlencode }}&fecha={{ fecha|date:'Y-m-d' }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page=1">
             <i class="bi bi-skip-backward-fill"></i> Inicio
           </a>
 
           {% if page_obj.has_previous %}
             <a class="pbtn"
-               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.previous_page_number }}">
+               href="?q={{ q|urlencode }}&fecha={{ fecha|date:'Y-m-d' }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.previous_page_number }}">
               <i class="bi bi-chevron-left"></i> Anterior
             </a>
           {% else %}
@@ -1204,7 +1102,7 @@
 
           {% if page_obj.has_next %}
             <a class="pbtn"
-               href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.next_page_number }}">
+               href="?q={{ q|urlencode }}&fecha={{ fecha|date:'Y-m-d' }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.next_page_number }}">
               Siguiente <i class="bi bi-chevron-right"></i>
             </a>
           {% else %}
@@ -1212,7 +1110,7 @@
           {% endif %}
 
           <a class="pbtn {% if not page_obj.has_next %}disabled{% endif %}"
-             href="?q={{ q|urlencode }}&desde={{ desde|urlencode }}&hasta={{ hasta|urlencode }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.paginator.num_pages }}">
+             href="?q={{ q|urlencode }}&fecha={{ fecha|date:'Y-m-d' }}&condicion={{ condicion|urlencode }}&ps={{ ps }}&page={{ page_obj.paginator.num_pages }}">
             Fin <i class="bi bi-skip-forward-fill"></i>
           </a>
         </div>
@@ -1220,52 +1118,15 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     (function(){
       const wrap = document.getElementById("toastWrap");
       if (wrap) {
         setTimeout(() => {
-          [...wrap.children].forEach((t) => t.classList.add("toastx-hide"));
-          setTimeout(() => wrap.remove(), 350);
+          wrap.remove();
         }, 4000);
       }
-    })();
-
-    (function(){
-      const input = document.getElementById('liveSearchInput');
-      const rows = Array.from(document.querySelectorAll('#historyBody .history-row'));
-      const noResults = document.getElementById('liveNoResultsRow');
-      const serverEmpty = document.getElementById('emptyServerRow');
-      const status = document.getElementById('liveSearchStatus');
-      if (!input || !rows.length) return;
-
-      function normalize(s){
-        return (s || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-      }
-
-      function filterRows(){
-        const q = normalize(input.value);
-        let visible = 0;
-
-        rows.forEach((tr) => {
-          const hay = normalize(tr.dataset.search);
-          const show = !q || hay.includes(q);
-          tr.classList.toggle('row-hidden-live', !show);
-          if (show) visible++;
-        });
-
-        if (noResults) noResults.style.display = visible === 0 ? '' : 'none';
-        if (serverEmpty) serverEmpty.style.display = 'none';
-
-        if (status) {
-          status.innerHTML = visible === rows.length
-            ? '<i class="bi bi-lightning-charge-fill"></i> Búsqueda en vivo activa'
-            : `<i class="bi bi-search"></i> Mostrando ${visible} de ${rows.length} registros visibles`;
-        }
-      }
-
-      input.addEventListener('input', filterRows, { passive:true });
-      filterRows();
     })();
   </script>
 </body>

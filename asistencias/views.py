@@ -275,7 +275,7 @@ def login_view_geocerca(request):
 
 
 # =========================================================
-# HELPERS HISTORIAL
+# HELPERS HISTORIAL POR DÍA
 # =========================================================
 def _aware_midnight(d):
     dt = datetime.combine(d, time(0, 0, 0))
@@ -289,70 +289,154 @@ def _aware_end_of_day(d):
     return timezone.make_aware(dt, tz)
 
 
-def _event_from_asistencia(a):
+def _build_historial_rows_por_dia(fecha, q="", condicion=""):
+    profesores_qs = (
+        Profesor.objects.only("id", "dni", "codigo", "apellidos", "nombres", "condicion")
+        .order_by("apellidos", "nombres")
+    )
+
+    if q:
+        profesores_qs = profesores_qs.filter(
+            Q(dni__icontains=q)
+            | Q(codigo__icontains=q)
+            | Q(apellidos__icontains=q)
+            | Q(nombres__icontains=q)
+        )
+
+    if condicion in ("N", "C"):
+        profesores_qs = profesores_qs.filter(condicion__iexact=condicion)
+
+    profesores = list(profesores_qs)
+    profesor_ids = [p.id for p in profesores]
+
+    dia_especial = _obtener_dia_especial(fecha)
+
+    asistencias = (
+        Asistencia.objects
+        .filter(profesor_id__in=profesor_ids, fecha=fecha, tipo="E")
+        .select_related("profesor")
+        .order_by("fecha_hora")
+    )
+    asistencia_map = {}
+    for a in asistencias:
+        if a.profesor_id not in asistencia_map:
+            asistencia_map[a.profesor_id] = a
+
+    justificaciones = (
+        JustificacionAsistencia.objects
+        .filter(profesor_id__in=profesor_ids, fecha=fecha)
+        .select_related("profesor")
+    )
+    just_map = {j.profesor_id: j for j in justificaciones}
+
+    asist_j = (
+        Asistencia.objects
+        .filter(profesor_id__in=profesor_ids, fecha=fecha, tipo="J")
+        .select_related("profesor")
+        .order_by("fecha_hora")
+    )
+    asist_j_map = {}
+    for j in asist_j:
+        if j.profesor_id not in asist_j_map:
+            asist_j_map[j.profesor_id] = j
+
+    rows = []
+    c_asistio = 0
+    c_just = 0
+    c_falto = 0
+    c_especial = 0
+
+    for profesor in profesores:
+        a = asistencia_map.get(profesor.id)
+        j = just_map.get(profesor.id)
+        aj = asist_j_map.get(profesor.id)
+
+        if dia_especial:
+            tipo_display = _tipo_display_dia_especial(dia_especial)
+            descripcion = (dia_especial.descripcion or "").strip()
+
+            row = {
+                "profesor": profesor,
+                "estado_key": "DIA_ESPECIAL",
+                "estado": tipo_display.upper(),
+                "detalle": descripcion or "Día especial institucional",
+                "fecha_hora": _aware_end_of_day(fecha),
+                "puede_justificar": False,
+                "justificacion_existente": False,
+                "es_dia_especial": True,
+            }
+            c_especial += 1
+
+        elif a:
+            row = {
+                "profesor": profesor,
+                "estado_key": "ASISTIO",
+                "estado": "ASISTIÓ",
+                "detalle": "Asistencia registrada",
+                "fecha_hora": a.fecha_hora,
+                "puede_justificar": False,
+                "justificacion_existente": bool(j or aj),
+                "es_dia_especial": False,
+            }
+            c_asistio += 1
+
+        elif j or aj:
+            motivo_label = "Justificación"
+            detalle = ""
+
+            if j:
+                try:
+                    motivo_label = j.get_tipo_display()
+                except Exception:
+                    motivo_label = (j.tipo or "").strip() or "Justificación"
+                detalle = (j.detalle or "").strip()
+                fecha_hora = _aware_midnight(j.fecha)
+            else:
+                try:
+                    motivo_label = aj.get_motivo_display()
+                except Exception:
+                    motivo_label = (getattr(aj, "motivo", "") or "").strip() or "Justificación"
+                detalle = (getattr(aj, "detalle", "") or "").strip()
+                fecha_hora = aj.fecha_hora
+
+            row = {
+                "profesor": profesor,
+                "estado_key": "JUSTIFICADO",
+                "estado": f"JUSTIFICADO ({motivo_label})",
+                "detalle": detalle or "Inasistencia justificada",
+                "fecha_hora": fecha_hora,
+                "puede_justificar": False,
+                "justificacion_existente": True,
+                "es_dia_especial": False,
+            }
+            c_just += 1
+
+        else:
+            row = {
+                "profesor": profesor,
+                "estado_key": "FALTO",
+                "estado": "FALTÓ",
+                "detalle": "Sin asistencia ni justificación",
+                "fecha_hora": _aware_end_of_day(fecha),
+                "puede_justificar": True,
+                "justificacion_existente": False,
+                "es_dia_especial": False,
+            }
+            c_falto += 1
+
+        rows.append(row)
+
     return {
-        "kind": "A",
-        "profesor": a.profesor,
-        "estado": "ASISTIÓ",
-        "fecha_hora": a.fecha_hora,
-        "codigo": getattr(a.profesor, "codigo", ""),
-        "condicion": getattr(a.profesor, "condicion", ""),
-        "detalle": "Asistencia registrada",
-        "es_dia_especial": False,
-    }
-
-
-def _event_from_justificacion(j):
-    dt = _aware_midnight(j.fecha)
-    tipo_label = j.get_tipo_display() if hasattr(j, "get_tipo_display") else (j.tipo or "")
-    return {
-        "kind": "J",
-        "profesor": j.profesor,
-        "estado": f"JUSTIFICADO ({tipo_label})",
-        "fecha_hora": dt,
-        "codigo": getattr(j.profesor, "codigo", ""),
-        "condicion": getattr(j.profesor, "condicion", ""),
-        "detalle": (j.detalle or ""),
-        "es_dia_especial": False,
-    }
-
-
-def _event_from_dia_especial(d):
-    tipo_display = _tipo_display_dia_especial(d)
-    detalle = (d.descripcion or "").strip() or "Día especial institucional"
-
-    return {
-        "kind": "D",
-        "profesor": {
-            "dni": "-",
-            "codigo": "-",
-            "apellidos": "INSTITUCIONAL",
-            "nombres": "",
-            "condicion": "-",
+        "rows": rows,
+        "dia_especial": dia_especial,
+        "resumen": {
+            "asistio": c_asistio,
+            "justificado": c_just,
+            "falto": c_falto,
+            "especial": c_especial,
+            "total": len(rows),
         },
-        "estado": tipo_display.upper(),
-        "fecha_hora": _aware_end_of_day(d.fecha),
-        "codigo": "-",
-        "condicion": "-",
-        "detalle": detalle,
-        "es_dia_especial": True,
     }
-
-
-def _merge_top_n_three(asist_qs, just_qs, dias_qs, n):
-    eventos = []
-
-    for a in list(asist_qs[:n]):
-        eventos.append(_event_from_asistencia(a))
-
-    for j in list(just_qs[:n]):
-        eventos.append(_event_from_justificacion(j))
-
-    for d in list(dias_qs[:n]):
-        eventos.append(_event_from_dia_especial(d))
-
-    eventos.sort(key=lambda x: x["fecha_hora"], reverse=True)
-    return eventos[:n]
 
 
 # =========================================================
@@ -416,19 +500,22 @@ def seleccionar_grupo(request):
 
 
 # =========================================================
-# HISTORIAL
+# HISTORIAL POR DÍA
 # =========================================================
 @user_passes_test(_in_any_group("HISTORIAL", "JUSTIFICACIONES"), login_url="login")
 def historial_asistencias(request):
     q = (request.GET.get("q") or "").strip()
-    desde = (request.GET.get("desde") or "").strip()
-    hasta = (request.GET.get("hasta") or "").strip()
-    condicion = (request.GET.get("condicion") or "").strip()
-
+    fecha_str = (request.GET.get("fecha") or "").strip()
+    condicion = (request.GET.get("condicion") or "").strip().upper()
     ps = (request.GET.get("ps") or "25").strip()
+
     if ps not in ("25", "50", "100"):
         ps = "25"
     ps = int(ps)
+
+    fecha = parse_date(fecha_str) if fecha_str else timezone.localdate()
+    if not fecha:
+        fecha = timezone.localdate()
 
     origen = (request.GET.get("from") or "").strip().lower()
 
@@ -459,149 +546,139 @@ def historial_asistencias(request):
 
     url_volver_just = f"{reverse('panel_justificaciones')}?fecha={fecha_just}"
 
-    asist_qs = (
-        Asistencia.objects.select_related("profesor")
-        .only(
-            "id",
-            "fecha_hora",
-            "fecha",
-            "tipo",
-            "profesor__id",
-            "profesor__codigo",
-            "profesor__condicion",
-            "profesor__apellidos",
-            "profesor__nombres",
-            "profesor__dni",
-        )
-        .filter(tipo="E")
-        .order_by("-fecha_hora")
+    data = _build_historial_rows_por_dia(
+        fecha=fecha,
+        q=q,
+        condicion=condicion,
     )
 
-    just_qs = (
-        JustificacionAsistencia.objects.select_related("profesor")
-        .only(
-            "id",
-            "fecha",
-            "tipo",
-            "detalle",
-            "profesor__id",
-            "profesor__codigo",
-            "profesor__condicion",
-            "profesor__apellidos",
-            "profesor__nombres",
-            "profesor__dni",
-        )
-        .order_by("-fecha")
-    )
+    rows = data["rows"]
+    dia_especial = data["dia_especial"]
+    resumen = data["resumen"]
 
-    dias_qs = DiaEspecial.objects.filter(activo=True).only(
-        "id",
-        "fecha",
-        "tipo",
-        "descripcion",
-        "activo",
-    ).order_by("-fecha")
-
-    if q:
-        filt = (
-            Q(profesor__dni__icontains=q)
-            | Q(profesor__codigo__icontains=q)
-            | Q(profesor__apellidos__icontains=q)
-            | Q(profesor__nombres__icontains=q)
-        )
-        asist_qs = asist_qs.filter(filt)
-        just_qs = just_qs.filter(filt)
-        # Los días especiales son institucionales, por eso no se filtran por docente.
-
-    if condicion:
-        asist_qs = asist_qs.filter(profesor__condicion__iexact=condicion)
-        just_qs = just_qs.filter(profesor__condicion__iexact=condicion)
-        # Los días especiales son institucionales, por eso no se filtran por condición.
-
-    desde_date = parse_date(desde) if desde else None
-    hasta_date = parse_date(hasta) if hasta else None
-
-    if desde and desde_date:
-        asist_qs = asist_qs.filter(fecha_hora__date__gte=desde_date)
-        just_qs = just_qs.filter(fecha__gte=desde_date)
-        dias_qs = dias_qs.filter(fecha__gte=desde_date)
-
-    if hasta and hasta_date:
-        asist_qs = asist_qs.filter(fecha_hora__date__lte=hasta_date)
-        just_qs = just_qs.filter(fecha__lte=hasta_date)
-        dias_qs = dias_qs.filter(fecha__lte=hasta_date)
-
-    total_asist = asist_qs.count()
-    total_just = just_qs.count()
-    total_especiales = dias_qs.count()
-    total_registros = total_asist + total_just + total_especiales
-
-    ids_a = set(asist_qs.values_list("profesor_id", flat=True).distinct())
-    ids_j = set(just_qs.values_list("profesor_id", flat=True).distinct())
-    docentes_unicos = len(ids_a | ids_j)
-
-    registros_n = (
-        asist_qs.filter(profesor__condicion__iexact="N").count()
-        + just_qs.filter(profesor__condicion__iexact="N").count()
-    )
-    registros_c = (
-        asist_qs.filter(profesor__condicion__iexact="C").count()
-        + just_qs.filter(profesor__condicion__iexact="C").count()
-    )
-
+    paginator = Paginator(rows, ps)
     page_number = request.GET.get("page", "1")
-    try:
-        page_number_int = int(page_number)
-        if page_number_int < 1:
-            page_number_int = 1
-    except Exception:
-        page_number_int = 1
+    page_obj = paginator.get_page(page_number)
+    items = list(page_obj.object_list)
 
-    offset = (page_number_int - 1) * ps
-    need_n = offset + ps
-
-    merged = _merge_top_n_three(asist_qs, just_qs, dias_qs, need_n)
-    page_items = merged[offset:offset + ps]
-
-    paginator = Paginator(range(total_registros), ps)
-    page_obj = paginator.get_page(page_number_int)
-    page_obj.object_list = page_items
-
-    dias_especiales_rango = []
-    for d in dias_qs[:50]:
-        dias_especiales_rango.append({
-            "fecha": d.fecha,
-            "tipo": d.tipo,
-            "tipo_display": _tipo_display_dia_especial(d),
-            "descripcion": (d.descripcion or "").strip(),
-        })
+    can_justify_from_historial = (
+        request.user.is_superuser
+        or request.user.groups.filter(name="HISTORIAL").exists()
+        or request.user.groups.filter(name="JUSTIFICACIONES").exists()
+    )
 
     return render(
         request,
         "asistencias/historial.html",
         {
-            "items": page_items,
+            "items": items,
             "page_obj": page_obj,
             "paginator": paginator,
             "q": q,
-            "desde": desde,
-            "hasta": hasta,
+            "fecha": fecha,
             "condicion": condicion,
             "ps": ps,
-            "total_registros": total_registros,
-            "total_asist": total_asist,
-            "total_just": total_just,
-            "total_especiales": total_especiales,
-            "docentes_unicos": docentes_unicos,
-            "registros_n": registros_n,
-            "registros_c": registros_c,
+            "total_registros": resumen["total"],
+            "total_asist": resumen["asistio"],
+            "total_just": resumen["justificado"],
+            "total_falto": resumen["falto"],
+            "total_especiales": resumen["especial"],
+            "docentes_unicos": resumen["total"],
+            "registros_n": len([x for x in rows if (x["profesor"].condicion or "").upper() == "N"]),
+            "registros_c": len([x for x in rows if (x["profesor"].condicion or "").upper() == "C"]),
             "puede_volver_just": puede_volver_just,
             "fecha_just": fecha_just,
             "url_registro_manual": url_registro_manual,
             "url_volver_just": url_volver_just,
-            "dias_especiales_rango": dias_especiales_rango,
+            "dia_especial": dia_especial,
+            "can_justify_from_historial": can_justify_from_historial,
         },
     )
+
+
+# =========================================================
+# JUSTIFICAR FALTA DESDE HISTORIAL
+# =========================================================
+@require_POST
+@user_passes_test(_in_any_group("HISTORIAL", "JUSTIFICACIONES"), login_url="login")
+def justificar_falta_historial(request):
+    profesor_id = (request.POST.get("profesor_id") or "").strip()
+    fecha_str = (request.POST.get("fecha") or "").strip()
+    tipo = (request.POST.get("tipo") or "DM").strip().upper()
+    detalle = (request.POST.get("detalle") or "").strip()
+
+    q = (request.POST.get("q") or "").strip()
+    condicion = (request.POST.get("condicion") or "").strip()
+    ps = (request.POST.get("ps") or "25").strip()
+    page = (request.POST.get("page") or "1").strip()
+
+    redirect_url = (
+        f"{reverse('historial_asistencias')}?"
+        f"q={q}&fecha={fecha_str}&condicion={condicion}&ps={ps}&page={page}"
+    )
+
+    fecha = parse_date(fecha_str)
+    if not fecha:
+        messages.error(request, "Fecha inválida.")
+        return redirect(redirect_url)
+
+    if _es_dia_especial(fecha):
+        messages.warning(request, "Ese día está marcado como día especial. No se requiere justificación.")
+        return redirect(redirect_url)
+
+    try:
+        profesor = Profesor.objects.get(id=profesor_id)
+    except Profesor.DoesNotExist:
+        messages.error(request, "Profesor no encontrado.")
+        return redirect(redirect_url)
+
+    tipo_ok = tipo if tipo in ("DM", "C", "P", "O") else "DM"
+    ip = _get_client_ip(request)
+    ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
+
+    if Asistencia.objects.filter(profesor=profesor, fecha=fecha, tipo="E").exists():
+        messages.warning(request, "Ese docente ya tiene asistencia registrada en esa fecha.")
+        return redirect(redirect_url)
+
+    if JustificacionAsistencia.objects.filter(profesor=profesor, fecha=fecha).exists():
+        messages.warning(request, "Ese docente ya tiene justificación registrada en esa fecha.")
+        return redirect(redirect_url)
+
+    try:
+        with transaction.atomic():
+            JustificacionAsistencia.objects.create(
+                profesor=profesor,
+                fecha=fecha,
+                tipo=tipo_ok,
+                detalle=detalle,
+                creado_por=request.user,
+                actualizado_por=request.user,
+            )
+
+            Asistencia.objects.update_or_create(
+                profesor=profesor,
+                fecha=fecha,
+                tipo="J",
+                defaults={
+                    "fecha_hora": timezone.now(),
+                    "motivo": tipo_ok,
+                    "detalle": detalle,
+                    "registrado_por": request.user,
+                    "ip": ip,
+                    "user_agent": ua,
+                },
+            )
+
+        messages.success(request, f"✅ Falta justificada correctamente para {profesor.apellidos}, {profesor.nombres}.")
+        return redirect(redirect_url)
+
+    except IntegrityError:
+        messages.warning(request, "Ya existía una justificación para ese docente en esa fecha.")
+        return redirect(redirect_url)
+
+    except Exception as e:
+        messages.error(request, f"Error guardando la justificación: {type(e).__name__} - {str(e)[:220]}")
+        return redirect(redirect_url)
 
 
 # =========================================================
@@ -611,25 +688,15 @@ def historial_asistencias(request):
 def exportar_reporte_excel(request):
     q = (request.GET.get("q") or "").strip()
     condicion = (request.GET.get("condicion") or "").strip().upper()
-    desde_str = (request.GET.get("desde") or "").strip()
-    hasta_str = (request.GET.get("hasta") or "").strip()
+    fecha_str = (request.GET.get("fecha") or "").strip()
 
     hoy = timezone.localdate()
-    desde = parse_date(desde_str) if desde_str else None
-    hasta = parse_date(hasta_str) if hasta_str else None
+    fecha = parse_date(fecha_str) if fecha_str else hoy
+    if not fecha:
+        fecha = hoy
 
-    if not desde:
-        desde = hoy
-    if not hasta:
-        hasta = hoy
-    if desde > hasta:
-        desde, hasta = hasta, desde
-
-    days = []
-    cur = desde
-    while cur <= hasta:
-        days.append(cur)
-        cur += timedelta(days=1)
+    desde = fecha
+    hasta = fecha
 
     dias_especiales = _dias_especiales_dict(desde, hasta)
 
@@ -652,7 +719,7 @@ def exportar_reporte_excel(request):
     entradas = (
         Asistencia.objects.filter(
             profesor_id__in=prof_ids,
-            fecha__range=(desde, hasta),
+            fecha=fecha,
             tipo="E",
         )
         .values("profesor_id", "fecha")
@@ -663,7 +730,7 @@ def exportar_reporte_excel(request):
     justificados = (
         JustificacionAsistencia.objects.filter(
             profesor_id__in=prof_ids,
-            fecha__range=(desde, hasta),
+            fecha=fecha,
         )
         .values("profesor_id", "fecha", "tipo", "detalle")
     )
@@ -686,7 +753,7 @@ def exportar_reporte_excel(request):
     asist_j = (
         Asistencia.objects.filter(
             profesor_id__in=prof_ids,
-            fecha__range=(desde, hasta),
+            fecha=fecha,
             tipo="J",
         )
         .values("profesor_id", "fecha", "motivo", "detalle")
@@ -702,7 +769,7 @@ def exportar_reporte_excel(request):
 
     wb = Workbook()
     ws: Worksheet = wb.active
-    ws.title = "Reporte General"
+    ws.title = "Reporte Diario"
 
     navy = "7F1D1D"
     red = "B91C1C"
@@ -717,10 +784,7 @@ def exportar_reporte_excel(request):
     thin = Side(style="thin", color="CBD5E1")
     border_all = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    base_cols = 4
-    n_days = len(days)
-    total_cols = 3
-    total_columns = base_cols + n_days + total_cols
+    total_columns = 7
     last_col_letter = get_column_letter(total_columns)
 
     for r in (1, 2):
@@ -745,7 +809,7 @@ def exportar_reporte_excel(request):
         ws.row_dimensions[3].height = 10
         ws.column_dimensions["A"].width = 18
 
-    titulo = f"REPORTE GENERAL DE ASISTENCIAS — {desde.strftime('%d/%m/%Y')} al {hasta.strftime('%d/%m/%Y')}"
+    titulo = f"REPORTE DIARIO DE ASISTENCIAS — {fecha.strftime('%d/%m/%Y')}"
     ws["B1"] = titulo
     ws.merge_cells(f"B1:{last_col_letter}1")
     ws["B1"].font = Font(bold=True, size=16, color=navy)
@@ -756,11 +820,8 @@ def exportar_reporte_excel(request):
         filtros_txt.append(f"Búsqueda: {q}")
     if condicion:
         filtros_txt.append(f"Condición: {condicion.upper()}")
-    filtros_txt.append(f"Desde: {desde.strftime('%Y-%m-%d')}")
-    filtros_txt.append(f"Hasta: {hasta.strftime('%Y-%m-%d')}")
+    filtros_txt.append(f"Fecha: {fecha.strftime('%Y-%m-%d')}")
     filtros_txt.append(f"Docentes: {len(profesores)}")
-    filtros_txt.append(f"Días en rango: {n_days}")
-    filtros_txt.append(f"Días especiales: {len(dias_especiales)}")
 
     ws["B2"] = " | ".join(filtros_txt)
     ws.merge_cells(f"B2:{last_col_letter}2")
@@ -769,11 +830,7 @@ def exportar_reporte_excel(request):
 
     ws.append([])
 
-    headers = ["DNI", "Código", "Docente", "Condición"]
-    for d in days:
-        headers.append(d.strftime("%d/%m"))
-    headers += ["Asistió", "Justificó", "Faltó"]
-
+    headers = ["DNI", "Código", "Docente", "Condición", "Estado", "Detalle", "Hora"]
     ws.append([str(h) for h in headers])
     header_row = ws.max_row
 
@@ -787,139 +844,68 @@ def exportar_reporte_excel(request):
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = border_all
 
-    ws.row_dimensions[header_row].height = 24
-    data_start = header_row + 1
+    dia_especial = _obtener_dia_especial(fecha)
 
     for p in profesores:
-        asistio_count = 0
-        just_count = 0
-        falta_count = 0
+        key = (p.id, fecha)
+        dt = entrada_map.get(key)
+
+        if dia_especial:
+            estado = _tipo_display_dia_especial(dia_especial).upper()
+            detalle = (dia_especial.descripcion or "").strip() or "Día especial institucional"
+            hora = "-"
+        elif dt:
+            dt_local = timezone.localtime(dt)
+            estado = "ASISTIÓ"
+            detalle = "Asistencia registrada"
+            hora = dt_local.strftime("%H:%M")
+        else:
+            jtxt = just_map.get(key) or asist_j_map.get(key)
+            if jtxt:
+                estado = "JUSTIFICADO"
+                detalle = jtxt
+                hora = "-"
+            else:
+                estado = "FALTÓ"
+                detalle = "Sin asistencia ni justificación"
+                hora = "-"
 
         docente = f"{(p.apellidos or '').strip()}, {(p.nombres or '').strip()}".strip().strip(",")
 
         row = [
             str(p.dni),
             str(p.codigo or ""),
-            str(docente),
+            docente,
             str((p.condicion or "").upper()),
+            estado,
+            detalle,
+            hora,
         ]
-
-        for d in days:
-            key = (p.id, d)
-            dt = entrada_map.get(key)
-
-            if dt:
-                dt_local = timezone.localtime(dt)
-                val = f"ASISTIÓ ({dt_local.strftime('%H:%M')})"
-                asistio_count += 1
-            else:
-                jtxt = just_map.get(key) or asist_j_map.get(key)
-                if jtxt:
-                    val = jtxt
-                    just_count += 1
-                elif d in dias_especiales:
-                    val = dias_especiales[d]["label"].upper()
-                else:
-                    val = "FALTÓ"
-                    falta_count += 1
-
-            row.append(val)
-
-        row += [asistio_count, just_count, falta_count]
         ws.append(row)
-        current_row = ws.max_row
 
+        current_row = ws.max_row
         for col in range(1, len(headers) + 1):
             cell = ws.cell(row=current_row, column=col)
             cell.border = border_all
             cell.alignment = Alignment(vertical="center", wrap_text=True)
 
-        ws.cell(row=current_row, column=4).alignment = Alignment(horizontal="center", vertical="center")
+        estado_cell = ws.cell(row=current_row, column=5)
+        if estado == "ASISTIÓ":
+            estado_cell.fill = PatternFill("solid", fgColor=green_soft)
+        elif estado == "JUSTIFICADO":
+            estado_cell.fill = PatternFill("solid", fgColor=blue_soft)
+        elif estado == "FALTÓ":
+            estado_cell.fill = PatternFill("solid", fgColor=red_soft)
+        else:
+            estado_cell.fill = PatternFill("solid", fgColor=amber_soft)
 
-        day_start_col = 5
-        day_end_col = 4 + n_days
+    ws.freeze_panes = "A5"
 
-        for col in range(day_start_col, day_end_col + 1):
-            cell = ws.cell(row=current_row, column=col)
-            txt = str(cell.value or "")
-            dia_col = days[col - day_start_col]
+    widths = [14, 14, 40, 12, 18, 45, 12]
+    for i, width in enumerate(widths, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = width
 
-            cell.font = Font(bold=True, color=text_dark)
-            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-
-            if txt.startswith("ASISTIÓ"):
-                cell.fill = PatternFill("solid", fgColor=green_soft)
-            elif txt.startswith("JUSTIFICADO"):
-                cell.fill = PatternFill("solid", fgColor=blue_soft)
-            elif (
-                dia_col in dias_especiales
-                or txt.startswith("FERIADO")
-                or txt.startswith("HUELGA")
-                or txt.startswith("PARO")
-                or txt.startswith("SUSPENSIÓN")
-                or txt.startswith("SUSPENSION")
-                or txt.startswith("TRABAJO REMOTO")
-                or txt.startswith("JORNADA REMOTA")
-                or txt.startswith("NO LABORABLE")
-                or txt.startswith("OTRO")
-            ):
-                cell.fill = PatternFill("solid", fgColor=amber_soft)
-            else:
-                cell.fill = PatternFill("solid", fgColor=red_soft)
-
-        tot_start = 5 + n_days
-        for col in range(tot_start, tot_start + 3):
-            tot_cell = ws.cell(row=current_row, column=col)
-            tot_cell.alignment = Alignment(horizontal="center", vertical="center")
-            tot_cell.font = Font(bold=True, color=text_dark)
-
-        ws.cell(row=current_row, column=5 + n_days).fill = PatternFill("solid", fgColor=green_soft)
-        ws.cell(row=current_row, column=6 + n_days).fill = PatternFill("solid", fgColor=blue_soft)
-        ws.cell(row=current_row, column=7 + n_days).fill = PatternFill("solid", fgColor=red_soft)
-
-    last_row = ws.max_row
-    if last_row >= data_start:
-        table_ref = f"A{header_row}:{last_col_letter}{last_row}"
-        table = Table(displayName="TablaReporteAsistencia", ref=table_ref)
-        table.tableStyleInfo = TableStyleInfo(
-            name="TableStyleMedium9",
-            showFirstColumn=False,
-            showLastColumn=False,
-            showRowStripes=True,
-            showColumnStripes=False,
-        )
-        ws.add_table(table)
-
-    ws.freeze_panes = f"E{data_start}"
-
-    ws.column_dimensions["A"].width = 14
-    ws.column_dimensions["B"].width = 14
-    ws.column_dimensions["C"].width = 40
-    ws.column_dimensions["D"].width = 12
-
-    for i in range(n_days):
-        ws.column_dimensions[get_column_letter(5 + i)].width = 18
-
-    ws.column_dimensions[get_column_letter(5 + n_days)].width = 12
-    ws.column_dimensions[get_column_letter(6 + n_days)].width = 12
-    ws.column_dimensions[get_column_letter(7 + n_days)].width = 12
-
-    ws2 = wb.create_sheet("Leyenda")
-    ws2["A1"] = "Leyenda del reporte"
-    ws2["A1"].font = Font(bold=True, size=14, color=navy)
-
-    ws2["A3"] = "ASISTIÓ (HH:MM) = asistencia registrada"
-    ws2["A4"] = "JUSTIFICADO (...) = ausencia justificada"
-    ws2["A5"] = "FALTÓ = no hay asistencia ni justificación"
-    ws2["A6"] = "FERIADO / HUELGA / PARO / SUSPENSIÓN / NO LABORABLE = no cuenta como falta"
-    ws2["A7"] = "Los días especiales se muestran directamente dentro del rango exportado"
-
-    for r in range(3, 8):
-        ws2[f"A{r}"].font = Font(size=11)
-
-    ws2.column_dimensions["A"].width = 95
-
-    filename = f"reporte_asistencias_{desde.strftime('%Y-%m-%d')}_a_{hasta.strftime('%Y-%m-%d')}.xlsx"
+    filename = f"reporte_diario_asistencias_{fecha.strftime('%Y-%m-%d')}.xlsx"
     bio = BytesIO()
     wb.save(bio)
     bio.seek(0)

@@ -13,6 +13,7 @@ urlpatterns = [
 
     # ✅ HISTORIAL (solo grupo HISTORIAL)
     path("historial/", views.historial_asistencias, name="historial_asistencias"),
+    path("historial/justificar/", views.justificar_falta_historial, name="justificar_falta_historial"),
     path("excel/", views.exportar_reporte_excel, name="exportar_reporte_excel"),
 
     # ✅ Registro manual por DNI (solo HISTORIAL)

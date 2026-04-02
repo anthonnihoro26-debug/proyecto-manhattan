@@ -20,8 +20,17 @@ class Command(BaseCommand):
     )
 
     def add_arguments(self, parser):
-        parser.add_argument("--max-emails", type=int, default=40, help="Máximo de correos a procesar por ejecución (default 40).")
-        parser.add_argument("--dry-run", action="store_true", help="No envía correos, solo imprime en consola.")
+        parser.add_argument(
+            "--max-emails",
+            type=int,
+            default=40,
+            help="Máximo de correos a procesar por ejecución (default 40).",
+        )
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="No envía correos, solo imprime en consola.",
+        )
         parser.add_argument(
             "--solo-con-registros",
             action="store_true",
@@ -30,8 +39,12 @@ class Command(BaseCommand):
 
     def _rango_lun_vie(self):
         now = timezone.localtime(timezone.now())
-        lunes = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
-        viernes_fin = (lunes + timedelta(days=4)).replace(hour=23, minute=59, second=59, microsecond=999999)
+        lunes = (now - timedelta(days=now.weekday())).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        viernes_fin = (lunes + timedelta(days=4)).replace(
+            hour=23, minute=59, second=59, microsecond=999999
+        )
         return now, lunes, viernes_fin
 
     def _dias_lun_vie(self, lunes_dt):
@@ -123,6 +136,13 @@ class Command(BaseCommand):
                 'font-size:12px;font-weight:700;">NO LABORABLE</span>'
             )
 
+        if t == "DÍA ESPECIAL":
+            return (
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'background:#f8fafc;border:1px solid #cbd5e1;color:#475569;'
+                'font-size:12px;font-weight:700;">DÍA ESPECIAL</span>'
+            )
+
         return (
             '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
             'background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;'
@@ -141,6 +161,7 @@ class Command(BaseCommand):
                 "estado": "FERIADO",
                 "hora_registrada": "-",
                 "observacion": detalle or "No hubo actividades académicas por feriado.",
+                "es_evaluable": False,
             }
 
         if tipo == "HUELGA":
@@ -148,6 +169,7 @@ class Command(BaseCommand):
                 "estado": "HUELGA",
                 "hora_registrada": "-",
                 "observacion": detalle or "No se considera falta por huelga o medida de fuerza.",
+                "es_evaluable": False,
             }
 
         if tipo == "PARO":
@@ -155,6 +177,7 @@ class Command(BaseCommand):
                 "estado": "PARO",
                 "hora_registrada": "-",
                 "observacion": detalle or "No se considera falta por paro de transportistas o dificultades de traslado.",
+                "es_evaluable": False,
             }
 
         if tipo == "SUSPENSION":
@@ -162,6 +185,7 @@ class Command(BaseCommand):
                 "estado": "SUSPENSIÓN",
                 "hora_registrada": "-",
                 "observacion": detalle or "Se suspendieron las actividades académicas o institucionales.",
+                "es_evaluable": False,
             }
 
         if tipo == "REMOTO":
@@ -169,6 +193,7 @@ class Command(BaseCommand):
                 "estado": "REMOTO",
                 "hora_registrada": "-",
                 "observacion": detalle or "La jornada fue desarrollada en modalidad remota institucional.",
+                "es_evaluable": False,
             }
 
         if tipo == "NO_LABORABLE":
@@ -176,12 +201,14 @@ class Command(BaseCommand):
                 "estado": "NO LABORABLE",
                 "hora_registrada": "-",
                 "observacion": detalle or "No corresponde registrar asistencia ni falta en esta fecha.",
+                "es_evaluable": False,
             }
 
         return {
             "estado": "DÍA ESPECIAL",
             "hora_registrada": "-",
             "observacion": detalle or "No corresponde registrar falta en esta fecha.",
+            "es_evaluable": False,
         }
 
     def _estado_diario_profesional(self, prof, lunes, viernes_fin):
@@ -191,10 +218,15 @@ class Command(BaseCommand):
         - ASISTIÓ (si hay E)
         - JUSTIFICACIÓN (si no hay E pero sí J)
         - FALTA (si no hay E ni J ni día especial)
+
+        IMPORTANTE:
+        - Los días especiales NO cuentan como falta
+        - Los días especiales NO se consideran días evaluables
+        - El cumplimiento se calcula sobre días evaluables reales
         """
+
         qs = (
-            Asistencia.objects
-            .filter(
+            Asistencia.objects.filter(
                 profesor=prof,
                 fecha_hora__gte=lunes,
                 fecha_hora__lte=viernes_fin,
@@ -210,8 +242,7 @@ class Command(BaseCommand):
             por_fecha.setdefault(key, []).append((a, dt_local))
 
         justis_qs = (
-            JustificacionAsistencia.objects
-            .filter(
+            JustificacionAsistencia.objects.filter(
                 profesor=prof,
                 fecha__gte=lunes.date(),
                 fecha__lte=viernes_fin.date(),
@@ -230,6 +261,7 @@ class Command(BaseCommand):
         justificaciones = 0
         faltas = 0
         dias_especiales = 0
+        dias_evaluables = 0
 
         nombres_dia = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
 
@@ -242,15 +274,19 @@ class Command(BaseCommand):
             estado = "FALTA"
             observacion = "No se registró asistencia ni justificación en la fecha evaluada."
             hora_registrada = "-"
+            es_evaluable = True
 
             if dia_especial:
                 info_especial = self._estado_dia_especial(dia_especial)
                 estado = info_especial["estado"]
                 observacion = info_especial["observacion"]
                 hora_registrada = info_especial["hora_registrada"]
+                es_evaluable = info_especial["es_evaluable"]
                 dias_especiales += 1
 
             else:
+                dias_evaluables += 1
+
                 if regs:
                     tiene_e = False
                     tiene_j = False
@@ -326,17 +362,21 @@ class Command(BaseCommand):
                     else:
                         faltas += 1
 
-            dias_eval.append({
-                "dia_nombre": nombres_dia[idx],
-                "fecha": fecha_date.strftime("%d/%m/%Y"),
-                "estado": estado,
-                "badge_html": self._tipo_badge_html(estado),
-                "hora_registrada": hora_registrada,
-                "observacion": observacion,
-            })
+            dias_eval.append(
+                {
+                    "dia_nombre": nombres_dia[idx],
+                    "fecha": fecha_date.strftime("%d/%m/%Y"),
+                    "estado": estado,
+                    "badge_html": self._tipo_badge_html(estado),
+                    "hora_registrada": hora_registrada,
+                    "observacion": observacion,
+                    "es_evaluable": es_evaluable,
+                }
+            )
 
-        total_dias = 5
-        cumplimiento_base = asistio + justificaciones + dias_especiales
+        total_dias_semana = 5
+        total_dias = dias_evaluables
+        cumplimiento_base = asistio + justificaciones
         cumplimiento = round(cumplimiento_base * 100 / total_dias, 1) if total_dias else 0
 
         return {
@@ -346,6 +386,8 @@ class Command(BaseCommand):
             "faltas": faltas,
             "dias_especiales": dias_especiales,
             "total_dias": total_dias,
+            "total_dias_semana": total_dias_semana,
+            "dias_evaluables": dias_evaluables,
             "cumplimiento": cumplimiento,
             "total_registros_eyj": qs.count(),
         }
@@ -452,13 +494,17 @@ class Command(BaseCommand):
         )
 
         if envio_habilitado:
-            self.stdout.write(self.style.SUCCESS(
-                "[MODO ACTIVO] El envío de correos está HABILITADO en este comando."
-            ))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    "[MODO ACTIVO] El envío de correos está HABILITADO en este comando."
+                )
+            )
         else:
-            self.stdout.write(self.style.WARNING(
-                "[MODO SEGURO] El envío de correos está COMPLETAMENTE BLOQUEADO en este comando."
-            ))
+            self.stdout.write(
+                self.style.WARNING(
+                    "[MODO SEGURO] El envío de correos está COMPLETAMENTE BLOQUEADO en este comando."
+                )
+            )
 
         profesores = Profesor.objects.all().order_by("apellidos", "nombres")
 
@@ -489,12 +535,16 @@ class Command(BaseCommand):
             faltas = resultado["faltas"]
             dias_especiales = resultado["dias_especiales"]
             total_dias = resultado["total_dias"]
+            total_dias_semana = resultado["total_dias_semana"]
+            dias_evaluables = resultado["dias_evaluables"]
             cumplimiento = resultado["cumplimiento"]
             total_registros_eyj = resultado["total_registros_eyj"]
 
             if solo_con_registros and total_registros_eyj == 0 and dias_especiales == 0:
                 saltados_sin_registros += 1
-                self.stdout.write(f"[SKIP] {email_prof} -> sin registros (E/J) ni días especiales en el rango (--solo-con-registros)")
+                self.stdout.write(
+                    f"[SKIP] {email_prof} -> sin registros (E/J) ni días especiales en el rango (--solo-con-registros)"
+                )
                 continue
 
             nombre = (
@@ -517,7 +567,8 @@ class Command(BaseCommand):
                 f"Periodo evaluado: {desde:%d/%m/%Y %H:%M} a {hasta:%d/%m/%Y %H:%M}",
                 "",
                 "Resumen semanal (evaluación por día hábil):",
-                f"- Días evaluados: {total_dias}",
+                f"- Días de la semana considerados: {total_dias_semana}",
+                f"- Días evaluables reales: {dias_evaluables}",
                 f"- Asistió: {asistio}",
                 f"- Justificaciones: {justificaciones}",
                 f"- Días especiales: {dias_especiales}",
@@ -619,19 +670,27 @@ class Command(BaseCommand):
                     <div style="font-size:15px;line-height:1.6;color:#111827;">
                       Estimado(a) <b>{nombre_html}</b>:
                     </div>
+
                     <div style="font-size:14px;color:#4b5563;line-height:1.65;margin-top:10px;">
                       Reciba un cordial saludo. A continuación, se remite su <b>reporte semanal de asistencia docente</b>,
                       correspondiente al periodo indicado. La evaluación considera los días hábiles de <b>lunes a viernes</b>,
                       clasificando cada fecha como <b>Asistió</b>, <b>Justificación</b>, <b>Día especial</b> o <b>Falta</b> según los registros del sistema.
                     </div>
+
                     <div style="margin-top:10px;font-size:13px;color:#6b7280;line-height:1.55;">
-                      Este reporte ha sido generado automáticamente por <b>Proyecto Manhattan</b> para fines de seguimiento y control institucional.
+                      El porcentaje de cumplimiento se calcula únicamente sobre los <b>días evaluables reales</b>.
+                      Los días especiales institucionales <b>no se consideran falta</b> ni reducen el resultado del docente.
                     </div>
 
                     <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
                       <div style="flex:1;min-width:140px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
-                        <div style="font-size:12px;color:#64748b;">Días evaluados</div>
-                        <div style="font-size:26px;font-weight:900;color:#0f172a;line-height:1.1;margin-top:4px;">{total_dias}</div>
+                        <div style="font-size:12px;color:#64748b;">Días semana</div>
+                        <div style="font-size:26px;font-weight:900;color:#0f172a;line-height:1.1;margin-top:4px;">{total_dias_semana}</div>
+                      </div>
+
+                      <div style="flex:1;min-width:140px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:14px;padding:14px;">
+                        <div style="font-size:12px;color:#4338ca;">Días evaluables</div>
+                        <div style="font-size:26px;font-weight:900;color:#4338ca;line-height:1.1;margin-top:4px;">{dias_evaluables}</div>
                       </div>
 
                       <div style="flex:1;min-width:140px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px;">
@@ -709,34 +768,44 @@ class Command(BaseCommand):
 
             if dry_run:
                 bloqueados += 1
-                self.stdout.write(self.style.WARNING(
-                    f"[DRY-RUN] to={email_prof} A={asistio} J={justificaciones} DE={dias_especiales} F={faltas} "
-                    f"cumpl={cumplimiento_text} registros_EJ={total_registros_eyj} logo_url={'ok' if logo_url else 'no'}"
-                ))
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"[DRY-RUN] to={email_prof} A={asistio} J={justificaciones} DE={dias_especiales} "
+                        f"F={faltas} evaluables={dias_evaluables} cumpl={cumplimiento_text} "
+                        f"registros_EJ={total_registros_eyj} logo_url={'ok' if logo_url else 'no'}"
+                    )
+                )
                 continue
 
             if not envio_habilitado:
                 bloqueados += 1
-                self.stdout.write(self.style.WARNING(
-                    f"[BLOQUEADO] No se enviará correo a {email_prof}. "
-                    f"A={asistio} J={justificaciones} DE={dias_especiales} F={faltas} "
-                    f"cumpl={cumplimiento_text} registros_EJ={total_registros_eyj} "
-                    f"logo_url={'ok' if logo_url else 'no'}"
-                ))
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"[BLOQUEADO] No se enviará correo a {email_prof}. "
+                        f"A={asistio} J={justificaciones} DE={dias_especiales} F={faltas} "
+                        f"evaluables={dias_evaluables} cumpl={cumplimiento_text} "
+                        f"registros_EJ={total_registros_eyj} logo_url={'ok' if logo_url else 'no'}"
+                    )
+                )
                 continue
 
             try:
                 self._brevo_send_email(email_prof, subject, body_text, body_html)
                 enviados += 1
-                self.stdout.write(self.style.SUCCESS(
-                    f"[SEND] to={email_prof} A={asistio} J={justificaciones} DE={dias_especiales} F={faltas} "
-                    f"cumpl={cumplimiento_text} registros_EJ={total_registros_eyj} logo_url={'ok' if logo_url else 'no'}"
-                ))
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"[SEND] to={email_prof} A={asistio} J={justificaciones} DE={dias_especiales} "
+                        f"F={faltas} evaluables={dias_evaluables} cumpl={cumplimiento_text} "
+                        f"registros_EJ={total_registros_eyj} logo_url={'ok' if logo_url else 'no'}"
+                    )
+                )
             except Exception as e:
                 errores += 1
                 self.stderr.write(self.style.ERROR(f"[ERROR] Enviando a {email_prof}: {e}"))
 
-        self.stdout.write(self.style.SUCCESS(
-            f"[DONE] Enviados: {enviados}. Bloqueados: {bloqueados}. Errores: {errores}. "
-            f"Saltados (sin email): {saltados_sin_email}. Saltados (sin registros): {saltados_sin_registros}."
-        ))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"[DONE] Enviados: {enviados}. Bloqueados: {bloqueados}. Errores: {errores}. "
+                f"Saltados (sin email): {saltados_sin_email}. Saltados (sin registros): {saltados_sin_registros}."
+            )
+        )
