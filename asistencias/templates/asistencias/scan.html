@@ -1477,6 +1477,24 @@
       updateVoiceUI();
     }
 
+    function sanitizeSpeechText(text){
+      return String(text || "")
+        .replace(/[•]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function buildNiceFullName(raw){
+      const txt = sanitizeSpeechText(raw);
+      if (!txt) return "";
+      return txt
+        .toLowerCase()
+        .split(" ")
+        .filter(Boolean)
+        .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+        .join(" ");
+    }
+
     function speakText(text){
       try{
         if (!voiceEnabled) return;
@@ -1486,9 +1504,9 @@
 
         window.speechSynthesis.cancel();
 
-        const msg = new SpeechSynthesisUtterance(text);
+        const msg = new SpeechSynthesisUtterance(sanitizeSpeechText(text));
         msg.lang = preferredVoice?.lang || "es-PE";
-        msg.rate = 0.96;
+        msg.rate = 0.93;
         msg.pitch = 1.0;
         msg.volume = 1.0;
         if (preferredVoice) msg.voice = preferredVoice;
@@ -1497,6 +1515,29 @@
       }catch(e){
         console.error("speech error", e);
       }
+    }
+
+    function speakRegisteredProfessor(fullName){
+      const cleanName = buildNiceFullName(fullName);
+      if (cleanName){
+        speakText(`Profesor ${cleanName} registrado`);
+      } else {
+        speakText("Profesor registrado");
+      }
+    }
+
+    function speakDuplicateProfessor(fullName){
+      const cleanName = buildNiceFullName(fullName);
+      if (cleanName){
+        speakText(`Profesor ${cleanName} ya registrado`);
+      } else {
+        speakText("Profesor ya registrado");
+      }
+    }
+
+    function speakHoliday(tipoDisplay){
+      const tipo = sanitizeSpeechText(tipoDisplay || "feriado");
+      speakText(`Hoy es ${tipo}. No se registra asistencia.`);
     }
 
     function beep(freq=880, time=0.08, type="sine", gain=0.03){
@@ -1751,7 +1792,7 @@
             setGuide("Ese docente ya fue registrado hoy.");
             setHud("Registro repetido");
             beepWarn(); vibWarn();
-            speakText("Profesor ya registrado");
+            speakDuplicateProfessor(fullName);
 
             showLastScan({
               name: fullName,
@@ -1766,7 +1807,7 @@
             setGuide("Registro correcto. Puedes escanear el siguiente.");
             setHud("Lectura correcta");
             beepOk(); vibOk();
-            speakText("Profesor registrado");
+            speakRegisteredProfessor(fullName);
 
             showLastScan({
               name: fullName,
@@ -1804,7 +1845,7 @@
               detalleEspecial
             );
             beepWarn(); vibWarn();
-            speakText(`Hoy es ${tipoDisplay}. No se registra asistencia.`);
+            speakHoliday(tipoDisplay);
 
             showLastScan({
               name: fullName,
