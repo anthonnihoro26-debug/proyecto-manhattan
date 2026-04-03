@@ -934,36 +934,88 @@ def api_scan_asistencia(request):
     try:
         raw = _read_code_from_request(request)
     except UnicodeDecodeError:
-        return JsonResponse({"ok": False, "msg": "Encoding inválido (UTF-8)"}, status=400)
-    except json.JSONDecodeError:
-        return JsonResponse({"ok": False, "msg": "JSON inválido"}, status=400)
-    except Exception:
-        return JsonResponse({"ok": False, "msg": "Error leyendo el request"}, status=400)
-
-    if not raw:
-        return JsonResponse({"ok": False, "msg": "No llegó ningún código/DNI"}, status=400)
-
-    dni = _extract_dni(raw)
-    if not (dni.isdigit() and len(dni) == 8):
-        return JsonResponse({"ok": False, "msg": "DNI inválido (debe ser 8 dígitos)"}, status=400)
-
-    try:
-        profesor = Profesor.objects.get(dni=dni)
-    except Profesor.DoesNotExist:
-        return JsonResponse({"ok": False, "msg": "Profesor no encontrado", "dni": dni}, status=404)
-
-    hoy = timezone.localdate()
-
-    if _es_dia_especial(hoy):
         return JsonResponse(
             {
                 "ok": False,
-                "msg": "Hoy es un día especial institucional. No se registra asistencia.",
+                "estado": "ERROR",
+                "tipo_evento": "ENCODING_INVALIDO",
+                "msg": "Encoding inválido (UTF-8).",
+            },
+            status=400,
+        )
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {
+                "ok": False,
+                "estado": "ERROR",
+                "tipo_evento": "JSON_INVALIDO",
+                "msg": "JSON inválido.",
+            },
+            status=400,
+        )
+    except Exception as e:
+        logger.exception("Error leyendo request en api_scan_asistencia")
+        return JsonResponse(
+            {
+                "ok": False,
+                "estado": "ERROR",
+                "tipo_evento": "REQUEST_INVALIDO",
+                "msg": "Error leyendo el request.",
+                "detalle": str(e)[:180],
             },
             status=400,
         )
 
+    if not raw:
+        return JsonResponse(
+            {
+                "ok": False,
+                "estado": "ERROR",
+                "tipo_evento": "CODIGO_VACIO",
+                "msg": "No llegó ningún código o DNI.",
+            },
+            status=400,
+        )
+
+    dni = _extract_dni(raw)
+    if not (dni.isdigit() and len(dni) == 8):
+        return JsonResponse(
+            {
+                "ok": False,
+                "estado": "ERROR",
+                "tipo_evento": "DNI_INVALIDO",
+                "msg": "DNI inválido (debe ser de 8 dígitos).",
+                "dni": dni or "",
+            },
+            status=400,
+        )
+
+    try:
+        profesor = Profesor.objects.get(dni=dni)
+    except Profesor.DoesNotExist:
+        logger.warning("Profesor no encontrado en escáner | dni=%s", dni)
+        return JsonResponse(
+            {
+                "ok": False,
+                "estado": "ERROR",
+                "tipo_evento": "PROFESOR_NO_ENCONTRADO",
+                "msg": "Profesor no encontrado.",
+                "dni": dni,
+                "profesor": {
+                    "dni": dni,
+                    "codigo": "",
+                    "apellidos": "",
+                    "nombres": "",
+                    "condicion": "",
+                },
+            },
+            status=404,
+        )
+
+    hoy = timezone.localdate()
     now = timezone.now()
+    ip = _get_client_ip(request)
+    ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
 
     payload_prof = {
         "dni": profesor.dni,
@@ -973,8 +1025,39 @@ def api_scan_asistencia(request):
         "condicion": profesor.condicion,
     }
 
-    ip = _get_client_ip(request)
-    ua = (request.META.get("HTTP_USER_AGENT") or "")[:255]
+    dia_especial = _obtener_dia_especial(hoy)
+    if dia_especial:
+        tipo_display = _tipo_display_dia_especial(dia_especial)
+        descripcion = (dia_especial.descripcion or "").strip()
+
+        logger.info(
+            "DIA_ESPECIAL escaner bloqueado | dni=%s fecha=%s tipo=%s user=%s ip=%s",
+            dni,
+            hoy,
+            getattr(dia_especial, "tipo", ""),
+            request.user.username,
+            ip,
+        )
+
+        return JsonResponse(
+            {
+                "ok": False,
+                "estado": "DIA_ESPECIAL",
+                "tipo_evento": "DIA_ESPECIAL",
+                "accion": "ninguna",
+                "duplicado": False,
+                "msg": f"Hoy no se registra asistencia por día especial: {tipo_display}.",
+                "detalle": descripcion or "Día especial institucional.",
+                "profesor": payload_prof,
+                "dia_especial": {
+                    "fecha": str(hoy),
+                    "tipo": getattr(dia_especial, "tipo", ""),
+                    "tipo_display": tipo_display,
+                    "descripcion": descripcion,
+                },
+            },
+            status=400,
+        )
 
     with transaction.atomic():
         qs = (
@@ -984,20 +1067,32 @@ def api_scan_asistencia(request):
         )
 
         if qs.exists():
+            asistencia_existente = qs.first()
+
             logger.info(
-                "DUPLICADO asistencia dni=%s hoy=%s user=%s ip=%s",
+                "DUPLICADO asistencia | dni=%s fecha=%s user=%s ip=%s",
                 dni,
                 hoy,
                 request.user.username,
                 ip,
             )
+
             return JsonResponse(
                 {
                     "ok": True,
-                    "duplicado": True,
+                    "estado": "DUPLICADO",
+                    "tipo_evento": "ASISTENCIA_DUPLICADA",
                     "accion": "ninguna",
-                    "msg": f"⚠️ Ya registró asistencia hoy: {profesor.apellidos} {profesor.nombres}",
+                    "duplicado": True,
+                    "msg": f"Ya registró asistencia hoy: {profesor.apellidos} {profesor.nombres}.",
+                    "detalle": "El docente ya cuenta con una entrada registrada en la fecha actual.",
                     "profesor": payload_prof,
+                    "asistencia": {
+                        "id": asistencia_existente.id,
+                        "tipo": asistencia_existente.tipo,
+                        "fecha": str(asistencia_existente.fecha),
+                        "fecha_hora": asistencia_existente.fecha_hora.isoformat() if asistencia_existente.fecha_hora else "",
+                    },
                 },
                 status=200,
             )
@@ -1012,14 +1107,23 @@ def api_scan_asistencia(request):
             user_agent=ua,
         )
 
-    logger.info("OK asistencia dni=%s hoy=%s user=%s ip=%s", dni, hoy, request.user.username, ip)
+    logger.info(
+        "OK asistencia registrada | dni=%s fecha=%s user=%s ip=%s",
+        dni,
+        hoy,
+        request.user.username,
+        ip,
+    )
 
     return JsonResponse(
         {
             "ok": True,
-            "duplicado": False,
+            "estado": "ASISTIO",
+            "tipo_evento": "ASISTENCIA_REGISTRADA",
             "accion": "asistencia",
-            "msg": f"✅ ASISTIÓ registrado correctamente: {profesor.apellidos} {profesor.nombres}",
+            "duplicado": False,
+            "msg": f"Asistencia registrada correctamente: {profesor.apellidos} {profesor.nombres}.",
+            "detalle": "Entrada registrada con éxito.",
             "profesor": payload_prof,
             "asistencia": {
                 "id": asistencia.id,
@@ -1030,7 +1134,6 @@ def api_scan_asistencia(request):
         },
         status=201,
     )
-
 
 # =========================================================
 # CRON PRIVADO
