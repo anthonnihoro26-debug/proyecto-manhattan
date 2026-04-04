@@ -1,52 +1,76 @@
 :root{
-  --uni-bg-1: #071a2f;
-  --uni-bg-2: #0d2747;
-  --uni-side: #08182c;
-  --uni-card: rgba(14, 31, 58, 0.96);
-  --uni-card-2: rgba(19, 39, 70, 0.98);
+  --uni-bg-1: #091524;
+  --uni-bg-2: #10233d;
+  --uni-bg-3: #152b49;
+
+  --uni-side: #0b1728;
+  --uni-card: rgba(18, 35, 58, 0.96);
+  --uni-card-2: rgba(23, 43, 70, 0.98);
+
   --uni-line: rgba(255,255,255,.08);
+  --uni-line-soft: rgba(255,255,255,.05);
 
   --uni-primary: #7b1e2b;
-  --uni-primary-2: #9a2534;
+  --uni-primary-2: #a12638;
+  --uni-primary-3: #c03a4d;
+
   --uni-gold: #d4af37;
-  --uni-gold-soft: #e8cb72;
+  --uni-gold-soft: #f0d98a;
+
+  --uni-blue-soft: #8eb8ff;
+  --uni-green-soft: #7ee0a8;
+  --uni-red-soft: #ff9f9f;
 
   --uni-text: #f8fbff;
-  --uni-text-soft: #d6e1ee;
-  --uni-text-muted: #aebfd3;
+  --uni-text-soft: #dfe9f5;
+  --uni-text-muted: #b5c5d8;
 
-  --uni-radius: 16px;
-  --uni-shadow: 0 14px 35px rgba(0,0,0,.22);
+  --uni-radius: 18px;
+  --uni-radius-sm: 14px;
+  --uni-shadow: 0 14px 35px rgba(0,0,0,.24);
+  --uni-shadow-soft: 0 8px 24px rgba(0,0,0,.18);
 }
 
-/* Fondo general */
+/* =========================================================
+   BASE
+   ========================================================= */
 html, body{
   background:
-    radial-gradient(circle at top left, rgba(212,175,55,.07), transparent 20%),
-    radial-gradient(circle at bottom right, rgba(123,30,43,.10), transparent 24%),
-    linear-gradient(135deg, var(--uni-bg-1), var(--uni-bg-2)) !important;
+    radial-gradient(circle at top left, rgba(212,175,55,.08), transparent 18%),
+    radial-gradient(circle at bottom right, rgba(123,30,43,.12), transparent 22%),
+    linear-gradient(135deg, var(--uni-bg-1), var(--uni-bg-2), var(--uni-bg-3)) !important;
   color: var(--uni-text) !important;
+  min-height: 100%;
 }
 
-/* Sidebar */
+body, p, li, td, th, label, input, select, textarea{
+  letter-spacing: .1px;
+}
+
+a{
+  transition: all .18s ease !important;
+}
+
+/* =========================================================
+   SIDEBAR / MENÚ
+   ========================================================= */
 aside{
-  background: linear-gradient(180deg, #08182c 0%, #091d35 100%) !important;
+  background: linear-gradient(180deg, #0b1728 0%, #10233d 100%) !important;
   border-right: 1px solid var(--uni-line) !important;
+  box-shadow: inset -1px 0 0 rgba(255,255,255,.03);
 }
 
 aside *{
   color: var(--uni-text) !important;
 }
 
-/* Marca superior */
 aside .font-semibold,
 aside .font-bold{
-  letter-spacing: .2px;
+  letter-spacing: .25px;
 }
 
-/* Menú lateral */
 aside a{
-  border-radius: 12px !important;
+  border-radius: 14px !important;
   transition: all .18s ease;
   color: var(--uni-text-soft) !important;
 }
@@ -60,15 +84,18 @@ aside a:hover{
 aside a[aria-current="page"],
 aside a.bg-primary-600,
 aside a[class*="primary"]{
-  background: linear-gradient(90deg, rgba(123,30,43,.58), rgba(212,175,55,.12)) !important;
+  background: linear-gradient(90deg, rgba(123,30,43,.66), rgba(212,175,55,.14)) !important;
   border: 1px solid rgba(212,175,55,.20) !important;
   color: #fff !important;
+  box-shadow: 0 8px 18px rgba(123,30,43,.22);
 }
 
-/* Barra superior */
+/* =========================================================
+   TOPBAR
+   ========================================================= */
 header, nav{
-  background: rgba(8, 23, 42, .72) !important;
-  backdrop-filter: blur(10px);
+  background: rgba(8, 23, 42, .78) !important;
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255,255,255,.05);
 }
 
@@ -76,21 +103,41 @@ header *, nav *{
   color: var(--uni-text) !important;
 }
 
-/* Cards */
+/* =========================================================
+   TARJETAS / CONTENEDORES
+   ========================================================= */
 div[class*="bg-base"],
 section,
 article,
 .rounded-lg,
-.rounded-md{
+.rounded-md,
+.module,
+#content-main,
+#changelist,
+.change-form,
+.results,
+.dashboard #content{
   background: var(--uni-card) !important;
   border: 1px solid var(--uni-line) !important;
   border-radius: var(--uni-radius) !important;
   box-shadow: var(--uni-shadow);
 }
 
-/* Títulos */
+#content{
+  padding-top: 12px !important;
+}
+
+/* =========================================================
+   TÍTULOS
+   ========================================================= */
 h1, h2, h3, h4, h5, h6{
   color: var(--uni-text) !important;
+}
+
+h1{
+  font-size: 28px !important;
+  font-weight: 800 !important;
+  letter-spacing: .2px !important;
 }
 
 .text-font-important-light,
@@ -101,23 +148,34 @@ h1, h2, h3, h4, h5, h6{
 .text-font-subtle-light,
 .text-base-400,
 .text-base-500,
-.text-base-600{
+.text-base-600,
+.quiet,
+.help,
+.helptext,
+.text-sm{
   color: var(--uni-text-muted) !important;
 }
 
-/* Inputs */
+/* =========================================================
+   FORMULARIOS
+   ========================================================= */
 input,
 select,
 textarea{
-  background: rgba(7, 20, 38, .95) !important;
+  background: rgba(8, 22, 39, .96) !important;
   color: var(--uni-text) !important;
   border: 1px solid rgba(255,255,255,.10) !important;
   border-radius: 14px !important;
+  min-height: 42px !important;
+}
+
+textarea{
+  min-height: 110px !important;
 }
 
 input::placeholder,
 textarea::placeholder{
-  color: #b9c8d8 !important;
+  color: #bfd0e1 !important;
 }
 
 input:focus,
@@ -128,33 +186,121 @@ textarea:focus{
   box-shadow: 0 0 0 4px rgba(212,175,55,.10) !important;
 }
 
-/* Botones */
+label{
+  color: var(--uni-text) !important;
+  font-weight: 700 !important;
+}
+
+.aligned label{
+  color: var(--uni-text) !important;
+  font-weight: 700 !important;
+}
+
+fieldset.module{
+  background: var(--uni-card) !important;
+  border: 1px solid var(--uni-line) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--uni-shadow) !important;
+  padding: 16px !important;
+}
+
+fieldset.module h2{
+  background: linear-gradient(135deg, rgba(123,30,43,.34), rgba(212,175,55,.10)) !important;
+  color: var(--uni-text) !important;
+  border: 1px solid rgba(212,175,55,.10) !important;
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  margin-bottom: 14px !important;
+}
+
+.form-row{
+  border-bottom: 1px solid rgba(255,255,255,.05) !important;
+  padding: 12px 0 !important;
+}
+
+.form-row:last-child{
+  border-bottom: 0 !important;
+}
+
+/* =========================================================
+   BOTONES
+   ========================================================= */
 button,
 input[type="submit"],
 input[type="button"],
 .submit-row input,
 a.button,
-.button{
+.button,
+.object-tools a,
+.object-tools .addlink{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  min-height: 42px !important;
+  padding: 0 18px !important;
   border-radius: 13px !important;
   border: 1px solid rgba(212,175,55,.18) !important;
   background: linear-gradient(135deg, var(--uni-primary), var(--uni-primary-2)) !important;
   color: #fff !important;
   font-weight: 700 !important;
+  text-decoration: none !important;
   box-shadow: 0 10px 24px rgba(123,30,43,.22);
-  transition: all .18s ease;
+  transition: all .18s ease !important;
 }
 
 button:hover,
 input[type="submit"]:hover,
 input[type="button"]:hover,
+.submit-row input:hover,
 a.button:hover,
-.button:hover{
+.button:hover,
+.object-tools a:hover,
+.object-tools .addlink:hover{
   transform: translateY(-1px);
-  filter: brightness(1.04);
+  filter: brightness(1.05);
   box-shadow: 0 12px 28px rgba(123,30,43,.30);
 }
 
-/* Tablas */
+.deletelink,
+a.deletelink{
+  background: linear-gradient(135deg, #a91d2a, #d73345) !important;
+  border-color: rgba(255,255,255,.10) !important;
+  color: #fff !important;
+}
+
+/* =========================================================
+   BOTÓN AÑADIR EN CADA APARTADO
+   ========================================================= */
+.object-tools{
+  float: none !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 0 16px 0 !important;
+  padding: 0 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.object-tools li{
+  display: block !important;
+  list-style: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.change-list .object-tools,
+.change-form .object-tools{
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* =========================================================
+   TABLAS
+   ========================================================= */
 table{
   width: 100%;
   border-collapse: separate !important;
@@ -162,24 +308,33 @@ table{
   background: transparent !important;
 }
 
+#result_list{
+  border-radius: 18px !important;
+  overflow: hidden !important;
+}
+
 thead th{
-  background: rgba(123,30,43,.18) !important;
+  background: linear-gradient(135deg, rgba(123,30,43,.26), rgba(212,175,55,.08)) !important;
   color: var(--uni-gold-soft) !important;
-  font-weight: 700 !important;
+  font-weight: 800 !important;
   border-bottom: 1px solid rgba(255,255,255,.08) !important;
 }
 
+thead th a{
+  color: var(--uni-gold-soft) !important;
+}
+
 tbody tr{
-  background: rgba(13, 31, 56, .90) !important;
-  transition: background .18s ease;
+  background: rgba(13, 31, 56, .92) !important;
+  transition: all .18s ease;
 }
 
 tbody tr:nth-child(even){
-  background: rgba(17, 37, 66, .94) !important;
+  background: rgba(16, 36, 63, .96) !important;
 }
 
 tbody tr:hover{
-  background: rgba(26, 50, 86, .98) !important;
+  background: rgba(24, 48, 82, .99) !important;
 }
 
 tbody td,
@@ -194,7 +349,7 @@ table a,
 tbody a,
 td a{
   color: #ffffff !important;
-  font-weight: 600;
+  font-weight: 700 !important;
 }
 
 table a:hover,
@@ -203,63 +358,55 @@ td a:hover{
   color: var(--uni-gold-soft) !important;
 }
 
-/* Labels */
-label{
-  color: var(--uni-text) !important;
-  font-weight: 600;
+#result_list thead th:first-child{
+  border-top-left-radius: 16px !important;
 }
 
-/* Helptext */
-.help,
-.helptext,
-.text-sm{
-  color: var(--uni-text-muted) !important;
+#result_list thead th:last-child{
+  border-top-right-radius: 16px !important;
 }
 
-/* Paginación / filtros / badges */
-.rounded-full,
-.inline-flex{
-  border-radius: 999px !important;
+#result_list tbody tr:last-child td:first-child{
+  border-bottom-left-radius: 16px !important;
 }
 
-/* Quitar sensación pesada */
-*{
-  scrollbar-color: rgba(212,175,55,.25) transparent;
+#result_list tbody tr:last-child td:last-child{
+  border-bottom-right-radius: 16px !important;
 }
 
 /* =========================================================
    ACCIONES DEL CHANGELIST
    ========================================================= */
-#changelist-form .actions {
+#changelist-form .actions{
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
   flex-wrap: wrap !important;
   margin: 14px 0 !important;
   padding: 14px 16px !important;
-  background: linear-gradient(135deg, rgba(123, 30, 43, 0.30), rgba(212, 175, 55, 0.14)) !important;
-  border: 1px solid rgba(212, 175, 55, 0.18) !important;
+  background: linear-gradient(135deg, rgba(123,30,43,.30), rgba(212,175,55,.14)) !important;
+  border: 1px solid rgba(212,175,55,.18) !important;
   border-radius: 16px !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.18) !important;
   z-index: 50 !important;
 }
 
 #changelist-form .actions label,
 #changelist-form .actions span,
-#changelist-form .actions small {
-  color: var(--uni-text, #f8fbff) !important;
-  font-weight: 600 !important;
+#changelist-form .actions small{
+  color: var(--uni-text) !important;
+  font-weight: 700 !important;
 }
 
-#changelist-form .actions select {
+#changelist-form .actions select{
   min-width: 320px !important;
   min-height: 42px !important;
   display: inline-block !important;
   visibility: visible !important;
   opacity: 1 !important;
-  background: rgba(7, 20, 38, 0.95) !important;
-  color: var(--uni-text, #f8fbff) !important;
-  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  background: rgba(8, 22, 39, .96) !important;
+  color: var(--uni-text) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
   border-radius: 14px !important;
 }
 
@@ -267,7 +414,7 @@ label{
 #changelist-form .actions input[type="submit"],
 #changelist-form .actions input[type="button"],
 #changelist-form .actions .button,
-#changelist-form .actions a.button {
+#changelist-form .actions a.button{
   min-height: 42px !important;
   padding: 0 18px !important;
   display: inline-flex !important;
@@ -276,157 +423,180 @@ label{
   visibility: visible !important;
   opacity: 1 !important;
   border-radius: 13px !important;
-  border: 1px solid rgba(212, 175, 55, 0.18) !important;
+  border: 1px solid rgba(212,175,55,.18) !important;
   background: linear-gradient(135deg, #7b1e2b, #9a2534) !important;
   color: #ffffff !important;
   font-weight: 700 !important;
-  box-shadow: 0 10px 24px rgba(123, 30, 43, 0.22) !important;
+  box-shadow: 0 10px 24px rgba(123,30,43,.22) !important;
 }
 
 /* =========================================================
    FILTROS LATERALES
    ========================================================= */
-#changelist-filter {
-  background: var(--uni-card-2, rgba(19, 39, 70, 0.98)) !important;
-  border: 1px solid var(--uni-line, rgba(255, 255, 255, 0.08)) !important;
+#changelist-filter{
+  background: var(--uni-card-2) !important;
+  border: 1px solid var(--uni-line) !important;
   border-radius: 18px !important;
-  box-shadow: var(--uni-shadow, 0 14px 35px rgba(0, 0, 0, 0.22)) !important;
+  box-shadow: var(--uni-shadow) !important;
   padding: 12px !important;
 }
 
-#changelist-filter h2 {
+#changelist-filter h2{
   background: transparent !important;
-  color: var(--uni-text, #f8fbff) !important;
+  color: var(--uni-text) !important;
   font-size: 18px !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  font-weight: 800 !important;
+  border-bottom: 1px solid rgba(255,255,255,.06) !important;
   padding-bottom: 10px !important;
   margin-bottom: 10px !important;
 }
 
 #changelist-filter ul,
-#changelist-filter ol {
+#changelist-filter ol{
   margin: 0 !important;
   padding: 0 !important;
   list-style: none !important;
 }
 
-#changelist-filter li {
+#changelist-filter li{
   margin: 0 0 6px 0 !important;
 }
 
-#changelist-filter li a {
+#changelist-filter li a{
   display: block !important;
   border-radius: 12px !important;
   padding: 8px 10px !important;
-  color: var(--uni-text-soft, #d6e1ee) !important;
+  color: var(--uni-text-soft) !important;
   text-decoration: none !important;
-  transition: all 0.18s ease !important;
+  transition: all .18s ease !important;
 }
 
-#changelist-filter li a:hover {
-  background: rgba(212, 175, 55, 0.08) !important;
+#changelist-filter li a:hover{
+  background: rgba(212,175,55,.08) !important;
   color: #ffffff !important;
 }
 
-#changelist-filter li.selected a {
-  background: linear-gradient(90deg, rgba(123, 30, 43, 0.58), rgba(212, 175, 55, 0.12)) !important;
+#changelist-filter li.selected a{
+  background: linear-gradient(90deg, rgba(123,30,43,.58), rgba(212,175,55,.12)) !important;
   color: #ffffff !important;
-  font-weight: 700 !important;
-  border: 1px solid rgba(212, 175, 55, 0.20) !important;
+  font-weight: 800 !important;
+  border: 1px solid rgba(212,175,55,.20) !important;
 }
 
 /* =========================================================
    BREADCRUMBS
    ========================================================= */
-div.breadcrumbs {
-  background: rgba(8, 23, 42, 0.72) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+div.breadcrumbs{
+  background: rgba(8, 23, 42, 0.76) !important;
+  border: 1px solid rgba(255,255,255,.05) !important;
   border-radius: 16px !important;
   margin-bottom: 16px !important;
-  box-shadow: var(--uni-shadow, 0 14px 35px rgba(0, 0, 0, 0.22)) !important;
+  box-shadow: var(--uni-shadow-soft) !important;
   padding: 10px 14px !important;
 }
 
 div.breadcrumbs,
-div.breadcrumbs a {
-  color: var(--uni-text-soft, #d6e1ee) !important;
+div.breadcrumbs a{
+  color: var(--uni-text-soft) !important;
 }
 
-div.breadcrumbs a:hover {
-  color: var(--uni-gold-soft, #e8cb72) !important;
-}
-
-/* =========================================================
-   FORMULARIOS
-   ========================================================= */
-fieldset.module {
-  background: var(--uni-card, rgba(14, 31, 58, 0.96)) !important;
-  border: 1px solid var(--uni-line, rgba(255, 255, 255, 0.08)) !important;
-  border-radius: 18px !important;
-  box-shadow: var(--uni-shadow, 0 14px 35px rgba(0, 0, 0, 0.22)) !important;
-  padding: 14px !important;
-}
-
-fieldset.module h2 {
-  border-radius: 14px !important;
-  margin-bottom: 14px !important;
-}
-
-.form-row {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-  padding: 12px 0 !important;
-}
-
-.aligned label {
-  color: var(--uni-text, #f8fbff) !important;
-  font-weight: 700 !important;
-}
-
-/* =========================================================
-   TABLAS
-   ========================================================= */
-#result_list {
-  border-radius: 18px !important;
-  overflow: hidden !important;
-}
-
-#result_list thead th:first-child {
-  border-top-left-radius: 16px !important;
-}
-
-#result_list thead th:last-child {
-  border-top-right-radius: 16px !important;
-}
-
-#result_list tbody tr:last-child td:first-child {
-  border-bottom-left-radius: 16px !important;
-}
-
-#result_list tbody tr:last-child td:last-child {
-  border-bottom-right-radius: 16px !important;
+div.breadcrumbs a:hover{
+  color: var(--uni-gold-soft) !important;
 }
 
 /* =========================================================
    MENSAJES
    ========================================================= */
-ul.messagelist li {
+ul.messagelist li{
   border-radius: 14px !important;
   padding: 12px 14px !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: var(--uni-shadow, 0 14px 35px rgba(0, 0, 0, 0.22)) !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+  box-shadow: var(--uni-shadow-soft) !important;
 }
 
-ul.messagelist li.success {
-  background: rgba(22, 163, 74, 0.18) !important;
+ul.messagelist li.success{
+  background: rgba(22,163,74,.18) !important;
   color: #d1fae5 !important;
 }
 
-ul.messagelist li.warning {
-  background: rgba(245, 158, 11, 0.18) !important;
+ul.messagelist li.warning{
+  background: rgba(245,158,11,.18) !important;
   color: #fef3c7 !important;
 }
 
-ul.messagelist li.error {
-  background: rgba(220, 38, 38, 0.18) !important;
+ul.messagelist li.error{
+  background: rgba(220,38,38,.18) !important;
   color: #fee2e2 !important;
+}
+
+/* =========================================================
+   PAGINACIÓN
+   ========================================================= */
+.paginator{
+  background: transparent !important;
+  color: var(--uni-text-soft) !important;
+  margin-top: 14px !important;
+}
+
+.paginator a{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  padding: 0 10px !important;
+  border-radius: 10px !important;
+  background: rgba(255,255,255,.04) !important;
+  border: 1px solid rgba(255,255,255,.06) !important;
+  color: var(--uni-text) !important;
+  text-decoration: none !important;
+}
+
+.paginator a:hover{
+  background: rgba(212,175,55,.10) !important;
+  color: #fff !important;
+}
+
+/* =========================================================
+   CHECKBOXES Y DETALLES
+   ========================================================= */
+input[type="checkbox"]{
+  min-height: auto !important;
+  accent-color: #9a2534;
+}
+
+.selector h2,
+.selector .selector-filter{
+  color: var(--uni-text) !important;
+}
+
+/* =========================================================
+   SCROLL
+   ========================================================= */
+*{
+  scrollbar-color: rgba(212,175,55,.25) transparent;
+}
+
+/* =========================================================
+   PEQUEÑOS AJUSTES VISUALES
+   ========================================================= */
+.submit-row{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  align-items: center !important;
+  padding-top: 14px !important;
+}
+
+.inline-group{
+  background: transparent !important;
+}
+
+.related-widget-wrapper-link{
+  color: var(--uni-gold-soft) !important;
+  font-weight: 700 !important;
+}
+
+.related-widget-wrapper-link:hover{
+  color: #fff !important;
 }

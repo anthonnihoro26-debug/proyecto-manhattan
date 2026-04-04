@@ -15,7 +15,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
@@ -24,22 +23,34 @@ from django.contrib.auth import views as auth_views
 from asistencias import views as asist_views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Logout exclusivo del admin: cierra sesión y vuelve al login del admin
+    path(
+        "admin/logout/",
+        auth_views.LogoutView.as_view(next_page="/admin/login/"),
+        name="admin_logout",
+    ),
+
+    # Admin
+    path("admin/", admin.site.urls),
 
     # Login personalizado con geocerca
-    path('login/', asist_views.login_view_geocerca, name='login'),
+    path("login/", asist_views.login_view_geocerca, name="login"),
 
-    # Logout
-    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    # Logout del sistema principal
+    path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
 
     # Redirección post-login
-    path('', asist_views.post_login_redirect, name='post_login'),
+    path("", asist_views.post_login_redirect, name="post_login"),
 
     # Cron privado
-    path("cron/reporte-asistencia/", asist_views.trigger_reporte_asistencia, name="cron_reporte_asistencia"),
+    path(
+        "cron/reporte-asistencia/",
+        asist_views.trigger_reporte_asistencia,
+        name="cron_reporte_asistencia",
+    ),
 
     # App
-    path('asistencia/', include('asistencias.urls')),
+    path("asistencia/", include("asistencias.urls")),
 ]
 
 if settings.DEBUG:

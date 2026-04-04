@@ -688,15 +688,35 @@ def justificar_falta_historial(request):
 def exportar_reporte_excel(request):
     q = (request.GET.get("q") or "").strip()
     condicion = (request.GET.get("condicion") or "").strip().upper()
+    fecha_desde_str = (request.GET.get("fecha_desde") or "").strip()
+    fecha_hasta_str = (request.GET.get("fecha_hasta") or "").strip()
     fecha_str = (request.GET.get("fecha") or "").strip()
 
     hoy = timezone.localdate()
-    fecha = parse_date(fecha_str) if fecha_str else hoy
-    if not fecha:
-        fecha = hoy
 
-    desde = fecha
-    hasta = fecha
+    if fecha_desde_str or fecha_hasta_str:
+        desde = parse_date(fecha_desde_str) if fecha_desde_str else hoy
+        hasta = parse_date(fecha_hasta_str) if fecha_hasta_str else hoy
+    else:
+        fecha = parse_date(fecha_str) if fecha_str else hoy
+        if not fecha:
+            fecha = hoy
+        desde = fecha
+        hasta = fecha
+
+    if not desde:
+        desde = hoy
+    if not hasta:
+        hasta = hoy
+
+    if desde > hasta:
+        desde, hasta = hasta, desde
+
+    dias_rango = []
+    cur = desde
+    while cur <= hasta:
+        dias_rango.append(cur)
+        cur += timedelta(days=1)
 
     dias_especiales = _dias_especiales_dict(desde, hasta)
 
@@ -719,7 +739,7 @@ def exportar_reporte_excel(request):
     entradas = (
         Asistencia.objects.filter(
             profesor_id__in=prof_ids,
-            fecha=fecha,
+            fecha__range=(desde, hasta),
             tipo="E",
         )
         .values("profesor_id", "fecha")
@@ -730,7 +750,7 @@ def exportar_reporte_excel(request):
     justificados = (
         JustificacionAsistencia.objects.filter(
             profesor_id__in=prof_ids,
-            fecha=fecha,
+            fecha__range=(desde, hasta),
         )
         .values("profesor_id", "fecha", "tipo", "detalle")
     )
@@ -753,7 +773,7 @@ def exportar_reporte_excel(request):
     asist_j = (
         Asistencia.objects.filter(
             profesor_id__in=prof_ids,
-            fecha=fecha,
+            fecha__range=(desde, hasta),
             tipo="J",
         )
         .values("profesor_id", "fecha", "motivo", "detalle")
@@ -769,7 +789,7 @@ def exportar_reporte_excel(request):
 
     wb = Workbook()
     ws: Worksheet = wb.active
-    ws.title = "Reporte Diario"
+    ws.title = "Reporte Asistencias"
 
     navy = "7F1D1D"
     red = "B91C1C"
@@ -778,13 +798,12 @@ def exportar_reporte_excel(request):
     blue_soft = "DBEAFE"
     amber_soft = "FEF3C7"
     gray_bg = "F8FAFC"
-    text_dark = "111827"
     white = "FFFFFF"
 
     thin = Side(style="thin", color="CBD5E1")
     border_all = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    total_columns = 7
+    total_columns = 4 + len(dias_rango)
     last_col_letter = get_column_letter(total_columns)
 
     for r in (1, 2):
@@ -807,9 +826,13 @@ def exportar_reporte_excel(request):
         ws.row_dimensions[1].height = 44
         ws.row_dimensions[2].height = 20
         ws.row_dimensions[3].height = 10
-        ws.column_dimensions["A"].width = 18
+        ws.column_dimensions["A"].width = 16
 
-    titulo = f"REPORTE DIARIO DE ASISTENCIAS — {fecha.strftime('%d/%m/%Y')}"
+    if desde == hasta:
+        titulo = f"REPORTE DE ASISTENCIAS — {desde.strftime('%d/%m/%Y')}"
+    else:
+        titulo = f"REPORTE DE ASISTENCIAS — {desde.strftime('%d/%m/%Y')} al {hasta.strftime('%d/%m/%Y')}"
+
     ws["B1"] = titulo
     ws.merge_cells(f"B1:{last_col_letter}1")
     ws["B1"].font = Font(bold=True, size=16, color=navy)
@@ -820,7 +843,7 @@ def exportar_reporte_excel(request):
         filtros_txt.append(f"Búsqueda: {q}")
     if condicion:
         filtros_txt.append(f"Condición: {condicion.upper()}")
-    filtros_txt.append(f"Fecha: {fecha.strftime('%Y-%m-%d')}")
+    filtros_txt.append(f"Rango: {desde.strftime('%Y-%m-%d')} a {hasta.strftime('%Y-%m-%d')}")
     filtros_txt.append(f"Docentes: {len(profesores)}")
 
     ws["B2"] = " | ".join(filtros_txt)
@@ -830,8 +853,8 @@ def exportar_reporte_excel(request):
 
     ws.append([])
 
-    headers = ["DNI", "Código", "Docente", "Condición", "Estado", "Detalle", "Hora"]
-    ws.append([str(h) for h in headers])
+    headers = ["DNI", "Código", "Docente", "Condición"] + [d.strftime("%d/%m/%Y") for d in dias_rango]
+    ws.append(headers)
     header_row = ws.max_row
 
     header_fill = PatternFill("solid", fgColor=red)
@@ -844,68 +867,75 @@ def exportar_reporte_excel(request):
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = border_all
 
-    dia_especial = _obtener_dia_especial(fecha)
+    especiales_upper = {x["tipo_display"].upper() for x in dias_especiales.values()}
 
     for p in profesores:
-        key = (p.id, fecha)
-        dt = entrada_map.get(key)
-
-        if dia_especial:
-            estado = _tipo_display_dia_especial(dia_especial).upper()
-            detalle = (dia_especial.descripcion or "").strip() or "Día especial institucional"
-            hora = "-"
-        elif dt:
-            dt_local = timezone.localtime(dt)
-            estado = "ASISTIÓ"
-            detalle = "Asistencia registrada"
-            hora = dt_local.strftime("%H:%M")
-        else:
-            jtxt = just_map.get(key) or asist_j_map.get(key)
-            if jtxt:
-                estado = "JUSTIFICADO"
-                detalle = jtxt
-                hora = "-"
-            else:
-                estado = "FALTÓ"
-                detalle = "Sin asistencia ni justificación"
-                hora = "-"
-
         docente = f"{(p.apellidos or '').strip()}, {(p.nombres or '').strip()}".strip().strip(",")
 
-        row = [
+        fila = [
             str(p.dni),
             str(p.codigo or ""),
             docente,
             str((p.condicion or "").upper()),
-            estado,
-            detalle,
-            hora,
         ]
-        ws.append(row)
+
+        for dia in dias_rango:
+            key = (p.id, dia)
+            dt = entrada_map.get(key)
+            dia_especial = dias_especiales.get(dia)
+
+            if dia_especial:
+                valor = dia_especial["tipo_display"].upper()
+                if dia_especial.get("descripcion"):
+                    valor += f" - {dia_especial['descripcion']}"
+            elif dt:
+                valor = timezone.localtime(dt).strftime("%H:%M")
+            else:
+                jtxt = just_map.get(key) or asist_j_map.get(key)
+                if jtxt:
+                    valor = jtxt
+                else:
+                    valor = "FALTÓ"
+
+            fila.append(valor)
+
+        ws.append(fila)
 
         current_row = ws.max_row
         for col in range(1, len(headers) + 1):
             cell = ws.cell(row=current_row, column=col)
             cell.border = border_all
-            cell.alignment = Alignment(vertical="center", wrap_text=True)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-        estado_cell = ws.cell(row=current_row, column=5)
-        if estado == "ASISTIÓ":
-            estado_cell.fill = PatternFill("solid", fgColor=green_soft)
-        elif estado == "JUSTIFICADO":
-            estado_cell.fill = PatternFill("solid", fgColor=blue_soft)
-        elif estado == "FALTÓ":
-            estado_cell.fill = PatternFill("solid", fgColor=red_soft)
-        else:
-            estado_cell.fill = PatternFill("solid", fgColor=amber_soft)
+        ws.cell(row=current_row, column=3).alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+
+        for idx in range(5, total_columns + 1):
+            val = str(ws.cell(row=current_row, column=idx).value or "").upper()
+
+            if val.startswith("JUSTIFICADO"):
+                ws.cell(row=current_row, column=idx).fill = PatternFill("solid", fgColor=blue_soft)
+            elif val == "FALTÓ":
+                ws.cell(row=current_row, column=idx).fill = PatternFill("solid", fgColor=red_soft)
+            elif any(val.startswith(es) for es in especiales_upper):
+                ws.cell(row=current_row, column=idx).fill = PatternFill("solid", fgColor=amber_soft)
+            elif val:
+                ws.cell(row=current_row, column=idx).fill = PatternFill("solid", fgColor=green_soft)
 
     ws.freeze_panes = "A5"
 
-    widths = [14, 14, 40, 12, 18, 45, 12]
-    for i, width in enumerate(widths, start=1):
-        ws.column_dimensions[get_column_letter(i)].width = width
+    ws.column_dimensions["A"].width = 14
+    ws.column_dimensions["B"].width = 14
+    ws.column_dimensions["C"].width = 38
+    ws.column_dimensions["D"].width = 14
 
-    filename = f"reporte_diario_asistencias_{fecha.strftime('%Y-%m-%d')}.xlsx"
+    for i in range(5, total_columns + 1):
+        ws.column_dimensions[get_column_letter(i)].width = 18
+
+    if desde == hasta:
+        filename = f"reporte_asistencias_{desde.strftime('%Y-%m-%d')}.xlsx"
+    else:
+        filename = f"reporte_asistencias_{desde.strftime('%Y-%m-%d')}_a_{hasta.strftime('%Y-%m-%d')}.xlsx"
+
     bio = BytesIO()
     wb.save(bio)
     bio.seek(0)

@@ -228,6 +228,7 @@
       white-space:nowrap;
       box-shadow:0 10px 20px rgba(0,0,0,.20);
       transition:transform .12s ease, opacity .12s ease, box-shadow .12s ease, border-color .2s ease;
+      text-decoration:none;
     }
     .btn:hover{ transform:translateY(-1px); }
     .btn:active{ transform:translateY(0); opacity:.94; }
@@ -252,6 +253,20 @@
       border-color:rgba(255,255,255,.10);
       background:rgba(255,255,255,.05);
       opacity:.86;
+    }
+
+    .logoutForm{
+      display:inline-flex;
+      margin:0;
+    }
+
+    .btn-logout{
+      border-color:rgba(239,68,68,.28);
+      background:linear-gradient(180deg, rgba(239,68,68,.18), rgba(239,68,68,.10));
+    }
+
+    .btn-logout:hover{
+      box-shadow:0 12px 24px rgba(239,68,68,.18);
     }
 
     .hidden{ display:none !important; }
@@ -1145,6 +1160,11 @@
         <button id="btnFlip" class="btn btn-blue" type="button">🔄 Cámara</button>
         <button id="btnTorch" class="btn btn-blue hidden" type="button">🔦 Linterna</button>
         <button id="btnStop" class="btn btn-stop" type="button" disabled>⏹ Detener</button>
+
+        <form method="post" action="{% url 'logout' %}" class="logoutForm">
+          {% csrf_token %}
+          <button class="btn btn-logout" type="submit">⎋ Cerrar sesión</button>
+        </form>
       </div>
     </header>
 

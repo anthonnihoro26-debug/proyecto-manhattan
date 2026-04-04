@@ -59,6 +59,7 @@ class ExportCsvMixin:
 class ProfesorAdmin(admin.ModelAdmin):
     list_display = (
         "dni",
+        "codigo",
         "apellidos",
         "nombres",
         "condicion_badge",
@@ -150,7 +151,7 @@ class ProfesorAdmin(admin.ModelAdmin):
             texto,
         )
 
-    @admin.display(description="Jornada", ordering="tipo_jornada")
+    @admin.display(description="Dedicación horaria", ordering="tipo_jornada")
     def jornada_badge(self, obj):
         valor = (obj.tipo_jornada or "").strip().upper()
 
@@ -160,6 +161,14 @@ class ProfesorAdmin(admin.ModelAdmin):
                 'font-weight:700;font-size:12px;color:#16a34a;'
                 'background:rgba(22,163,74,.16);border:1px solid rgba(22,163,74,.28);">'
                 'TC · Tiempo completo</span>'
+            )
+
+        if valor == "DE":
+            return format_html(
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'font-weight:700;font-size:12px;color:#7c3aed;'
+                'background:rgba(124,58,237,.16);border:1px solid rgba(124,58,237,.28);">'
+                'DE · Dedicación exclusiva</span>'
             )
 
         if valor == "TP":
@@ -651,7 +660,7 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
             '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
             'font-weight:700;font-size:12px;color:#dc2626;'
             'background:rgba(220,38,38,.16);border:1px solid rgba(220,38,38,.28);">'
-            'Fallido</span>'
+                'Fallido</span>'
         )
 
     @admin.display(description="Estado geo", ordering="estado_geo")
@@ -767,4 +776,3 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
             'loading="lazy"></iframe>',
             src,
         )
-

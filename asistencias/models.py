@@ -6,6 +6,7 @@ from django.conf import settings
 class Profesor(models.Model):
     TIPO_JORNADA_CHOICES = [
         ("TC", "Tiempo completo"),
+        ("DE", "Dedicación exclusiva"),
         ("TP", "Tiempo parcial"),
     ]
 
@@ -16,7 +17,7 @@ class Profesor(models.Model):
     condicion = models.CharField("Condición", max_length=20)
 
     tipo_jornada = models.CharField(
-        "Tipo de jornada",
+        "Dedicación horaria",
         max_length=2,
         choices=TIPO_JORNADA_CHOICES,
         blank=True,
@@ -24,7 +25,6 @@ class Profesor(models.Model):
     )
 
     activo = models.BooleanField("Activo", default=True)
-
     email = models.EmailField("Correo", blank=True, null=True)
 
     @property
@@ -41,7 +41,6 @@ class Profesor(models.Model):
         verbose_name = "Profesor"
         verbose_name_plural = "Profesores"
         ordering = ["apellidos", "nombres"]
-
 
 class Asistencia(models.Model):
     TIPOS = (
