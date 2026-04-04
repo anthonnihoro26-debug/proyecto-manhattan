@@ -1583,43 +1583,48 @@ def _build_private_stats(fecha_inicio, fecha_fin, q="", condicion=""):
             | Q(nombres__icontains=q)
         )
 
-    if condicion in ("N", "C"):
+    if condicion in ("N", "C", "O/S"):
         profesores_qs = profesores_qs.filter(condicion__iexact=condicion)
 
     profesores = list(profesores_qs)
     profesor_ids = [p.id for p in profesores]
 
+    # Días especiales del rango
     dias_especiales = _dias_especiales_dict(fecha_inicio, fecha_fin)
 
-    dias_habiles = []
+    # Solo lunes a viernes
+    dias_laborables = []
     cur = fecha_inicio
     while cur <= fecha_fin:
-        if cur.weekday() < 5 and cur not in dias_especiales:
-            dias_habiles.append(cur)
+        if cur.weekday() < 5:
+            dias_laborables.append(cur)
         cur += timedelta(days=1)
 
-    entradas_set = set(
+    # Asistencias del rango (E y J)
+    asistencias = (
         Asistencia.objects.filter(
             profesor_id__in=profesor_ids,
             fecha__range=(fecha_inicio, fecha_fin),
-            tipo="E",
-        ).values_list("profesor_id", "fecha")
+            tipo__in=["E", "J"],
+        )
+        .values("profesor_id", "fecha", "tipo")
     )
 
-    just_set = set(
+    asist_map = {}
+    for a in asistencias:
+        key = (a["profesor_id"], a["fecha"])
+        asist_map.setdefault(key, set()).add((a.get("tipo") or "").strip().upper())
+
+    # Justificaciones del rango
+    justificaciones = (
         JustificacionAsistencia.objects.filter(
             profesor_id__in=profesor_ids,
             fecha__range=(fecha_inicio, fecha_fin),
-        ).values_list("profesor_id", "fecha")
+        )
+        .values("profesor_id", "fecha")
     )
 
-    just_asist_set = set(
-        Asistencia.objects.filter(
-            profesor_id__in=profesor_ids,
-            fecha__range=(fecha_inicio, fecha_fin),
-            tipo="J",
-        ).values_list("profesor_id", "fecha")
-    )
+    just_set = {(j["profesor_id"], j["fecha"]) for j in justificaciones}
 
     rows = []
     total_asistio = 0
@@ -1630,18 +1635,29 @@ def _build_private_stats(fecha_inicio, fecha_fin, q="", condicion=""):
         asistio = 0
         justifico = 0
         falto = 0
+        total_dias = 0
 
-        for dia in dias_habiles:
+        for dia in dias_laborables:
+            # Si es día especial, no se evalúa
+            if dia in dias_especiales:
+                continue
+
+            total_dias += 1
             key = (profesor.id, dia)
+            tipos = asist_map.get(key, set())
 
-            if key in entradas_set:
+            tiene_e = "E" in tipos
+            tiene_j = "J" in tipos
+            tiene_justificacion = key in just_set
+
+            # Prioridad igual que el comando del correo
+            if tiene_e:
                 asistio += 1
-            elif key in just_set or key in just_asist_set:
+            elif tiene_j or tiene_justificacion:
                 justifico += 1
             else:
                 falto += 1
 
-        total_dias = len(dias_habiles)
         porcentaje = round((asistio / total_dias) * 100, 2) if total_dias else 0
 
         rows.append(
@@ -1665,7 +1681,7 @@ def _build_private_stats(fecha_inicio, fecha_fin, q="", condicion=""):
 
     return {
         "rows": rows,
-        "dias_habiles": dias_habiles,
+        "dias_habiles": dias_laborables,
         "dias_especiales": dias_especiales,
         "docentes_total": docentes_total,
         "total_asistio": total_asistio,

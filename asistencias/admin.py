@@ -57,6 +57,8 @@ class ExportCsvMixin:
 # =========================================================
 @admin.register(Profesor)
 class ProfesorAdmin(admin.ModelAdmin):
+    change_list_template = "admin/asistencias/profesor/change_list.html"
+
     list_display = (
         "dni",
         "codigo",
@@ -70,7 +72,7 @@ class ProfesorAdmin(admin.ModelAdmin):
     search_fields = ("dni", "apellidos", "nombres", "email", "codigo")
     list_filter = ("condicion", "tipo_jornada", "activo")
     ordering = ("apellidos", "nombres")
-    list_per_page = 25
+    list_per_page = 20
     list_display_links = ("dni", "apellidos", "nombres")
     actions = ["activar_profesores", "desactivar_profesores", "delete_selected"]
     actions_on_top = True
@@ -423,6 +425,8 @@ class JustificacionAsistenciaAdmin(ExportCsvMixin, admin.ModelAdmin):
 # =========================================================
 @admin.register(DiaEspecial)
 class DiaEspecialAdmin(admin.ModelAdmin):
+    change_list_template = "admin/asistencias/diaespecial/change_list.html"
+
     list_display = (
         "fecha",
         "tipo_badge",
@@ -660,7 +664,7 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
             '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
             'font-weight:700;font-size:12px;color:#dc2626;'
             'background:rgba(220,38,38,.16);border:1px solid rgba(220,38,38,.28);">'
-                'Fallido</span>'
+            'Fallido</span>'
         )
 
     @admin.display(description="Estado geo", ordering="estado_geo")

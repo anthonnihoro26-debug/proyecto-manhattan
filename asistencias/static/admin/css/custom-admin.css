@@ -1,34 +1,33 @@
 :root{
-  --uni-bg-1: #091524;
-  --uni-bg-2: #10233d;
-  --uni-bg-3: #152b49;
+  --bg-0: #0b1220;
+  --bg-1: #101a2d;
+  --bg-2: #13203a;
+  --bg-3: #182844;
 
-  --uni-side: #0b1728;
-  --uni-card: rgba(18, 35, 58, 0.96);
-  --uni-card-2: rgba(23, 43, 70, 0.98);
+  --card: rgba(19, 32, 58, 0.92);
+  --card-strong: rgba(24, 40, 68, 0.96);
+  --line: rgba(255,255,255,.08);
+  --line-soft: rgba(255,255,255,.05);
 
-  --uni-line: rgba(255,255,255,.08);
-  --uni-line-soft: rgba(255,255,255,.05);
+  --primary: #8b1e3f;
+  --primary-2: #b3264d;
+  --primary-soft: rgba(179, 38, 77, 0.16);
 
-  --uni-primary: #7b1e2b;
-  --uni-primary-2: #a12638;
-  --uni-primary-3: #c03a4d;
+  --accent: #d4af37;
+  --accent-soft: #f1d98a;
 
-  --uni-gold: #d4af37;
-  --uni-gold-soft: #f0d98a;
+  --text: #f8fbff;
+  --text-soft: #d9e4f4;
+  --text-muted: #aebed5;
 
-  --uni-blue-soft: #8eb8ff;
-  --uni-green-soft: #7ee0a8;
-  --uni-red-soft: #ff9f9f;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --info: #2563eb;
 
-  --uni-text: #f8fbff;
-  --uni-text-soft: #dfe9f5;
-  --uni-text-muted: #b5c5d8;
-
-  --uni-radius: 18px;
-  --uni-radius-sm: 14px;
-  --uni-shadow: 0 14px 35px rgba(0,0,0,.24);
-  --uni-shadow-soft: 0 8px 24px rgba(0,0,0,.18);
+  --radius: 18px;
+  --radius-sm: 14px;
+  --shadow: 0 16px 40px rgba(0,0,0,.24);
+  --shadow-soft: 0 10px 28px rgba(0,0,0,.18);
 }
 
 /* =========================================================
@@ -36,47 +35,36 @@
    ========================================================= */
 html, body{
   background:
-    radial-gradient(circle at top left, rgba(212,175,55,.08), transparent 18%),
-    radial-gradient(circle at bottom right, rgba(123,30,43,.12), transparent 22%),
-    linear-gradient(135deg, var(--uni-bg-1), var(--uni-bg-2), var(--uni-bg-3)) !important;
-  color: var(--uni-text) !important;
-  min-height: 100%;
+    radial-gradient(circle at top left, rgba(212,175,55,.06), transparent 18%),
+    radial-gradient(circle at bottom right, rgba(179,38,77,.10), transparent 24%),
+    linear-gradient(135deg, var(--bg-0), var(--bg-1), var(--bg-2)) !important;
+  color: var(--text) !important;
 }
 
 body, p, li, td, th, label, input, select, textarea{
   letter-spacing: .1px;
 }
 
-a{
-  transition: all .18s ease !important;
-}
-
 /* =========================================================
-   SIDEBAR / MENÚ
+   SIDEBAR
    ========================================================= */
 aside{
-  background: linear-gradient(180deg, #0b1728 0%, #10233d 100%) !important;
-  border-right: 1px solid var(--uni-line) !important;
-  box-shadow: inset -1px 0 0 rgba(255,255,255,.03);
+  background: linear-gradient(180deg, #0b1527 0%, #0f1d34 100%) !important;
+  border-right: 1px solid var(--line) !important;
 }
 
 aside *{
-  color: var(--uni-text) !important;
-}
-
-aside .font-semibold,
-aside .font-bold{
-  letter-spacing: .25px;
+  color: var(--text) !important;
 }
 
 aside a{
   border-radius: 14px !important;
-  transition: all .18s ease;
-  color: var(--uni-text-soft) !important;
+  color: var(--text-soft) !important;
+  transition: all .18s ease !important;
 }
 
 aside a:hover{
-  background: rgba(212,175,55,.08) !important;
+  background: rgba(255,255,255,.04) !important;
   color: #fff !important;
   transform: translateX(2px);
 }
@@ -84,76 +72,78 @@ aside a:hover{
 aside a[aria-current="page"],
 aside a.bg-primary-600,
 aside a[class*="primary"]{
-  background: linear-gradient(90deg, rgba(123,30,43,.66), rgba(212,175,55,.14)) !important;
-  border: 1px solid rgba(212,175,55,.20) !important;
+  background: linear-gradient(90deg, rgba(139,30,63,.55), rgba(212,175,55,.10)) !important;
+  border: 1px solid rgba(212,175,55,.16) !important;
   color: #fff !important;
-  box-shadow: 0 8px 18px rgba(123,30,43,.22);
+  box-shadow: 0 10px 22px rgba(139,30,63,.18);
 }
 
 /* =========================================================
    TOPBAR
    ========================================================= */
 header, nav{
-  background: rgba(8, 23, 42, .78) !important;
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255,255,255,.05);
+  background: rgba(11, 21, 39, .76) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,.05) !important;
 }
 
 header *, nav *{
-  color: var(--uni-text) !important;
+  color: var(--text) !important;
 }
 
 /* =========================================================
-   TARJETAS / CONTENEDORES
+   CONTENEDORES
    ========================================================= */
 div[class*="bg-base"],
 section,
 article,
 .rounded-lg,
 .rounded-md,
+.rounded-xl,
 .module,
 #content-main,
 #changelist,
-.change-form,
-.results,
-.dashboard #content{
-  background: var(--uni-card) !important;
-  border: 1px solid var(--uni-line) !important;
-  border-radius: var(--uni-radius) !important;
-  box-shadow: var(--uni-shadow);
+.results{
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow) !important;
 }
 
-#content{
-  padding-top: 12px !important;
+/* Más aire general */
+#content,
+main,
+main > div,
+main section{
+  gap: 18px !important;
 }
 
 /* =========================================================
    TÍTULOS
    ========================================================= */
 h1, h2, h3, h4, h5, h6{
-  color: var(--uni-text) !important;
+  color: var(--text) !important;
 }
 
 h1{
-  font-size: 28px !important;
+  font-size: 30px !important;
   font-weight: 800 !important;
   letter-spacing: .2px !important;
 }
 
 .text-font-important-light,
 .text-font-default-light{
-  color: var(--uni-text) !important;
+  color: var(--text) !important;
 }
 
 .text-font-subtle-light,
 .text-base-400,
 .text-base-500,
 .text-base-600,
-.quiet,
+.text-sm,
 .help,
-.helptext,
-.text-sm{
-  color: var(--uni-text-muted) !important;
+.helptext{
+  color: var(--text-muted) !important;
 }
 
 /* =========================================================
@@ -162,64 +152,44 @@ h1{
 input,
 select,
 textarea{
-  background: rgba(8, 22, 39, .96) !important;
-  color: var(--uni-text) !important;
+  background: rgba(9, 19, 36, .94) !important;
+  color: var(--text) !important;
   border: 1px solid rgba(255,255,255,.10) !important;
   border-radius: 14px !important;
-  min-height: 42px !important;
+  min-height: 46px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
 }
 
 textarea{
-  min-height: 110px !important;
+  min-height: 120px !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
 }
 
 input::placeholder,
 textarea::placeholder{
-  color: #bfd0e1 !important;
+  color: #b9c7d8 !important;
 }
 
 input:focus,
 select:focus,
 textarea:focus{
   outline: none !important;
-  border-color: rgba(212,175,55,.45) !important;
-  box-shadow: 0 0 0 4px rgba(212,175,55,.10) !important;
+  border-color: rgba(212,175,55,.40) !important;
+  box-shadow: 0 0 0 4px rgba(212,175,55,.08) !important;
 }
 
 label{
-  color: var(--uni-text) !important;
+  color: var(--text) !important;
   font-weight: 700 !important;
 }
 
-.aligned label{
-  color: var(--uni-text) !important;
-  font-weight: 700 !important;
-}
-
-fieldset.module{
-  background: var(--uni-card) !important;
-  border: 1px solid var(--uni-line) !important;
-  border-radius: 18px !important;
-  box-shadow: var(--uni-shadow) !important;
-  padding: 16px !important;
-}
-
-fieldset.module h2{
-  background: linear-gradient(135deg, rgba(123,30,43,.34), rgba(212,175,55,.10)) !important;
-  color: var(--uni-text) !important;
-  border: 1px solid rgba(212,175,55,.10) !important;
-  border-radius: 14px !important;
-  padding: 12px 14px !important;
-  margin-bottom: 14px !important;
-}
-
-.form-row{
-  border-bottom: 1px solid rgba(255,255,255,.05) !important;
-  padding: 12px 0 !important;
-}
-
-.form-row:last-child{
-  border-bottom: 0 !important;
+/* Buscador superior más bonito */
+input[type="search"]{
+  min-height: 50px !important;
+  border-radius: 16px !important;
+  background: rgba(8,18,34,.98) !important;
 }
 
 /* =========================================================
@@ -230,22 +200,13 @@ input[type="submit"],
 input[type="button"],
 .submit-row input,
 a.button,
-.button,
-.object-tools a,
-.object-tools .addlink{
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  min-height: 42px !important;
-  padding: 0 18px !important;
-  border-radius: 13px !important;
+.button{
+  border-radius: 14px !important;
   border: 1px solid rgba(212,175,55,.18) !important;
-  background: linear-gradient(135deg, var(--uni-primary), var(--uni-primary-2)) !important;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2)) !important;
   color: #fff !important;
   font-weight: 700 !important;
-  text-decoration: none !important;
-  box-shadow: 0 10px 24px rgba(123,30,43,.22);
+  box-shadow: 0 10px 24px rgba(139,30,63,.22) !important;
   transition: all .18s ease !important;
 }
 
@@ -254,29 +215,23 @@ input[type="submit"]:hover,
 input[type="button"]:hover,
 .submit-row input:hover,
 a.button:hover,
-.button:hover,
-.object-tools a:hover,
-.object-tools .addlink:hover{
+.button:hover{
   transform: translateY(-1px);
   filter: brightness(1.05);
-  box-shadow: 0 12px 28px rgba(123,30,43,.30);
-}
-
-.deletelink,
-a.deletelink{
-  background: linear-gradient(135deg, #a91d2a, #d73345) !important;
-  border-color: rgba(255,255,255,.10) !important;
-  color: #fff !important;
 }
 
 /* =========================================================
-   BOTÓN AÑADIR EN CADA APARTADO
+   BOTÓN AÑADIR - UNFOLD / DJANGO
    ========================================================= */
-.object-tools{
-  float: none !important;
+
+/* Zona superior con acciones */
+.object-tools,
+div[class*="object-tools"],
+ul.object-tools{
   display: flex !important;
-  justify-content: flex-end !important;
   align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
   gap: 10px !important;
   margin: 0 0 16px 0 !important;
   padding: 0 !important;
@@ -284,67 +239,103 @@ a.deletelink{
   opacity: 1 !important;
 }
 
-.object-tools li{
+.object-tools li,
+ul.object-tools li{
   display: block !important;
-  list-style: none !important;
   visibility: visible !important;
   opacity: 1 !important;
 }
 
-.change-list .object-tools,
-.change-form .object-tools{
-  display: flex !important;
+/* Enlaces tipo añadir */
+.object-tools a,
+ul.object-tools a,
+a[href$="/add/"],
+a[href*="/add/?"],
+a[class*="addlink"],
+a[class*="bg-primary"],
+main a[href$="/add/"]{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  min-height: 44px !important;
+  padding: 0 18px !important;
+  border-radius: 14px !important;
+  text-decoration: none !important;
+  font-weight: 800 !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2)) !important;
+  border: 1px solid rgba(212,175,55,.18) !important;
+  box-shadow: 0 12px 28px rgba(139,30,63,.24) !important;
   visibility: visible !important;
   opacity: 1 !important;
+}
+
+.object-tools a:hover,
+ul.object-tools a:hover,
+a[href$="/add/"]:hover,
+a[href*="/add/?"]:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.05);
 }
 
 /* =========================================================
    TABLAS
    ========================================================= */
 table{
-  width: 100%;
+  width: 100% !important;
   border-collapse: separate !important;
   border-spacing: 0 !important;
   background: transparent !important;
 }
 
 #result_list{
+  width: 100% !important;
   border-radius: 18px !important;
   overflow: hidden !important;
 }
 
+/* Encabezado tabla */
 thead th{
-  background: linear-gradient(135deg, rgba(123,30,43,.26), rgba(212,175,55,.08)) !important;
-  color: var(--uni-gold-soft) !important;
+  background: linear-gradient(135deg, rgba(139,30,63,.18), rgba(212,175,55,.08)) !important;
+  color: var(--accent-soft) !important;
   font-weight: 800 !important;
-  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+  font-size: 15px !important;
+  padding: 16px 14px !important;
+  border-bottom: 1px solid rgba(255,255,255,.06) !important;
+  white-space: nowrap !important;
 }
 
 thead th a{
-  color: var(--uni-gold-soft) !important;
+  color: var(--accent-soft) !important;
 }
 
+/* Filas */
 tbody tr{
-  background: rgba(13, 31, 56, .92) !important;
-  transition: all .18s ease;
+  background: rgba(14, 28, 50, .90) !important;
+  transition: background .18s ease !important;
 }
 
 tbody tr:nth-child(even){
-  background: rgba(16, 36, 63, .96) !important;
+  background: rgba(18, 34, 59, .96) !important;
 }
 
 tbody tr:hover{
-  background: rgba(24, 48, 82, .99) !important;
+  background: rgba(24, 44, 74, .98) !important;
 }
 
 tbody td,
 tbody th,
 td,
 th{
-  color: var(--uni-text) !important;
+  color: var(--text) !important;
   border-bottom: 1px solid rgba(255,255,255,.05) !important;
+  padding: 16px 14px !important;
+  vertical-align: middle !important;
+  font-size: 15px !important;
 }
 
+/* Enlaces de tabla */
 table a,
 tbody a,
 td a{
@@ -355,100 +346,42 @@ td a{
 table a:hover,
 tbody a:hover,
 td a:hover{
-  color: var(--uni-gold-soft) !important;
+  color: var(--accent-soft) !important;
 }
 
-#result_list thead th:first-child{
-  border-top-left-radius: 16px !important;
+/* Más aire entre columnas importantes */
+th:nth-child(2), td:nth-child(2),
+th:nth-child(3), td:nth-child(3),
+th:nth-child(4), td:nth-child(4),
+th:nth-child(5), td:nth-child(5),
+th:nth-child(6), td:nth-child(6){
+  min-width: 140px !important;
 }
 
-#result_list thead th:last-child{
-  border-top-right-radius: 16px !important;
-}
-
-#result_list tbody tr:last-child td:first-child{
-  border-bottom-left-radius: 16px !important;
-}
-
-#result_list tbody tr:last-child td:last-child{
-  border-bottom-right-radius: 16px !important;
-}
-
-/* =========================================================
-   ACCIONES DEL CHANGELIST
-   ========================================================= */
-#changelist-form .actions{
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  flex-wrap: wrap !important;
-  margin: 14px 0 !important;
-  padding: 14px 16px !important;
-  background: linear-gradient(135deg, rgba(123,30,43,.30), rgba(212,175,55,.14)) !important;
-  border: 1px solid rgba(212,175,55,.18) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 12px 28px rgba(0,0,0,.18) !important;
-  z-index: 50 !important;
-}
-
-#changelist-form .actions label,
-#changelist-form .actions span,
-#changelist-form .actions small{
-  color: var(--uni-text) !important;
-  font-weight: 700 !important;
-}
-
-#changelist-form .actions select{
-  min-width: 320px !important;
-  min-height: 42px !important;
-  display: inline-block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  background: rgba(8, 22, 39, .96) !important;
-  color: var(--uni-text) !important;
-  border: 1px solid rgba(255,255,255,.10) !important;
-  border-radius: 14px !important;
-}
-
-#changelist-form .actions button,
-#changelist-form .actions input[type="submit"],
-#changelist-form .actions input[type="button"],
-#changelist-form .actions .button,
-#changelist-form .actions a.button{
-  min-height: 42px !important;
-  padding: 0 18px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  border-radius: 13px !important;
-  border: 1px solid rgba(212,175,55,.18) !important;
-  background: linear-gradient(135deg, #7b1e2b, #9a2534) !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
-  box-shadow: 0 10px 24px rgba(123,30,43,.22) !important;
+/* Nombres y apellidos que no se vean aplastados */
+td{
+  line-height: 1.35 !important;
 }
 
 /* =========================================================
-   FILTROS LATERALES
+   PANEL LATERAL DE FILTROS
    ========================================================= */
 #changelist-filter{
-  background: var(--uni-card-2) !important;
-  border: 1px solid var(--uni-line) !important;
+  background: var(--card-strong) !important;
+  border: 1px solid var(--line) !important;
   border-radius: 18px !important;
-  box-shadow: var(--uni-shadow) !important;
-  padding: 12px !important;
+  box-shadow: var(--shadow-soft) !important;
+  padding: 16px !important;
 }
 
 #changelist-filter h2{
   background: transparent !important;
-  color: var(--uni-text) !important;
+  color: var(--text) !important;
   font-size: 18px !important;
   font-weight: 800 !important;
   border-bottom: 1px solid rgba(255,255,255,.06) !important;
   padding-bottom: 10px !important;
-  margin-bottom: 10px !important;
+  margin-bottom: 12px !important;
 }
 
 #changelist-filter ul,
@@ -459,49 +392,75 @@ td a:hover{
 }
 
 #changelist-filter li{
-  margin: 0 0 6px 0 !important;
+  margin-bottom: 8px !important;
 }
 
 #changelist-filter li a{
   display: block !important;
   border-radius: 12px !important;
-  padding: 8px 10px !important;
-  color: var(--uni-text-soft) !important;
+  padding: 10px 12px !important;
+  color: var(--text-soft) !important;
   text-decoration: none !important;
-  transition: all .18s ease !important;
 }
 
 #changelist-filter li a:hover{
-  background: rgba(212,175,55,.08) !important;
-  color: #ffffff !important;
+  background: rgba(255,255,255,.04) !important;
+  color: #fff !important;
 }
 
 #changelist-filter li.selected a{
-  background: linear-gradient(90deg, rgba(123,30,43,.58), rgba(212,175,55,.12)) !important;
-  color: #ffffff !important;
-  font-weight: 800 !important;
-  border: 1px solid rgba(212,175,55,.20) !important;
+  background: linear-gradient(90deg, rgba(139,30,63,.50), rgba(212,175,55,.10)) !important;
+  border: 1px solid rgba(212,175,55,.16) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+}
+
+/* =========================================================
+   ACCIONES DEL CHANGELIST
+   ========================================================= */
+#changelist-form .actions{
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  margin: 16px 0 !important;
+  padding: 14px 16px !important;
+  background: linear-gradient(135deg, rgba(139,30,63,.18), rgba(212,175,55,.08)) !important;
+  border: 1px solid rgba(212,175,55,.12) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+#changelist-form .actions label,
+#changelist-form .actions span,
+#changelist-form .actions small{
+  color: var(--text) !important;
+  font-weight: 700 !important;
+}
+
+#changelist-form .actions select{
+  min-width: 280px !important;
 }
 
 /* =========================================================
    BREADCRUMBS
    ========================================================= */
 div.breadcrumbs{
-  background: rgba(8, 23, 42, 0.76) !important;
+  background: rgba(12, 23, 40, 0.70) !important;
   border: 1px solid rgba(255,255,255,.05) !important;
   border-radius: 16px !important;
   margin-bottom: 16px !important;
-  box-shadow: var(--uni-shadow-soft) !important;
-  padding: 10px 14px !important;
+  box-shadow: var(--shadow-soft) !important;
+  padding: 12px 14px !important;
 }
 
 div.breadcrumbs,
 div.breadcrumbs a{
-  color: var(--uni-text-soft) !important;
+  color: var(--text-soft) !important;
 }
 
 div.breadcrumbs a:hover{
-  color: var(--uni-gold-soft) !important;
+  color: var(--accent-soft) !important;
 }
 
 /* =========================================================
@@ -511,7 +470,7 @@ ul.messagelist li{
   border-radius: 14px !important;
   padding: 12px 14px !important;
   border: 1px solid rgba(255,255,255,.08) !important;
-  box-shadow: var(--uni-shadow-soft) !important;
+  box-shadow: var(--shadow-soft) !important;
 }
 
 ul.messagelist li.success{
@@ -533,22 +492,21 @@ ul.messagelist li.error{
    PAGINACIÓN
    ========================================================= */
 .paginator{
-  background: transparent !important;
-  color: var(--uni-text-soft) !important;
-  margin-top: 14px !important;
+  color: var(--text-soft) !important;
+  margin-top: 16px !important;
 }
 
 .paginator a{
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-width: 36px !important;
-  height: 36px !important;
+  min-width: 38px !important;
+  height: 38px !important;
   padding: 0 10px !important;
   border-radius: 10px !important;
   background: rgba(255,255,255,.04) !important;
   border: 1px solid rgba(255,255,255,.06) !important;
-  color: var(--uni-text) !important;
+  color: var(--text) !important;
   text-decoration: none !important;
 }
 
@@ -558,45 +516,37 @@ ul.messagelist li.error{
 }
 
 /* =========================================================
-   CHECKBOXES Y DETALLES
+   CHECKBOXES
    ========================================================= */
 input[type="checkbox"]{
   min-height: auto !important;
-  accent-color: #9a2534;
+  transform: scale(1.08);
+  accent-color: #b3264d;
 }
 
-.selector h2,
-.selector .selector-filter{
-  color: var(--uni-text) !important;
+/* =========================================================
+   EVITAR QUE TODO SE VEA APRETADO
+   ========================================================= */
+main table,
+#result_list,
+.results{
+  font-size: 15px !important;
 }
+
+main .rounded-lg,
+main .rounded-md,
+main .rounded-xl{
+  padding: 18px !important;
+}
+
+/* deja respirar el contenido */
+main .gap-2{ gap: .85rem !important; }
+main .gap-3{ gap: 1rem !important; }
+main .gap-4{ gap: 1.15rem !important; }
 
 /* =========================================================
    SCROLL
    ========================================================= */
 *{
   scrollbar-color: rgba(212,175,55,.25) transparent;
-}
-
-/* =========================================================
-   PEQUEÑOS AJUSTES VISUALES
-   ========================================================= */
-.submit-row{
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 10px !important;
-  align-items: center !important;
-  padding-top: 14px !important;
-}
-
-.inline-group{
-  background: transparent !important;
-}
-
-.related-widget-wrapper-link{
-  color: var(--uni-gold-soft) !important;
-  font-weight: 700 !important;
-}
-
-.related-widget-wrapper-link:hover{
-  color: #fff !important;
 }
