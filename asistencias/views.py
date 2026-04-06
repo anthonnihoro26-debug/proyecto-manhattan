@@ -1037,6 +1037,9 @@ def api_scan_asistencia(request):
                     "apellidos": "",
                     "nombres": "",
                     "condicion": "",
+                    "nombre_completo": "",
+                    "genero": "M",
+                    "tratamiento": "profesor",
                 },
             },
             status=404,
@@ -1053,7 +1056,32 @@ def api_scan_asistencia(request):
         "apellidos": profesor.apellidos,
         "nombres": profesor.nombres,
         "condicion": profesor.condicion,
+        "nombre_completo": profesor.nombre_completo,
+        "genero": profesor.genero_voz,
+        "tratamiento": profesor.tratamiento_voz,
     }
+
+    if hoy.weekday() in (5, 6):
+        logger.info(
+            "FIN_DE_SEMANA escaner bloqueado | dni=%s fecha=%s user=%s ip=%s",
+            dni,
+            hoy,
+            request.user.username,
+            ip,
+        )
+        return JsonResponse(
+            {
+                "ok": False,
+                "estado": "FIN_DE_SEMANA",
+                "tipo_evento": "FIN_DE_SEMANA",
+                "accion": "ninguna",
+                "duplicado": False,
+                "msg": "No se registra asistencia sábados ni domingos.",
+                "detalle": "El escáner solo registra asistencias de lunes a viernes.",
+                "profesor": payload_prof,
+            },
+            status=400,
+        )
 
     dia_especial = _obtener_dia_especial(hoy)
     if dia_especial:
@@ -1163,7 +1191,7 @@ def api_scan_asistencia(request):
             },
         },
         status=201,
-    )
+    ) 
 
 # =========================================================
 # CRON PRIVADO

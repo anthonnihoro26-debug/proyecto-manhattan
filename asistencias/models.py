@@ -33,6 +33,55 @@ class Profesor(models.Model):
         nom = (self.nombres or "").strip()
         return f"{ap} {nom}".strip() or "Profesor(a)"
 
+    def _normalizar_nombre(self, valor):
+        valor = (valor or "").strip().lower()
+        valor = unicodedata.normalize("NFKD", valor)
+        valor = "".join(ch for ch in valor if not unicodedata.combining(ch))
+        return valor
+
+    def _primer_nombre(self):
+        limpio = self._normalizar_nombre(self.nombres)
+        partes = [p for p in limpio.split() if p]
+        return partes[0] if partes else ""
+
+    def es_probablemente_mujer(self):
+        """
+        Heurística simple para voz.
+        Si luego quieres exactitud total, se puede agregar un campo sexo.
+        """
+        primero = self._primer_nombre()
+
+        nombres_femeninos = {
+            "ana", "andrea", "adriana", "alejandra", "alicia", "alma", "amparo",
+            "angela", "anahi", "beatriz", "brenda", "carla", "carmen", "carolina",
+            "cecilia", "claudia", "cristina", "daniela", "diana", "edith", "elena",
+            "elizabeth", "elvira", "erika", "eva", "fiorella", "flor", "gabriela",
+            "gloria", "gisela", "ingrid", "isabel", "jacqueline", "jennifer",
+            "jessica", "johana", "juana", "juliana", "karina", "katia", "laura",
+            "lilian", "lourdes", "lucia", "luisa", "maria", "mariana", "maribel",
+            "mariela", "martha", "melissa", "mercedes", "mirian", "monica",
+            "noemi", "norma", "pamela", "patricia", "paola", "rosa", "rosario",
+            "roxana", "silvia", "sonia", "susana", "teresa", "valeria", "vanessa",
+            "veronica", "victoria", "vilma", "ximena", "yolanda"
+        }
+
+        if primero in nombres_femeninos:
+            return True
+
+        # respaldo simple
+        if primero.endswith("a"):
+            return True
+
+        return False
+
+    @property
+    def genero_voz(self):
+        return "F" if self.es_probablemente_mujer() else "M"
+
+    @property
+    def tratamiento_voz(self):
+        return "profesora" if self.es_probablemente_mujer() else "profesor"
+
     def __str__(self):
         estado = "" if self.activo else " [INACTIVO]"
         return f"{self.apellidos} {self.nombres}{estado}"
