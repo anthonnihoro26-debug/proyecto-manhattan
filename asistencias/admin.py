@@ -57,8 +57,6 @@ class ExportCsvMixin:
 # =========================================================
 @admin.register(Profesor)
 class ProfesorAdmin(admin.ModelAdmin):
-    change_list_template = "admin/asistencias/profesor/change_list.html"
-
     list_display = (
         "dni",
         "codigo",
@@ -126,7 +124,7 @@ class ProfesorAdmin(admin.ModelAdmin):
 
     @admin.display(description="Sexo", ordering="sexo")
     def sexo_badge(self, obj):
-        valor = (obj.sexo or "").strip().upper()
+        valor = (getattr(obj, "sexo", "") or "").strip().upper()
 
         if valor == "F":
             return format_html(
@@ -445,8 +443,6 @@ class JustificacionAsistenciaAdmin(ExportCsvMixin, admin.ModelAdmin):
 # =========================================================
 @admin.register(DiaEspecial)
 class DiaEspecialAdmin(admin.ModelAdmin):
-    change_list_template = "admin/asistencias/diaespecial/change_list.html"
-
     list_display = (
         "fecha",
         "tipo_badge",
@@ -682,9 +678,9 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
             )
         return format_html(
             '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
-            'font-weight:700;font-size:12px;color:#dc2626;'
-            'background:rgba(220,38,38,.16);border:1px solid rgba(220,38,38,.28);">'
-            'Fallido</span>'
+                'font-weight:700;font-size:12px;color:#dc2626;'
+                'background:rgba(220,38,38,.16);border:1px solid rgba(220,38,38,.28);">'
+                'Fallido</span>'
         )
 
     @admin.display(description="Estado geo", ordering="estado_geo")
