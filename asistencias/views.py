@@ -1191,7 +1191,7 @@ def api_scan_asistencia(request):
             },
         },
         status=201,
-    ) 
+    )
 
 # =========================================================
 # CRON PRIVADO

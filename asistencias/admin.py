@@ -64,13 +64,14 @@ class ProfesorAdmin(admin.ModelAdmin):
         "codigo",
         "apellidos",
         "nombres",
+        "sexo_badge",
         "condicion_badge",
         "jornada_badge",
         "activo_badge",
         "email",
     )
     search_fields = ("dni", "apellidos", "nombres", "email", "codigo")
-    list_filter = ("condicion", "tipo_jornada", "activo")
+    list_filter = ("sexo", "condicion", "tipo_jornada", "activo")
     ordering = ("apellidos", "nombres")
     list_per_page = 20
     list_display_links = ("dni", "apellidos", "nombres")
@@ -90,9 +91,9 @@ class ProfesorAdmin(admin.ModelAdmin):
                     "codigo",
                     "dni",
                     ("apellidos", "nombres"),
-                    ("condicion", "tipo_jornada"),
+                    ("sexo", "condicion"),
+                    ("tipo_jornada", "activo"),
                     "email",
-                    "activo",
                 )
             },
         ),
@@ -121,6 +122,25 @@ class ProfesorAdmin(admin.ModelAdmin):
             request,
             f"Se desactivaron {actualizados} profesor(es).",
             level=messages.WARNING,
+        )
+
+    @admin.display(description="Sexo", ordering="sexo")
+    def sexo_badge(self, obj):
+        valor = (obj.sexo or "").strip().upper()
+
+        if valor == "F":
+            return format_html(
+                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                'font-weight:700;font-size:12px;color:#db2777;'
+                'background:rgba(219,39,119,.16);border:1px solid rgba(219,39,119,.28);">'
+                'Femenino</span>'
+            )
+
+        return format_html(
+            '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+            'font-weight:700;font-size:12px;color:#2563eb;'
+            'background:rgba(37,99,235,.16);border:1px solid rgba(37,99,235,.28);">'
+            'Masculino</span>'
         )
 
     @admin.display(description="Condición", ordering="condicion")
