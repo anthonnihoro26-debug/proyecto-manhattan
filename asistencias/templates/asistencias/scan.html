@@ -1448,28 +1448,89 @@
       }catch(e){}
     }
 
+    function normalizeVoiceText(v){
+      return String(v || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function voiceNameLooksMale(voice){
+      const txt = normalizeVoiceText(`${voice?.name || ""} ${voice?.voiceURI || ""}`);
+
+      const maleHints = [
+        "male", "mascul", "man", "hombre",
+        "pablo", "jorge", "diego", "carlos", "miguel", "juan",
+        "jorge", "alejandro", "antonio", "jose", "pedro", "raul",
+        "david", "gabriel", "martin", "mateo", "tomas", "sergio",
+        "andres", "manuel", "fernando", "roberto", "ricardo", "alvaro"
+      ];
+
+      return maleHints.some(h => txt.includes(h));
+    }
+
+    function isSpanishVoice(voice){
+      const lang = String(voice?.lang || "").toLowerCase();
+      return (
+        lang.includes("es") ||
+        lang === "es" ||
+        lang.startsWith("es-") ||
+        lang.startsWith("es_")
+      );
+    }
+
+    function scoreVoice(voice){
+      let score = 0;
+      const lang = String(voice?.lang || "").toLowerCase();
+      const name = normalizeVoiceText(`${voice?.name || ""} ${voice?.voiceURI || ""}`);
+
+      if (isSpanishVoice(voice)) score += 100;
+      if (lang.includes("es-pe") || lang.includes("es_pe")) score += 40;
+      if (lang.includes("es-419")) score += 28;
+      if (lang.includes("es-mx")) score += 22;
+      if (lang.includes("es-es")) score += 18;
+
+      if (voiceNameLooksMale(voice)) score += 70;
+
+      if (name.includes("google")) score += 6;
+      if (name.includes("microsoft")) score += 6;
+      if (name.includes("natural")) score += 6;
+      if (voice?.localService) score += 3;
+
+      return score;
+    }
+
     function initSpeech(){
       try{
         if (!("speechSynthesis" in window)){
           speechReady = false;
+          preferredVoice = null;
           updateVoiceUI();
           return;
         }
 
         const voices = window.speechSynthesis.getVoices() || [];
-        preferredVoice =
-          voices.find(v => /es-PE/i.test(v.lang)) ||
-          voices.find(v => /es_PE/i.test(v.lang)) ||
-          voices.find(v => /es-419/i.test(v.lang)) ||
-          voices.find(v => /es-MX/i.test(v.lang)) ||
-          voices.find(v => /es-ES/i.test(v.lang)) ||
-          voices.find(v => /^es/i.test(v.lang)) ||
-          null;
+        if (!voices.length){
+          speechReady = false;
+          preferredVoice = null;
+          updateVoiceUI();
+          return;
+        }
 
-        speechReady = true;
+        const spanishVoices = voices.filter(isSpanishVoice);
+
+        if (spanishVoices.length){
+          preferredVoice = [...spanishVoices].sort((a,b) => scoreVoice(b) - scoreVoice(a))[0];
+        } else {
+          preferredVoice = voices[0] || null;
+        }
+
+        speechReady = !!preferredVoice;
         updateVoiceUI();
       }catch(e){
         speechReady = false;
+        preferredVoice = null;
         updateVoiceUI();
       }
     }
@@ -1483,7 +1544,7 @@
       voiceBadge.classList.toggle("off", !ready);
       voiceHud.classList.toggle("off", !ready);
 
-      voiceBadgeText.textContent = ready ? "Voz inteligente activada" : "Voz desactivada";
+      voiceBadgeText.textContent = ready ? "Voz masculina activada" : "Voz desactivada";
       voiceHudText.textContent = ready ? "Voz lista" : "Voz apagada";
     }
 
@@ -1557,8 +1618,8 @@
 
           const msg = new SpeechSynthesisUtterance(cleaned);
           msg.lang = preferredVoice?.lang || "es-PE";
-          msg.rate = 0.93;
-          msg.pitch = 1.0;
+          msg.rate = 0.90;
+          msg.pitch = 0.78;
           msg.volume = 1.0;
           if (preferredVoice) msg.voice = preferredVoice;
 

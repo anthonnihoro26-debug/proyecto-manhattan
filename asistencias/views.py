@@ -192,9 +192,9 @@ def _tipo_display_dia_especial(dia_especial):
 # HELPERS GEOLOGIN
 # =========================================================
 JORGE_GEOFENCE_USERNAME = "jorge"
-JORGE_GEOFENCE_LAT = -12.0360672
-JORGE_GEOFENCE_LNG = -77.0033333
-JORGE_GEOFENCE_RADIUS_M = 30.0
+JORGE_GEOFENCE_LAT = -12.02161
+JORGE_GEOFENCE_LNG = -77.04883
+JORGE_GEOFENCE_RADIUS_M = 50.0
 
 
 def _to_float_maybe(value):
