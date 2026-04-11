@@ -35,7 +35,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--solo-con-registros",
             action="store_true",
-            help="Si se activa, solo procesa profesores con al menos un registro E/J o justificación en el rango.",
+            help="Si se activa, solo procesa profesores con al menos un registro E o justificación oficial en el rango.",
         )
 
     def _rango_lun_vie(self):
@@ -227,32 +227,33 @@ class Command(BaseCommand):
         Evalúa los 5 días (Lun-Vie) y devuelve estado por día:
         - FERIADO / HUELGA / PARO / SUSPENSIÓN / REMOTO / NO LABORABLE (si existe DíaEspecial activo)
         - ASISTIÓ (si hay E)
-        - JUSTIFICACIÓN (si no hay E pero sí J o JustificacionAsistencia)
-        - FALTA (si no hay E ni J ni día especial)
+        - JUSTIFICACIÓN (solo si existe JustificacionAsistencia oficial)
+        - FALTA (si no hay E, ni justificación oficial, ni día especial)
 
         IMPORTANTE:
         - Usa Asistencia.fecha para ubicar cada registro en su día real
-        - NO usa fecha_hora.date() para clasificar justificaciones
+        - NO usa fecha_hora.date() para clasificar
         - Los días especiales NO cuentan como falta
         - Los días especiales NO se consideran días evaluables
         - El cumplimiento se calcula sobre días evaluables reales
+        - Asistencia(tipo="J") ya NO convierte una falta en justificación
         """
 
-        qs = (
+        qs_entradas = (
             Asistencia.objects.filter(
                 profesor=prof,
                 fecha__gte=lunes.date(),
                 fecha__lte=viernes_fin.date(),
-                tipo__in=["E", "J"],
+                tipo="E",
             )
             .order_by("fecha", "fecha_hora", "id")
         )
 
-        por_fecha = {}
-        for a in qs:
+        por_fecha_entradas = {}
+        for a in qs_entradas:
             key = a.fecha
             dt_local = timezone.localtime(a.fecha_hora) if a.fecha_hora else None
-            por_fecha.setdefault(key, []).append((a, dt_local))
+            por_fecha_entradas.setdefault(key, []).append((a, dt_local))
 
         justis_qs = (
             JustificacionAsistencia.objects.filter(
@@ -280,7 +281,7 @@ class Command(BaseCommand):
 
         for idx, d in enumerate(dias):
             fecha_date = d.date()
-            regs = por_fecha.get(fecha_date, [])
+            regs_e = por_fecha_entradas.get(fecha_date, [])
             justis = justis_por_fecha.get(fecha_date, [])
             dia_especial = self._obtener_dia_especial(fecha_date)
 
@@ -298,42 +299,14 @@ class Command(BaseCommand):
                 dias_especiales += 1
             else:
                 dias_evaluables += 1
+                primer_e = regs_e[0] if regs_e else None
 
-                tiene_e = False
-                tiene_j = False
-                primer_e = None
-                primer_j = None
-
-                for a, dt_local in regs:
-                    tipo = (a.tipo or "").strip().upper()
-                    if tipo == "E" and not tiene_e:
-                        tiene_e = True
-                        primer_e = (a, dt_local)
-                    elif tipo == "J" and not tiene_j:
-                        tiene_j = True
-                        primer_j = (a, dt_local)
-
-                if tiene_e and primer_e:
+                if primer_e:
                     _, dt_local = primer_e
                     estado = "ASISTIÓ"
                     asistio += 1
                     hora_registrada = dt_local.strftime("%H:%M") if dt_local else "-"
                     observacion = "Se registró asistencia en la fecha evaluada."
-
-                elif tiene_j and primer_j:
-                    a, dt_local = primer_j
-                    estado = "JUSTIFICACIÓN"
-                    justificaciones += 1
-                    hora_registrada = dt_local.strftime("%H:%M") if dt_local else "-"
-                    try:
-                        motivo = a.get_motivo_display()
-                    except Exception:
-                        motivo = (getattr(a, "motivo", "") or "").strip() or "Sin motivo"
-
-                    detalle = (getattr(a, "detalle", "") or "").strip()
-                    observacion = f"Justificación registrada ({motivo})."
-                    if detalle:
-                        observacion = f"Justificación registrada ({motivo}): {detalle}"
 
                 elif justis:
                     j = justis[0]
@@ -370,7 +343,7 @@ class Command(BaseCommand):
         cumplimiento_base = asistio + justificaciones
         cumplimiento = round(cumplimiento_base * 100 / total_dias, 1) if total_dias else 0
 
-        total_registros_eyj = qs.count()
+        total_registros_eyj = qs_entradas.count()
         total_justificaciones_ext = justis_qs.count()
         total_registros_relevantes = total_registros_eyj + total_justificaciones_ext
 
