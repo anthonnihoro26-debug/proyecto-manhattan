@@ -584,8 +584,10 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
         "ver_mapa_google",
         "ver_mapa_osm",
     )
+
     list_filter = ("exito", "estado_geo", "permiso_geo", "fecha_hora_servidor")
     search_fields = ("username_intentado", "usuario__username", "ip", "device_info")
+
     readonly_fields = (
         "usuario",
         "username_intentado",
@@ -603,6 +605,7 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
         "ver_mapa_osm",
         "mapa_embed_html",
     )
+
     ordering = ("-fecha_hora_servidor",)
     list_per_page = 20
     list_select_related = ("usuario",)
@@ -658,11 +661,31 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("usuario")
 
+    # =====================================================
+    # PERMISOS
+    # Solo el superusuario "anthonny" puede ver evidencias
+    # =====================================================
+    def puede_ver_evidencias(self, request):
+        return (
+            request.user.is_authenticated
+            and request.user.is_superuser
+            and request.user.username.lower() == "anthonny"
+        )
+
+    def has_module_permission(self, request):
+        return self.puede_ver_evidencias(request)
+
+    def has_view_permission(self, request, obj=None):
+        return self.puede_ver_evidencias(request)
+
     def has_add_permission(self, request):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return True
+        return self.puede_ver_evidencias(request)
+
+    def has_delete_permission(self, request, obj=None):
+        return self.puede_ver_evidencias(request)
 
     def _coords_ok(self, obj):
         return obj.latitud is not None and obj.longitud is not None
@@ -676,11 +699,12 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
                 'background:rgba(22,163,74,.16);border:1px solid rgba(22,163,74,.28);">'
                 'Correcto</span>'
             )
+
         return format_html(
             '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
-                'font-weight:700;font-size:12px;color:#dc2626;'
-                'background:rgba(220,38,38,.16);border:1px solid rgba(220,38,38,.28);">'
-                'Fallido</span>'
+            'font-weight:700;font-size:12px;color:#dc2626;'
+            'background:rgba(220,38,38,.16);border:1px solid rgba(220,38,38,.28);">'
+            'Fallido</span>'
         )
 
     @admin.display(description="Estado geo", ordering="estado_geo")
@@ -705,8 +729,7 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
         return format_html(
             '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
             'font-weight:700;font-size:12px;color:{};background:{};border:1px solid {};">'
-            '{}'
-            "</span>",
+            "{}</span>",
             color,
             bg,
             border,
@@ -735,19 +758,20 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
         return format_html(
             '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
             'font-weight:700;font-size:12px;color:{};background:{};border:1px solid {};">'
-            '{}'
-            "</span>",
+            "{}</span>",
             color,
             bg,
             border,
             valor,
         )
 
-    @admin.display(description="Mapa (Google)")
+    @admin.display(description="Mapa Google")
     def ver_mapa_google(self, obj):
         if not self._coords_ok(obj):
             return "—"
+
         url = f"https://www.google.com/maps?q={obj.latitud},{obj.longitud}"
+
         return format_html(
             '<a href="{}" target="_blank" rel="noopener" '
             'style="display:inline-block;padding:6px 12px;border-radius:10px;'
@@ -756,14 +780,16 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
             url,
         )
 
-    @admin.display(description="Mapa (OSM)")
+    @admin.display(description="Mapa OSM")
     def ver_mapa_osm(self, obj):
         if not self._coords_ok(obj):
             return "—"
+
         url = (
             f"https://www.openstreetmap.org/?mlat={obj.latitud}&mlon={obj.longitud}"
             f"#map=18/{obj.latitud}/{obj.longitud}"
         )
+
         return format_html(
             '<a href="{}" target="_blank" rel="noopener" '
             'style="display:inline-block;padding:6px 12px;border-radius:10px;'
@@ -780,6 +806,7 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
         lat = float(obj.latitud)
         lng = float(obj.longitud)
         delta = 0.003
+
         left = lng - delta
         right = lng + delta
         bottom = lat - delta
@@ -790,6 +817,7 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
             f"?bbox={left}%2C{bottom}%2C{right}%2C{top}"
             f"&layer=mapnik&marker={lat}%2C{lng}"
         )
+
         return format_html(
             '<iframe src="{}" width="100%" height="320" '
             'style="border:1px solid #d1d5db;border-radius:12px;background:#fff;" '
