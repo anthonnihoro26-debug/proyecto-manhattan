@@ -142,3 +142,32 @@ El correo ahora presenta solo dos indicadores visuales compactos (Asistencias y 
 Días evaluables, faltas, justificaciones y días especiales aparecen en texto discreto debajo.
 Los cálculos, la tabla diaria, las rutas de simulación y prueba individual, los destinatarios y los envíos no cambiaron.
 No ejecuta automáticamente correos al instalarse.
+
+
+## Versión V5: Gmail muestra la tabla directamente
+
+Cuando se envían varias pruebas del mismo reporte semanal al mismo Gmail, Gmail
+puede ocultar texto repetido detrás del botón `•••` (*Mostrar contenido recortado*).
+Eso lo decide Gmail; no significa que el reporte haya sido enviado incompleto.
+
+**Corrección V5:** cada envío individual de prueba utiliza un asunto exclusivo,
+por ejemplo `UNI | Prueba individual A1B2C3D4 | Reporte semanal | ...`, para evitar
+que Gmail agrupe las pruebas de la misma semana. El asunto de los reportes
+a los demás docentes permanece igual. La plantilla de dos tarjetas y el detalle
+diario tampoco cambian. Además, el logotipo solo se incluye con URL pública:
+si no está configurada, se muestra la sigla UNI en lugar de incrustar una imagen
+base64 grande en el HTML (que puede provocar recorte por tamaño).
+
+Para comprobarlo, sube los archivos a GitHub, espera a que Render indique **Live**,
+y vuelve a ejecutar **una sola vez** la URL individual:
+
+```
+https://proyecto-manhattan.onrender.com/cron/reporte-asistencia/?token=TU_TOKEN&modo=reporte-prueba&correo=anthonnihoro26@gmail.com
+```
+
+Si el mensaje antiguo sigue con `•••`, no cambia retroactivamente. Abre el correo
+**nuevo**, de asunto distinto, para comprobar. Si Gmail vuelve a ocultar el detalle,
+pulsa `•••` para verlo. No es posible imponer al servicio Gmail que siempre muestre
+todo el contenido, pero esta corrección evita la causa habitual por hilos repetidos.
+
+**No ejecutes el enlace original sin `modo`: envía reportes a todos los docentes.**

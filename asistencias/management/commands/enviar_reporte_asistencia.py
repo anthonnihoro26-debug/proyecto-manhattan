@@ -1,14 +1,12 @@
 from datetime import timedelta
 import requests
 import html
-import base64
-import os
 import unicodedata
+import uuid
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from django.conf import settings
-from django.contrib.staticfiles import finders
 from django.templatetags.static import static
 
 from asistencias.models import Profesor, Asistencia, JustificacionAsistencia, DiaEspecial
@@ -57,18 +55,6 @@ class Command(BaseCommand):
     def _dias_lun_vie(self, lunes_dt):
         base = lunes_dt.replace(hour=0, minute=0, second=0, microsecond=0)
         return [base + timedelta(days=i) for i in range(5)]
-
-    def _logo_data_uri(self) -> str:
-        static_path = "asistencias/img/uni_logo.png"
-        try:
-            abs_path = finders.find(static_path)
-            if not abs_path or not os.path.exists(abs_path):
-                return ""
-            with open(abs_path, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode("utf-8")
-            return f"data:image/png;base64,{b64}"
-        except Exception:
-            return ""
 
     def _logo_public_url(self) -> str:
         base = (getattr(settings, "PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
@@ -485,7 +471,7 @@ class Command(BaseCommand):
         saltados_sin_registros = 0
         bloqueados = 0
 
-        logo_uri = self._logo_data_uri()
+        # Sin imágenes base64 incrustadas: evitan correos HTML enormes en Gmail.
         logo_url = self._logo_public_url()
 
         for prof in profesores:
@@ -528,6 +514,13 @@ class Command(BaseCommand):
                 f"UNI | Reporte Semanal de Asistencia Docente | "
                 f"{desde:%d/%m/%Y} - {hasta:%d/%m/%Y}"
             )
+            # Gmail agrupa/oculta texto repetido cuando las pruebas llegan con el
+            # mismo asunto durante la misma semana. Diferenciar solo las pruebas
+            # individuales reduce el riesgo de que el detalle diario se repliegue.
+            # El asunto de los envíos generales permanece idéntico.
+            if email_profesor and not dry_run:
+                codigo_prueba = uuid.uuid4().hex[:8].upper()
+                subject = f"UNI | Prueba individual {codigo_prueba} | Reporte semanal | {desde:%d/%m/%Y} - {hasta:%d/%m/%Y}"
 
             body_lines = [
                 f"Estimado(a) {nombre},",
@@ -611,7 +604,7 @@ class Command(BaseCommand):
             rango_html = html.escape(f"{desde:%d/%m/%Y %H:%M} a {hasta:%d/%m/%Y %H:%M}")
             cumplimiento_text = f"{cumplimiento:.1f}%".replace(".0%", "%")
 
-            img_src = (logo_url or "").strip() or (logo_uri or "").strip()
+            img_src = (logo_url or "").strip()
 
             if img_src:
                 logo_html = (

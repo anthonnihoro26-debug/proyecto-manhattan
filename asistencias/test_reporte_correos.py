@@ -113,3 +113,11 @@ class DisenoReporteInstitucionalTests(SimpleTestCase):
         self.assertIn('max-width:600px', source)
         self.assertIn('table-layout:fixed', source)
         self.assertIn('Día / Fecha', source)
+
+    def test_pruebas_tienen_asunto_unico_y_sin_logo_base64(self):
+        from pathlib import Path
+        from asistencias.management.commands import enviar_reporte_asistencia
+        source = Path(enviar_reporte_asistencia.__file__).read_text(encoding="utf-8")
+        self.assertIn("uuid.uuid4().hex[:8]", source)
+        self.assertIn("if email_profesor and not dry_run:", source)
+        self.assertNotIn('data:image/png;base64,', source)
