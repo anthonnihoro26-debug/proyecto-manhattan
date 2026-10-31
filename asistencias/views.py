@@ -1210,7 +1210,11 @@ def trigger_reporte_asistencia(request):
     /cron/reporte-asistencia/?token=...&modo=verificar    -> comprueba variables (no envía)
     /cron/reporte-asistencia/?token=...&modo=simular     -> genera resumen (no envía)
     /cron/reporte-asistencia/?token=...&modo=prueba&correo=x@y.com
-                                                       -> un SOLO email de prueba
+                                                       -> un SOLO email técnico
+    /cron/reporte-asistencia/?token=...&modo=reporte-simular&correo=x@y.com
+                                                       -> simulación de UN docente
+    /cron/reporte-asistencia/?token=...&modo=reporte-prueba&correo=x@y.com
+                                                       -> UN reporte real del docente
 
     No requiere cambiar ninguna tabla ni aplicar migraciones.
     """
@@ -1263,6 +1267,47 @@ def trigger_reporte_asistencia(request):
             "ok": True, "modo": "prueba",
             "mensaje": "Brevo aceptó un solo correo de prueba; comprobar su recepción.",
         })
+
+    if modo in {"reporte-simular", "reporte-prueba"}:
+        # El correo debe coincidir con el de un ÚNICO docente existente.
+        # A diferencia de "prueba", aquí sí se genera su reporte semanal real.
+        correo = (request.GET.get("correo") or "").strip()
+        try:
+            validate_email(correo)
+        except ValidationError:
+            return JsonResponse({"ok": False, "error": "Correo del docente no válido."}, status=400)
+        out = StringIO()
+        try:
+            call_command(
+                "enviar_reporte_asistencia",
+                email_profesor=correo,
+                max_emails=1,
+                dry_run=(modo == "reporte-simular"),
+                stdout=out,
+                stderr=out,
+            )
+        except Exception:
+            logger.exception("Error en reporte individual de asistencia")
+            return JsonResponse({
+                "ok": False,
+                "modo": modo,
+                "error": "No se procesó el reporte individual. Revisa los logs de Render;"
+                         " verifica que este correo pertenezca a un solo docente.",
+            }, status=400)
+        texto = out.getvalue()
+        if modo == "reporte-prueba":
+            if "[DONE] Enviados: 1." not in texto:
+                return JsonResponse({
+                    "ok": False, "modo": modo,
+                    "mensaje": "No se confirmó ningún envío individual. Revisa el registro de Render.",
+                    "output": texto,
+                }, status=502)
+            return JsonResponse({
+                "ok": True, "modo": modo,
+                "mensaje": "Brevo aceptó UN reporte semanal real para el docente indicado. Comprueba Gmail.",
+                "output": texto,
+            })
+        return JsonResponse({"ok": True, "modo": modo, "output": texto})
 
     if modo == "simular":
         out = StringIO()

@@ -61,3 +61,44 @@ class ReporteCorreosTests(SimpleTestCase):
         response = self.get(token="token-solo-de-pruebas", modo="otro")
         self.assertEqual(response.status_code, 400)
         cmd.assert_not_called()
+
+    @patch("asistencias.views.call_command")
+    def test_simular_un_reporte_filtra_correo_y_no_envia(self, cmd):
+        response = self.get(
+            token="token-solo-de-pruebas", modo="reporte-simular", correo="prueba@example.com"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(cmd.call_args.kwargs["email_profesor"], "prueba@example.com")
+        self.assertTrue(cmd.call_args.kwargs["dry_run"])
+        self.assertEqual(cmd.call_args.kwargs["max_emails"], 1)
+
+    @patch("asistencias.views.call_command")
+    def test_reporte_real_solo_un_docente(self, cmd):
+        def simulate_one_report(*args, **kwargs):
+            kwargs["stdout"].write("[SEND] to=prueba@example.com\n[DONE] Enviados: 1. Bloqueados: 0. Errores: 0.\n")
+        cmd.side_effect = simulate_one_report
+        response = self.get(
+            token="token-solo-de-pruebas", modo="reporte-prueba", correo="prueba@example.com"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(cmd.call_args.kwargs["email_profesor"], "prueba@example.com")
+        self.assertFalse(cmd.call_args.kwargs["dry_run"])
+        self.assertEqual(cmd.call_args.kwargs["max_emails"], 1)
+
+    @patch("asistencias.views.call_command")
+    def test_reporte_real_error_no_confirma_envio(self, cmd):
+        def simulate_failure(*args, **kwargs):
+            kwargs["stdout"].write("[DONE] Enviados: 0. Bloqueados: 0. Errores: 1.\n")
+        cmd.side_effect = simulate_failure
+        response = self.get(
+            token="token-solo-de-pruebas", modo="reporte-prueba", correo="prueba@example.com"
+        )
+        self.assertEqual(response.status_code, 502)
+
+    @patch("asistencias.views.call_command")
+    def test_reporte_real_rechaza_correo_invalido(self, cmd):
+        response = self.get(
+            token="token-solo-de-pruebas", modo="reporte-prueba", correo="mal-correo"
+        )
+        self.assertEqual(response.status_code, 400)
+        cmd.assert_not_called()

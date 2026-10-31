@@ -5,7 +5,7 @@ import base64
 import os
 import unicodedata
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.staticfiles import finders
@@ -31,6 +31,12 @@ class Command(BaseCommand):
             "--dry-run",
             action="store_true",
             help="No envía correos, solo imprime en consola.",
+        )
+        parser.add_argument(
+            "--email-profesor",
+            type=str,
+            default="",
+            help="Enviar el reporte exclusivamente al profesor con este correo exacto (debe existir solo uno).",
         )
         parser.add_argument(
             "--solo-con-registros",
@@ -477,6 +483,20 @@ class Command(BaseCommand):
             )
 
         profesores = Profesor.objects.all().order_by("apellidos", "nombres")
+
+        # La selección por destinatario se aplica ANTES de generar o enviar reportes.
+        # Nunca permite un correo ambiguo: cero o varios docentes => ningún envío.
+        email_profesor = (options.get("email_profesor") or "").strip()
+        if email_profesor:
+            profesores = profesores.filter(email__iexact=email_profesor)
+            coincidencias = profesores.count()
+            if coincidencias != 1:
+                raise CommandError(
+                    "No se enviaron correos: el correo indicado debe pertenecer "
+                    "a exactamente UN docente (coincidencias: %s)." % coincidencias
+                )
+            max_emails = 1
+            self.stdout.write("[FILTRO] Modo docente único: se procesará exactamente un registro.")
 
         enviados = 0
         errores = 0

@@ -84,3 +84,28 @@ Las pruebas utilizan mocks; no envían nada a Brevo. Debes configurar Django y s
 - El sistema original **no registra qué docentes ya recibieron el reporte**. Para envío a más de 40 o reintentos sin duplicados será necesaria una mejora posterior, que debe revisarse con cuidado.
 - Una prueba con `modo=prueba` solo confirma que Brevo acepta un mensaje neutro; no confirma que los reportes de todos los docentes estén bien ni garantiza la entrega final en la bandeja.
 - Si ves *Suspended* en Render, la web o la PostgreSQL no funcionarán correctamente hasta que estén activos.
+
+## 6. Enviar UN REPORTE REAL a UN SOLO docente (antes del envío general)
+
+La versión incluye dos modos nuevos que usan el mismo cálculo y diseño HTML
+que el correo semanal real, sin cambiar base de datos, migraciones ni modelos.
+
+**Simular ese docente sin enviar nada:**
+
+```
+https://proyecto-manhattan.onrender.com/cron/reporte-asistencia/?token=TU_TOKEN&modo=reporte-simular&correo=anthonnihoro26@gmail.com
+```
+
+**Enviar UN reporte real solo a ese docente:**
+
+```
+https://proyecto-manhattan.onrender.com/cron/reporte-asistencia/?token=TU_TOKEN&modo=reporte-prueba&correo=anthonnihoro26@gmail.com
+```
+
+- Confirma que el correo está registrado en exactamente **un** docente. Si no existe o está repetido, la función se niega a enviar.
+- Solo genera el reporte de ese docente y lo envía al correo que figura en su ficha. **No envía a los otros docentes**.
+- El correo se arma con la información real de asistencias/justificaciones de esa semana, no con un texto técnico.
+- El enlace nuevo requiere **actualizar GitHub y completar un despliegue en Render**. No lo ejecutes hasta que Render aparezca Live con el nuevo commit.
+- Abre el enlace real una sola vez y comprueba recepción y diseño en Gmail. Repetir la URL provoca otro envío de ese mismo reporte.
+- El enlace original sin `modo` conserva el envío general, con sus precauciones (40 máximo por ejecución; sin deduplicación).
+- **No compartas el token completo**. Como va en la URL, queda en el historial del navegador.
