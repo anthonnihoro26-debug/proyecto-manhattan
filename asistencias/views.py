@@ -2,6 +2,7 @@ import json
 import logging
 import math
 import re
+import secrets
 from datetime import datetime, time, timedelta
 from io import BytesIO, StringIO
 
@@ -13,6 +14,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.staticfiles import finders
 from django.core.management import call_command
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Min, Q
@@ -23,6 +26,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt, csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.cache import never_cache
 from openpyxl import Workbook
 from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -1197,18 +1201,89 @@ def api_scan_asistencia(request):
 # CRON PRIVADO
 # =========================================================
 @csrf_exempt
+@never_cache
 @require_GET
 def trigger_reporte_asistencia(request):
+    """Cron histórico con modos opcionales seguros para comprobar Brevo.
+
+    /cron/reporte-asistencia/?token=...                 -> envío original a docentes
+    /cron/reporte-asistencia/?token=...&modo=verificar    -> comprueba variables (no envía)
+    /cron/reporte-asistencia/?token=...&modo=simular     -> genera resumen (no envía)
+    /cron/reporte-asistencia/?token=...&modo=prueba&correo=x@y.com
+                                                       -> un SOLO email de prueba
+
+    No requiere cambiar ninguna tabla ni aplicar migraciones.
+    """
     token = (request.GET.get("token") or "").strip()
     secret = (getattr(settings, "REPORT_TRIGGER_TOKEN", "") or "").strip()
-
-    if not secret or token != secret:
+    if not secret or not secrets.compare_digest(token, secret):
         return HttpResponseForbidden("Forbidden")
 
-    out = StringIO()
-    call_command("enviar_reporte_asistencia", stdout=out, stderr=out)
-    texto = out.getvalue()
+    modo = (request.GET.get("modo") or "enviar").strip().lower()
+    if modo == "verificar":
+        # No se imprimen secretos ni sus valores.
+        configured = {
+            "BREVO_API_KEY": bool((getattr(settings, "BREVO_API_KEY", "") or "").strip()),
+            "BREVO_SENDER_EMAIL": bool((getattr(settings, "BREVO_SENDER_EMAIL", "") or "").strip()),
+        }
+        return JsonResponse({
+            "ok": all(configured.values()),
+            "modo": "verificar",
+            "configuracion": configured,
+            "nota": "Solo comprueba que existan las variables; no valida la clave en Brevo y no envía correos.",
+        }, status=200 if all(configured.values()) else 503)
 
+    if modo == "prueba":
+        correo = (request.GET.get("correo") or "").strip()
+        try:
+            validate_email(correo)
+        except ValidationError:
+            return JsonResponse({"ok": False, "error": "Correo de prueba no válido."}, status=400)
+        from asistencias.management.commands.enviar_reporte_asistencia import Command
+
+        asunto = "UNI | Prueba de correo de Proyecto Manhattan"
+        contenido = (
+            "Prueba de configuración de Brevo de Proyecto Manhattan.\n"
+            "Este mensaje es una prueba técnica. No contiene datos ni reportes de docentes."
+        )
+        contenido_html = (
+            "<p><strong>Prueba de correo de Proyecto Manhattan</strong></p>"
+            "<p>La conexión con Brevo funciona. Este es un mensaje técnico "
+            "sin datos de asistencia de los docentes.</p>"
+        )
+        try:
+            Command()._brevo_send_email(correo, asunto, contenido, contenido_html)
+        except Exception:
+            logger.exception("Error al enviar el correo de prueba de Brevo")
+            return JsonResponse({
+                "ok": False, "modo": "prueba",
+                "error": "Brevo no aceptó el envío. Revisar los logs de Render (sin compartir claves).",
+            }, status=502)
+        return JsonResponse({
+            "ok": True, "modo": "prueba",
+            "mensaje": "Brevo aceptó un solo correo de prueba; comprobar su recepción.",
+        })
+
+    if modo == "simular":
+        out = StringIO()
+        try:
+            call_command("enviar_reporte_asistencia", dry_run=True, stdout=out, stderr=out)
+        except Exception:
+            logger.exception("Error en la simulación del reporte de asistencia")
+            return JsonResponse({"ok": False, "modo": "simular", "error": "Error de simulación; revisar logs."}, status=500)
+        return JsonResponse({"ok": True, "modo": "simular", "output": out.getvalue()})
+
+    if modo != "enviar":
+        return JsonResponse({"ok": False, "error": "Modo no permitido."}, status=400)
+
+    # Compatibilidad: el enlace original sin modo sigue enviando reportes reales.
+    out = StringIO()
+    try:
+        call_command("enviar_reporte_asistencia", stdout=out, stderr=out)
+    except Exception:
+        logger.exception("Error general del envío de reportes de asistencia")
+        return JsonResponse({"ok": False, "error": "Error al generar reportes; revisar logs."}, status=500)
+    texto = out.getvalue()
     return JsonResponse({"ok": True, "msg": "Reporte ejecutado", "output": texto})
 
 
