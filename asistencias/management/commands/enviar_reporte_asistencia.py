@@ -91,78 +91,78 @@ class Command(BaseCommand):
 
         if t == "ASISTIÓ":
             return (
-                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                '<span style="display:inline-block;padding:3px 7px;border-radius:8px;'
                 'background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;'
-                'font-size:12px;font-weight:700;">ASISTIÓ</span>'
+                'font-size:10px;font-weight:700;">ASISTIÓ</span>'
             )
 
         if t == "JUSTIFICACIÓN":
             return (
-                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                '<span style="display:inline-block;padding:3px 7px;border-radius:8px;'
                 'background:#f5f3ff;border:1px solid #ddd6fe;color:#5b21b6;'
-                'font-size:12px;font-weight:700;">JUSTIFICACIÓN</span>'
+                'font-size:10px;font-weight:700;">JUSTIFICACIÓN</span>'
             )
 
         if t == "FALTA":
             return (
-                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                '<span style="display:inline-block;padding:3px 7px;border-radius:8px;'
                 'background:#fef2f2;border:1px solid #fecaca;color:#991b1b;'
-                'font-size:12px;font-weight:700;">FALTA</span>'
+                'font-size:10px;font-weight:700;">FALTA</span>'
             )
 
         if t == "FERIADO":
             return (
-                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                '<span style="display:inline-block;padding:3px 7px;border-radius:8px;'
                 'background:#fff7ed;border:1px solid #fdba74;color:#9a3412;'
-                'font-size:12px;font-weight:700;">FERIADO</span>'
+                'font-size:10px;font-weight:700;">FERIADO</span>'
             )
 
         if t == "HUELGA":
             return (
-                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                '<span style="display:inline-block;padding:3px 7px;border-radius:8px;'
                 'background:#fff7ed;border:1px solid #fdba74;color:#7c2d12;'
-                'font-size:12px;font-weight:700;">HUELGA</span>'
+                'font-size:10px;font-weight:700;">HUELGA</span>'
             )
 
         if t == "PARO":
             return (
-                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                '<span style="display:inline-block;padding:3px 7px;border-radius:8px;'
                 'background:#fff7ed;border:1px solid #fdba74;color:#9a3412;'
-                'font-size:12px;font-weight:700;">PARO DE TRANSPORTISTAS</span>'
+                'font-size:10px;font-weight:700;">PARO</span>'
             )
 
         if t == "SUSPENSIÓN":
             return (
-                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                '<span style="display:inline-block;padding:3px 7px;border-radius:8px;'
                 'background:#fffbeb;border:1px solid #fcd34d;color:#92400e;'
-                'font-size:12px;font-weight:700;">SUSPENSIÓN</span>'
+                'font-size:10px;font-weight:700;">SUSPENSIÓN</span>'
             )
 
         if t == "REMOTO":
             return (
-                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                '<span style="display:inline-block;padding:3px 7px;border-radius:8px;'
                 'background:#eff6ff;border:1px solid #93c5fd;color:#1d4ed8;'
-                'font-size:12px;font-weight:700;">JORNADA REMOTA</span>'
+                'font-size:10px;font-weight:700;">REMOTO</span>'
             )
 
         if t == "NO LABORABLE":
             return (
-                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                '<span style="display:inline-block;padding:3px 7px;border-radius:8px;'
                 'background:#f8fafc;border:1px solid #cbd5e1;color:#475569;'
-                'font-size:12px;font-weight:700;">NO LABORABLE</span>'
+                'font-size:10px;font-weight:700;">NO LABORABLE</span>'
             )
 
         if t == "DÍA ESPECIAL":
             return (
-                '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+                '<span style="display:inline-block;padding:3px 7px;border-radius:8px;'
                 'background:#f8fafc;border:1px solid #cbd5e1;color:#475569;'
-                'font-size:12px;font-weight:700;">DÍA ESPECIAL</span>'
+                'font-size:10px;font-weight:700;">DÍA ESPECIAL</span>'
             )
 
         return (
-            '<span style="display:inline-block;padding:4px 10px;border-radius:999px;'
+            '<span style="display:inline-block;padding:3px 7px;border-radius:8px;'
             'background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;'
-            'font-size:12px;font-weight:700;">REGISTRO</span>'
+            'font-size:10px;font-weight:700;">REGISTRO</span>'
         )
 
     def _obtener_dia_especial(self, fecha_date):
@@ -376,33 +376,14 @@ class Command(BaseCommand):
         fecha_lunes = (now + timedelta(days=3)).strftime("%d/%m/%Y")
 
         return f"""
-        <div style="margin-top:18px;background:#fff8eb;border:1px solid #f59e0b;border-radius:12px;padding:14px 16px;">
-          <div style="font-size:14px;font-weight:800;color:#92400e;margin-bottom:8px;">
-            📌 Plazo para presentación de justificaciones
-          </div>
-          <div style="font-size:13px;color:#5b3b00;line-height:1.7;">
-            El presente reporte ha sido remitido el día <b>viernes {fecha_viernes}</b>.
-            En caso de registrarse alguna inasistencia en condición de <b>FALTA</b>,
-            el plazo máximo para presentar la justificación correspondiente será hasta el día
-            <b>lunes {fecha_lunes}</b>.
-          </div>
-          <div style="margin-top:8px;font-size:12px;color:#6b4f1d;line-height:1.6;">
-            Se recomienda regularizar oportunamente cualquier observación,
-            a fin de mantener actualizado el control de asistencia institucional.
-          </div>
-        </div>
-        """.strip()
-
-    def _bloque_marcha_blanca_html(self):
-        return """
-        <div style="margin-top:18px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px 16px;">
-          <div style="font-size:14px;font-weight:800;color:#1d4ed8;margin-bottom:8px;">
-            ℹ️ Aviso importante
-          </div>
-          <div style="font-size:13px;color:#1e3a8a;line-height:1.7;">
-            Recordar que nos encontramos en <b>proceso de marcha blanca</b>.
-          </div>
-        </div>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+               style="margin-top:14px;border-collapse:separate;background-color:#fbf5eb;border:1px solid #ead9bf;border-radius:9px;">
+          <tr><td style="padding:11px 13px;font-size:12px;line-height:1.6;color:#72552f;">
+            <strong>Plazo de justificación:</strong> si registra una falta en el reporte
+            remitido el viernes {fecha_viernes}, puede presentar su justificación
+            hasta el lunes {fecha_lunes}.
+          </td></tr>
+        </table>
         """.strip()
 
     def _brevo_send_email(self, to_email: str, subject: str, body_text: str, body_html: str):
@@ -575,14 +556,32 @@ class Command(BaseCommand):
                     f"{d['dia_nombre']} {d['fecha']} | {d['estado']} | Hora: {d['hora_registrada']} | {d['observacion']}"
                 )
 
+                # El resumen conserva las observaciones especiales y justificaciones.
+                # Para estados ordinarios se evita repetir frases largas en cada fila.
+                if d["estado"] == "ASISTIÓ":
+                    detalle = (
+                        f"Entrada: {d['hora_registrada']}"
+                        if d["hora_registrada"] != "-"
+                        else "Asistencia registrada"
+                    )
+                elif d["estado"] == "FALTA":
+                    detalle = "Sin marca ni justificación"
+                else:
+                    detalle = d["observacion"] or "—"
+
                 rows_dias_html.append(
                     f"""
                     <tr>
-                      <td style="padding:12px 12px;border-bottom:1px solid #eef2f7;color:#111827;font-weight:700;">{html.escape(d['dia_nombre'])}</td>
-                      <td style="padding:12px 12px;border-bottom:1px solid #eef2f7;color:#111827;">{html.escape(d['fecha'])}</td>
-                      <td style="padding:12px 12px;border-bottom:1px solid #eef2f7;">{d['badge_html']}</td>
-                      <td style="padding:12px 12px;border-bottom:1px solid #eef2f7;color:#111827;">{html.escape(d['hora_registrada'])}</td>
-                      <td style="padding:12px 12px;border-bottom:1px solid #eef2f7;color:#374151;line-height:1.5;">{html.escape(d['observacion'])}</td>
+                      <td valign="top" style="padding:10px 9px;border-bottom:1px solid #e9ecef;font-size:11px;line-height:1.5;color:#1f2937;">
+                        <strong style="font-size:12px;">{html.escape(d['dia_nombre'])}</strong><br />
+                        <span style="color:#64748b;">{html.escape(d['fecha'])}</span>
+                      </td>
+                      <td valign="top" style="padding:10px 6px;border-bottom:1px solid #e9ecef;">
+                        {d['badge_html']}
+                      </td>
+                      <td valign="top" style="padding:10px 9px;border-bottom:1px solid #e9ecef;font-size:11px;line-height:1.55;color:#475569;word-break:break-word;">
+                        {html.escape(detalle)}
+                      </td>
                     </tr>
                     """.strip()
                 )
@@ -597,8 +596,6 @@ class Command(BaseCommand):
                 ]
 
             body_lines += [
-                "",
-                "Recordar que estamos en proceso de marcha blanca.",
                 "",
                 "Este reporte ha sido generado automáticamente por Proyecto Manhattan para fines de seguimiento y control institucional.",
                 "Si identifica alguna inconsistencia, comuníquese con el área administradora del sistema.",
@@ -617,143 +614,128 @@ class Command(BaseCommand):
             img_src = (logo_url or "").strip() or (logo_uri or "").strip()
 
             if img_src:
-                logo_html = f"""
-                  <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
-                    <div style="height:56px;width:56px;border-radius:14px;background:rgba(255,255,255,.15);padding:6px;border:1px solid rgba(255,255,255,.35);box-sizing:border-box;">
-                      <img src="{html.escape(img_src)}" alt="UNI"
-                           style="height:100%;width:100%;object-fit:contain;display:block;" />
-                    </div>
-                    <div>
-                      <div style="font-size:14px;font-weight:900;opacity:.95;">Universidad Nacional de Ingeniería</div>
-                      <div style="font-size:12px;opacity:.9;">Proyecto Manhattan · Control de Asistencia Docente</div>
-                    </div>
-                  </div>
-                """.strip()
+                logo_html = (
+                    f'<img src="{html.escape(img_src, quote=True)}" alt="UNI" width="42" height="42" '
+                    'style="display:block;width:42px;height:42px;object-fit:contain;border:0;" />'
+                )
             else:
-                logo_html = """
-                  <div style="font-size:14px;font-weight:900;opacity:.95;">
-                    Proyecto Manhattan · Control de Asistencia Docente
-                  </div>
-                """.strip()
+                logo_html = (
+                    '<span style="font-family:Arial,Helvetica,sans-serif;font-size:18px;'
+                    'font-weight:800;color:#f1ddb0;">UNI</span>'
+                )
 
             bloque_plazo_html = self._bloque_plazo_html(now, faltas)
-            bloque_marcha_blanca_html = self._bloque_marcha_blanca_html()
-
+            # La plantilla usa tablas de presentación para evitar que Gmail desborde
+            # las tarjetas y para adaptarse a pantallas pequeñas.
             body_html = f"""
-            <div style="margin:0;padding:0;background:#f3f4f6;">
-              <div style="max-width:820px;margin:0 auto;padding:30px 14px;font-family:Arial,Helvetica,sans-serif;">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reporte semanal de asistencia docente</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f3f2f0;font-family:Arial,Helvetica,sans-serif;color:#24303a;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f2f0" style="width:100%;border-collapse:collapse;">
+    <tr><td align="center" style="padding:20px 9px;">
+      <table role="presentation" align="center" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"
+             style="width:100%;max-width:600px;border-collapse:separate;background-color:#ffffff;border:1px solid #e5e2df;border-radius:12px;overflow:hidden;">
+        <tr><td bgcolor="#702f3c" style="padding:16px 20px;background-color:#702f3c;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+            <tr>
+              <td width="48" valign="middle" style="width:48px;padding-right:10px;">{logo_html}</td>
+              <td valign="middle" style="font-size:10px;line-height:1.5;color:#f5eadd;letter-spacing:.3px;">
+                <strong style="font-size:12px;color:#ffffff;">Universidad Nacional de Ingeniería</strong><br />
+                Departamento Académico de Ciencias Básicas
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+        <tr><td bgcolor="#c9ae7b" height="3" style="height:3px;line-height:3px;font-size:1px;background-color:#c9ae7b;">&nbsp;</td></tr>
+        <tr><td style="padding:22px 20px 20px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#956e53;text-transform:uppercase;">CONTROL DE ASISTENCIA DOCENTE</div>
+          <div style="font-size:21px;font-weight:800;line-height:1.25;color:#333039;margin-top:6px;">Reporte semanal de asistencia</div>
+          <div style="font-size:12px;line-height:1.6;color:#69717b;margin-top:6px;">Del <strong>{desde:%d/%m/%Y}</strong> al <strong>{hasta:%d/%m/%Y}</strong></div>
+          <div style="height:1px;background:#ece8e5;margin:18px 0;"></div>
 
-                <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.06);">
+          <div style="font-size:13px;line-height:1.6;color:#303943;">Estimado(a) <strong>{nombre_html}</strong>:</div>
+          <div style="font-size:12px;line-height:1.65;color:#53606e;margin-top:7px;">
+            Compartimos su resumen de asistencia de la semana. A continuación encontrará
+            el resultado general y el detalle de cada día hábil.
+          </div>
 
-                  <div style="padding:22px 24px;background:linear-gradient(135deg,#8b1118 0%, #b91c1c 55%, #111827 100%);color:#ffffff;">
-                    {logo_html}
-                    <div style="font-size:23px;font-weight:900;letter-spacing:.2px;margin-top:8px;">
-                      Reporte Semanal de Asistencia Docente
-                    </div>
-                    <div style="font-size:13px;opacity:.95;margin-top:7px;line-height:1.5;">
-                      Periodo evaluado: <b>{rango_html}</b>
-                    </div>
-                  </div>
+          <div style="font-size:13px;font-weight:800;color:#38333a;margin:19px 0 8px;">Resumen de la semana</div>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;table-layout:fixed;border-collapse:separate;">
+            <tr>
+              <td width="33.33%" style="padding:3px;" valign="top">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f7f6;border:1px solid #e9e5e1;border-radius:8px;"><tr><td style="padding:10px 7px;">
+                  <div style="font-size:10px;line-height:1.3;color:#65717d;">Días evaluables</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#333b45;">{dias_evaluables}</div>
+                </td></tr></table>
+              </td>
+              <td width="33.33%" style="padding:3px;" valign="top">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6faf8;border:1px solid #deebe5;border-radius:8px;"><tr><td style="padding:10px 7px;">
+                  <div style="font-size:10px;line-height:1.3;color:#57716a;">Asistencias</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#2c7857;">{asistio}</div>
+                </td></tr></table>
+              </td>
+              <td width="33.33%" style="padding:3px;" valign="top">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f9f7fb;border:1px solid #e8e3ed;border-radius:8px;"><tr><td style="padding:10px 7px;">
+                  <div style="font-size:10px;line-height:1.3;color:#72657b;">Justificaciones</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#76508d;">{justificaciones}</div>
+                </td></tr></table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:3px;" valign="top">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fcf8f7;border:1px solid #f0e2df;border-radius:8px;"><tr><td style="padding:10px 7px;">
+                  <div style="font-size:10px;line-height:1.3;color:#8b6862;">Faltas</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#a63e3a;">{faltas}</div>
+                </td></tr></table>
+              </td>
+              <td style="padding:3px;" valign="top">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#faf9f6;border:1px solid #eae6db;border-radius:8px;"><tr><td style="padding:10px 7px;">
+                  <div style="font-size:10px;line-height:1.3;color:#786d51;">Días especiales</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#997a42;">{dias_especiales}</div>
+                </td></tr></table>
+              </td>
+              <td style="padding:3px;" valign="top">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f7f6;border:1px solid #e9e5e1;border-radius:8px;"><tr><td style="padding:10px 7px;">
+                  <div style="font-size:10px;line-height:1.3;color:#65717d;">Cumplimiento</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#702f3c;">{cumplimiento_text}</div>
+                </td></tr></table>
+              </td>
+            </tr>
+          </table>
+          <div style="font-size:10px;line-height:1.5;color:#697480;padding:6px 3px 0;">
+            El cumplimiento considera asistencias y justificaciones sobre los días evaluables.
+            Los días especiales no se cuentan como falta.
+          </div>
 
-                  <div style="padding:22px 24px;color:#111827;">
+          <div style="font-size:13px;font-weight:800;color:#38333a;margin:21px 0 9px;">Detalle diario</div>
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;table-layout:fixed;border-collapse:collapse;border:1px solid #e6e8eb;font-family:Arial,Helvetica,sans-serif;">
+            <thead>
+              <tr bgcolor="#f8f7f6" style="background-color:#f8f7f6;text-align:left;">
+                <th width="25%" style="padding:10px 9px;border-bottom:1px solid #dfe3e7;font-size:11px;color:#5a626a;">Día / Fecha</th>
+                <th width="28%" style="padding:10px 6px;border-bottom:1px solid #dfe3e7;font-size:11px;color:#5a626a;">Estado</th>
+                <th width="47%" style="padding:10px 9px;border-bottom:1px solid #dfe3e7;font-size:11px;color:#5a626a;">Detalle</th>
+              </tr>
+            </thead>
+            <tbody>
+              {''.join(rows_dias_html)}
+            </tbody>
+          </table>
 
-                    <div style="font-size:15px;line-height:1.6;color:#111827;">
-                      Estimado(a) <b>{nombre_html}</b>:
-                    </div>
-
-                    <div style="font-size:14px;color:#4b5563;line-height:1.65;margin-top:10px;">
-                      Reciba un cordial saludo. A continuación, se remite su <b>reporte semanal de asistencia docente</b>,
-                      correspondiente al periodo indicado. La evaluación considera los días hábiles de <b>lunes a viernes</b>,
-                      clasificando cada fecha como <b>Asistió</b>, <b>Justificación</b>, <b>Día especial</b> o <b>Falta</b> según los registros del sistema.
-                    </div>
-
-                    <div style="margin-top:10px;font-size:13px;color:#6b7280;line-height:1.55;">
-                      El porcentaje de cumplimiento se calcula únicamente sobre los <b>días evaluables reales</b>.
-                      Los días especiales institucionales <b>no se consideran falta</b> ni reducen el resultado del docente.
-                    </div>
-
-                    <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
-                      <div style="flex:1;min-width:140px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:14px;">
-                        <div style="font-size:12px;color:#64748b;">Días semana</div>
-                        <div style="font-size:26px;font-weight:900;color:#0f172a;line-height:1.1;margin-top:4px;">{total_dias_semana}</div>
-                      </div>
-
-                      <div style="flex:1;min-width:140px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:14px;padding:14px;">
-                        <div style="font-size:12px;color:#4338ca;">Días evaluables</div>
-                        <div style="font-size:26px;font-weight:900;color:#4338ca;line-height:1.1;margin-top:4px;">{dias_evaluables}</div>
-                      </div>
-
-                      <div style="flex:1;min-width:140px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px;">
-                        <div style="font-size:12px;color:#065f46;">Asistió</div>
-                        <div style="font-size:26px;font-weight:900;color:#065f46;line-height:1.1;margin-top:4px;">{asistio}</div>
-                      </div>
-
-                      <div style="flex:1;min-width:140px;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:14px;padding:14px;">
-                        <div style="font-size:12px;color:#5b21b6;">Justificaciones</div>
-                        <div style="font-size:26px;font-weight:900;color:#5b21b6;line-height:1.1;margin-top:4px;">{justificaciones}</div>
-                      </div>
-
-                      <div style="flex:1;min-width:140px;background:#fff7ed;border:1px solid #fdba74;border-radius:14px;padding:14px;">
-                        <div style="font-size:12px;color:#9a3412;">Días especiales</div>
-                        <div style="font-size:26px;font-weight:900;color:#9a3412;line-height:1.1;margin-top:4px;">{dias_especiales}</div>
-                      </div>
-
-                      <div style="flex:1;min-width:140px;background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px;">
-                        <div style="font-size:12px;color:#991b1b;">Faltas</div>
-                        <div style="font-size:26px;font-weight:900;color:#991b1b;line-height:1.1;margin-top:4px;">{faltas}</div>
-                      </div>
-
-                      <div style="flex:1;min-width:140px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px;">
-                        <div style="font-size:12px;color:#1d4ed8;">Cumplimiento</div>
-                        <div style="font-size:26px;font-weight:900;color:#1d4ed8;line-height:1.1;margin-top:4px;">{cumplimiento_text}</div>
-                      </div>
-                    </div>
-
-                    <div style="margin-top:22px;">
-                      <div style="font-size:15px;font-weight:800;color:#111827;margin-bottom:10px;">
-                        Evaluación diaria (Lunes a Viernes)
-                      </div>
-
-                      <div style="border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
-                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                          <thead>
-                            <tr style="background:#f8fafc;color:#374151;text-align:left;">
-                              <th style="padding:12px 12px;border-bottom:1px solid #e5e7eb;">Día</th>
-                              <th style="padding:12px 12px;border-bottom:1px solid #e5e7eb;">Fecha</th>
-                              <th style="padding:12px 12px;border-bottom:1px solid #e5e7eb;">Estado</th>
-                              <th style="padding:12px 12px;border-bottom:1px solid #e5e7eb;">Hora registrada</th>
-                              <th style="padding:12px 12px;border-bottom:1px solid #e5e7eb;">Observación</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {''.join(rows_dias_html)}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {bloque_plazo_html}
-                    {bloque_marcha_blanca_html}
-
-                    <div style="margin-top:18px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;">
-                      <div style="font-size:12px;color:#475569;line-height:1.6;">
-                        Si identifica alguna observación o inconsistencia en la información mostrada, por favor comuníquese con el área administradora del sistema para su revisión y validación correspondiente.
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-
-                <div style="text-align:center;color:#94a3b8;font-size:12px;line-height:1.6;margin-top:14px;">
-                  <div><b style="color:#64748b;">Proyecto Manhattan</b> · Sistema de Control de Asistencia Docente</div>
-                  <div>Departamento Académico de Ciencias Básicas · Facultad de Ingeniería Civil</div>
-                  <div>Universidad Nacional de Ingeniería</div>
-                  <div>Correo automático · No responder directamente a este mensaje</div>
-                  <div style="margin-top:4px;">© {timezone.localtime(timezone.now()).strftime("%Y")}</div>
-                </div>
-
-              </div>
-            </div>
+          {bloque_plazo_html}
+          <div style="font-size:11px;line-height:1.6;color:#66717d;margin-top:16px;">
+            Si encuentra una inconsistencia, contacte al área administradora del sistema
+            para solicitar la revisión correspondiente.
+          </div>
+        </td></tr>
+        <tr><td bgcolor="#f8f7f6" style="background-color:#f8f7f6;border-top:1px solid #ece8e5;padding:14px 20px;text-align:center;">
+          <div style="font-size:11px;font-weight:700;color:#574d53;line-height:1.5;">Proyecto Manhattan · Control de Asistencia Docente</div>
+          <div style="font-size:10px;line-height:1.55;color:#7a818a;">Universidad Nacional de Ingeniería · Facultad de Ingeniería Civil</div>
+          <div style="font-size:10px;line-height:1.55;color:#8f959b;margin-top:3px;">Mensaje automático · Por favor, no responder</div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
             """.strip()
 
             if dry_run:

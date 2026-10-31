@@ -102,3 +102,14 @@ class ReporteCorreosTests(SimpleTestCase):
         )
         self.assertEqual(response.status_code, 400)
         cmd.assert_not_called()
+
+
+class DisenoReporteInstitucionalTests(SimpleTestCase):
+    def test_plantilla_sin_marcha_blanca_y_con_tabla_compacta(self):
+        from pathlib import Path
+        from asistencias.management.commands import enviar_reporte_asistencia
+        source = Path(enviar_reporte_asistencia.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("marcha blanca", source.lower())
+        self.assertIn('max-width:600px', source)
+        self.assertIn('table-layout:fixed', source)
+        self.assertIn('Día / Fecha', source)

@@ -109,3 +109,28 @@ https://proyecto-manhattan.onrender.com/cron/reporte-asistencia/?token=TU_TOKEN&
 - Abre el enlace real una sola vez y comprueba recepción y diseño en Gmail. Repetir la URL provoca otro envío de ese mismo reporte.
 - El enlace original sin `modo` conserva el envío general, con sus precauciones (40 máximo por ejecución; sin deduplicación).
 - **No compartas el token completo**. Como va en la URL, queda en el historial del navegador.
+
+
+## 7. Plantilla institucional compacta (nueva versión)
+
+El correo de asistencia usa un diseño institucional guinda/dorado discreto, con ancho máximo
+aproximado de 600 px, tablas compatibles con Gmail y seis indicadores compactos.
+Se retiró por completo el mensaje de **marcha blanca** tanto del HTML como de la
+versión de texto; se conserva el cálculo de asistencia, justificaciones, días especiales,
+faltas, cumplimiento y todos los mecanismos de envío del código anterior.
+
+**Primero comprueba SOLO el reporte real de tu docente de prueba:**
+
+```
+https://proyecto-manhattan.onrender.com/cron/reporte-asistencia/?token=TU_TOKEN&modo=reporte-simular&correo=anthonnihoro26@gmail.com
+```
+
+Cuando aparezca un solo docente sin errores, utiliza **una sola vez**:
+
+```
+https://proyecto-manhattan.onrender.com/cron/reporte-asistencia/?token=TU_TOKEN&modo=reporte-prueba&correo=anthonnihoro26@gmail.com
+```
+
+No olvides que estas URL solo estarán disponibles tras desplegar la nueva versión en Render.
+El envío general (sin `modo`) sigue siendo real y no tiene protección contra duplicados.
+No lo ejecutes hasta validar los reportes y destinatarios.
