@@ -843,6 +843,15 @@
           Usuario: <span style="font-weight:950;">{{ request.user.username }}</span>
         </div>
 
+        {% if request.user.is_staff %}
+          <a class="btnx btnx-primary" href="{% url 'gestion_justificar' %}" style="text-decoration:none;">
+            <i class="bi bi-calendar2-check"></i> Justificar varios días
+          </a>
+          <a class="btnx btnx-primary" href="{% url 'gestion_inicio' %}" style="text-decoration:none;">
+            <i class="bi bi-speedometer2"></i> Gestión admin
+          </a>
+        {% endif %}
+
         <form method="post" action="{% url 'logout' %}" class="m-0">
           {% csrf_token %}
           <button type="submit" class="btnx btnx-danger">

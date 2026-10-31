@@ -449,7 +449,7 @@ class Command(BaseCommand):
                 )
             )
 
-        profesores = Profesor.objects.all().order_by("apellidos", "nombres")
+        profesores = Profesor.objects.filter(activo=True).order_by("apellidos", "nombres")
 
         # La selección por destinatario se aplica ANTES de generar o enviar reportes.
         # Nunca permite un correo ambiguo: cero o varios docentes => ningún envío.

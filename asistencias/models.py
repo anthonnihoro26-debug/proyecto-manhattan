@@ -359,3 +359,24 @@ class DiaEspecial(models.Model):
         if self.descripcion:
             base += f" - {self.descripcion}"
         return base
+
+class ReporteEnvio(models.Model):
+    """Control de un envío general por semana. Evita dobles envíos desde el panel/cron."""
+    ESTADOS = [("iniciado", "En proceso"), ("completado", "Completado"), ("parcial", "Parcial"), ("error", "Revisar error")]
+    semana_inicio = models.DateField(unique=True)
+    iniciado_en = models.DateTimeField(auto_now_add=True)
+    finalizado_en = models.DateTimeField(null=True, blank=True)
+    estado = models.CharField(max_length=12, choices=ESTADOS, default="iniciado")
+    origen = models.CharField(max_length=20, default="manual")
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    enviados = models.PositiveIntegerField(default=0)
+    errores = models.PositiveIntegerField(default=0)
+    resumen = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-iniciado_en"]
+        verbose_name = "Envío semanal"
+        verbose_name_plural = "Envíos semanales"
+
+    def __str__(self):
+        return f"Semana {self.semana_inicio:%d/%m/%Y} - {self.get_estado_display()}"

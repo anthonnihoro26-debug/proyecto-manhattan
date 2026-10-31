@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 
 class Command(BaseCommand):
-    help = "Crea/actualiza superusuario usando variables DJANGO_SUPERUSER_*"
+    help = "Crea superusuario inicial sin restablecer contraseñas existentes (DJANGO_SUPERUSER_*)"
 
     def handle(self, *args, **options):
         User = get_user_model()
@@ -18,14 +18,12 @@ class Command(BaseCommand):
 
         user, created = User.objects.get_or_create(username=username, defaults={"email": email})
 
-        # Siempre asegurar permisos y actualizar password
-        user.email = email
-        user.is_staff = True
-        user.is_superuser = True
-        user.set_password(password)
-        user.save()
-
         if created:
+            user.is_staff = True
+            user.is_superuser = True
+            user.set_password(password)
+            user.save(update_fields=["is_staff", "is_superuser", "password"])
             self.stdout.write(self.style.SUCCESS(f"Superusuario '{username}' creado."))
         else:
-            self.stdout.write(self.style.SUCCESS(f"Superusuario '{username}' actualizado (password/permisos)."))
+            # CRÍTICO: nunca restablecer contraseñas/permisos en cada deploy.
+            self.stdout.write(self.style.SUCCESS(f"El usuario '{username}' ya existe; se respetaron sus credenciales."))

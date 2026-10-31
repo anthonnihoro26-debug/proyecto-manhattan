@@ -1,0 +1,12 @@
+{% extends 'asistencias/gestion/base.html' %}
+{% block titulo %}Simulación de reportes | Manhattan{% endblock %}
+{% block contenido %}
+<div class="page-head"><div><div class="eyebrow">VISTA PREVIA SEGURA</div><h1>Simulación de reportes</h1>
+<p>Este resultado no envía ningún correo a los docentes.</p></div>
+<a class="btn subtle" href="{% url 'gestion_reportes' %}">Volver a reportes</a></div>
+<section class="panel"><h2>Resultado</h2>
+{% if error %}<div class="alert error">No se pudo completar la simulación.</div>{% else %}<div class="alert success">Simulación terminada. No se realizó ningún envío.</div>{% endif %}
+<pre class="simulacion-resultado">{{ salida }}</pre>
+<p class="hint">Antes de enviar a todos revisa los profesores inactivos, correos repetidos y el período.</p>
+</section>
+{% endblock %}

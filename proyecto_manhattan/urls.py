@@ -21,12 +21,18 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 
 from asistencias import views as asist_views
+from asistencias import gestion as gestion_views
 
 urlpatterns = [
-    # Logout exclusivo del admin: cierra sesión y vuelve al login del admin
+    path("gestion/", gestion_views.inicio, name="gestion_inicio"),
+    path("gestion/justificar/", gestion_views.justificar_rango, name="gestion_justificar"),
+    path("gestion/reportes/", gestion_views.reportes, name="gestion_reportes"),
+    path("gestion/reportes/simular/", gestion_views.simular_reportes, name="gestion_simular"),
+    path("gestion/reportes/enviar/", gestion_views.enviar_todos, name="gestion_enviar"),
+    # Cerrar sesión administrativa y volver al login ÚNICO de Manhattan
     path(
         "admin/logout/",
-        auth_views.LogoutView.as_view(next_page="/admin/login/"),
+        auth_views.LogoutView.as_view(next_page="/login/"),
         name="admin_logout",
     ),
 

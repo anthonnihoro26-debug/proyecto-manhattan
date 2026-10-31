@@ -51,10 +51,11 @@ class ReporteCorreosTests(SimpleTestCase):
         self.assertTrue(cmd.call_args.kwargs["dry_run"])
 
     @patch("asistencias.views.call_command")
-    def test_enlace_original_conserva_envio(self, cmd):
+    def test_enlace_original_bloquea_envio_masivo(self, cmd):
         response = self.get(token="token-solo-de-pruebas")
-        self.assertEqual(response.status_code, 200)
-        self.assertNotIn("dry_run", cmd.call_args.kwargs)
+        self.assertEqual(response.status_code, 405)
+        self.assertIn(b'gestion/reportes/', response.content)
+        cmd.assert_not_called()
 
     @patch("asistencias.views.call_command")
     def test_modo_no_permitido_no_envia(self, cmd):

@@ -22,6 +22,7 @@ from django.db.models import Min, Q
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt, csrf_protect, ensure_csrf_cookie
@@ -273,7 +274,18 @@ def login_view_geocerca(request):
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
-            return redirect(request.POST.get("next") or "post_login")
+            # Acceso administrativo desde EL MISMO login institucional de Manhattan.
+            # Nunca dependemos de una segunda pantalla de Django Admin.
+            if user.username.lower() == "admin" and user.is_staff and user.is_superuser:
+                return redirect("gestion_inicio")
+            # Evita redirigir a URLs externas proporcionadas por un formulario.
+            destino = request.POST.get("next") or ""
+            if destino and url_has_allowed_host_and_scheme(
+                destino, allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            ):
+                return redirect(destino)
+            return redirect("post_login")
 
     return render(request, "login.html", {"form": form})
 
@@ -449,6 +461,9 @@ def _build_historial_rows_por_dia(fecha, q="", condicion=""):
 @login_required
 def post_login_redirect(request):
     user = request.user
+
+    if user.username.lower() == "admin" and user.is_staff and user.is_superuser:
+        return redirect("gestion_inicio")
 
     if user.username.lower() == "anthonny" and user.is_superuser:
         return redirect("estadisticas_privadas")
@@ -1206,7 +1221,7 @@ def api_scan_asistencia(request):
 def trigger_reporte_asistencia(request):
     """Cron histórico con modos opcionales seguros para comprobar Brevo.
 
-    /cron/reporte-asistencia/?token=...                 -> envío original a docentes
+    /cron/reporte-asistencia/?token=...                 -> envío general DESHABILITADO (usar Gestión)
     /cron/reporte-asistencia/?token=...&modo=verificar    -> comprueba variables (no envía)
     /cron/reporte-asistencia/?token=...&modo=simular     -> genera resumen (no envía)
     /cron/reporte-asistencia/?token=...&modo=prueba&correo=x@y.com
@@ -1216,7 +1231,9 @@ def trigger_reporte_asistencia(request):
     /cron/reporte-asistencia/?token=...&modo=reporte-prueba&correo=x@y.com
                                                        -> UN reporte real del docente
 
-    No requiere cambiar ninguna tabla ni aplicar migraciones.
+    El envío masivo requiere sesión de administrador, POST y confirmación
+    a través de /gestion/reportes/. Se conservan los modos de diagnóstico
+    y prueba de un solo docente.
     """
     token = (request.GET.get("token") or "").strip()
     secret = (getattr(settings, "REPORT_TRIGGER_TOKEN", "") or "").strip()
@@ -1321,15 +1338,15 @@ def trigger_reporte_asistencia(request):
     if modo != "enviar":
         return JsonResponse({"ok": False, "error": "Modo no permitido."}, status=400)
 
-    # Compatibilidad: el enlace original sin modo sigue enviando reportes reales.
-    out = StringIO()
-    try:
-        call_command("enviar_reporte_asistencia", stdout=out, stderr=out)
-    except Exception:
-        logger.exception("Error general del envío de reportes de asistencia")
-        return JsonResponse({"ok": False, "error": "Error al generar reportes; revisar logs."}, status=500)
-    texto = out.getvalue()
-    return JsonResponse({"ok": True, "msg": "Reporte ejecutado", "output": texto})
+    # El antiguo enlace GET no puede disparar un envío masivo sin auditoría.
+    # Evitamos que un enlace guardado en el navegador salte el bloqueo semanal.
+    return JsonResponse({
+        "ok": False,
+        "modo": "enviar",
+        "mensaje": "Por seguridad, el envío a todos ahora se realiza desde el panel administrativo. "
+                   "Inicia sesión en Manhattan y abre Gestión > Reportes.",
+        "panel": "/gestion/reportes/",
+    }, status=405)
 
 
 # =========================================================

@@ -1,0 +1,18 @@
+{% load static %}
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block titulo %}Gestión Manhattan{% endblock %}</title><link rel="stylesheet" href="{% static 'asistencias/css/gestion.css' %}"></head>
+<body><aside class="sidebar"><a href="{% url 'gestion_inicio' %}" class="brand"><span class="brand-mark">UNI</span><span><b>PROYECTO MANHATTAN</b><small>Administración de Asistencias</small></span></a>
+<div class="menu-title">GESTIÓN ACADÉMICA</div><nav>
+<a href="{% url 'gestion_inicio' %}" class="{% if request.resolver_match.url_name == 'gestion_inicio' %}activo{% endif %}">▦ &nbsp; Resumen general</a>
+<a href="{% url 'admin:asistencias_profesor_changelist' %}">♙ &nbsp; Profesores</a>
+<a href="{% url 'admin:asistencias_profesor_add' %}">＋ &nbsp; Agregar profesor</a>
+<a href="{% url 'admin:asistencias_asistencia_changelist' %}">◷ &nbsp; Historial de asistencias</a>
+<a href="{% url 'gestion_justificar' %}" class="{% if request.resolver_match.url_name == 'gestion_justificar' %}activo{% endif %}">✓ &nbsp; Justificar varios días</a>
+<a href="{% url 'admin:asistencias_justificacionasistencia_changelist' %}">☷ &nbsp; Justificaciones</a>
+<a href="{% url 'admin:asistencias_diaespecial_changelist' %}">✶ &nbsp; Días especiales</a>
+<a href="{% url 'gestion_reportes' %}" class="{% if request.resolver_match.url_name == 'gestion_reportes' %}activo{% endif %}">✉ &nbsp; Envío de reportes</a></nav>
+<div class="sidebar-footer"><a href="{% url 'admin:index' %}">Administración avanzada</a><form action="{% url 'admin_logout' %}" method="post">{% csrf_token %}<button type="submit">Cerrar sesión</button></form></div></aside>
+<main class="main"><div class="topbar"><span>Departamento Académico de Ciencias Básicas</span><div class="user">● &nbsp; {{ request.user.username }}</div></div><div class="page">
+{% if messages %}<div class="alerts">{% for message in messages %}<div class="alert {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+{% block contenido %}{% endblock %}
+</div><footer>Universidad Nacional de Ingeniería · Proyecto Manhattan · Sistema de Control de Asistencia</footer></main></body></html>

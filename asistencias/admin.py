@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.utils.html import format_html
 import csv
 
-from .models import Profesor, Asistencia, JustificacionAsistencia, LoginEvidencia, DiaEspecial
+from .models import Profesor, Asistencia, JustificacionAsistencia, LoginEvidencia, DiaEspecial, ReporteEnvio
 
 # Opcional: ocultar modelos técnicos de axes del panel principal
 try:
@@ -824,3 +824,15 @@ class LoginEvidenciaAdmin(admin.ModelAdmin):
             'loading="lazy"></iframe>',
             src,
         )
+
+@admin.register(ReporteEnvio)
+class ReporteEnvioAdmin(admin.ModelAdmin):
+    list_display = ("semana_inicio", "estado", "origen", "enviados", "errores", "usuario", "iniciado_en")
+    list_filter = ("estado", "origen")
+    readonly_fields = ("semana_inicio", "estado", "origen", "enviados", "errores", "usuario", "iniciado_en", "finalizado_en", "resumen")
+    def has_add_permission(self, request):
+        return False
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False

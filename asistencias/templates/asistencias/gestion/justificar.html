@@ -1,0 +1,17 @@
+{% extends 'asistencias/gestion/base.html' %}
+{% block titulo %}Justificaciones rápidas | Manhattan{% endblock %}{% block contenido %}
+<div class="page-head"><div><div class="eyebrow">ASISTENCIAS · GESTIÓN RÁPIDA</div><h1>Justificar varios días</h1><p>Selecciona un docente y cubre un rango de fechas o una cantidad de días hábiles, sin repetir el formulario.</p></div><a class="btn subtle" href="{% url 'admin:asistencias_justificacionasistencia_changelist' %}">Ver todas las justificaciones</a></div>
+<div class="dual justify-layout"><section class="panel"><h2>Nueva justificación</h2><p class="hint">Solo se crean registros para lunes a viernes. Se omiten días especiales y justificaciones ya existentes.</p>
+<form method="post" enctype="multipart/form-data" id="form-justificar">{% csrf_token %}{% if form.non_field_errors %}<div class="alert error">{{ form.non_field_errors }}</div>{% endif %}
+<div class="field"><label for="{{ form.profesor.id_for_label }}">Docente</label>{{ form.profesor }}{{ form.profesor.errors }}</div>
+<div class="field"><label>¿Cómo deseas registrar los días?</label><div class="radio-inline">{{ form.modo }}</div></div>
+<div class="fields-two"><div class="field"><label for="{{ form.desde.id_for_label }}">Desde</label>{{ form.desde }}{{ form.desde.errors }}</div><div class="field" id="grupo-hasta"><label for="{{ form.hasta.id_for_label }}">Hasta</label>{{ form.hasta }}{{ form.hasta.errors }}</div><div class="field" id="grupo-cantidad" hidden><label for="{{ form.cantidad.id_for_label }}">Cantidad de días hábiles</label>{{ form.cantidad }}{{ form.cantidad.errors }}</div></div>
+<div class="fields-two"><div class="field"><label for="{{ form.tipo.id_for_label }}">Motivo</label>{{ form.tipo }}{{ form.tipo.errors }}</div><div class="field"><label for="{{ form.archivo.id_for_label }}">Sustento PDF (opcional)</label>{{ form.archivo }}{{ form.archivo.errors }}</div></div>
+<div class="field"><label for="{{ form.detalle.id_for_label }}">Descripción u observación</label>{{ form.detalle }}{{ form.detalle.errors }}</div>
+<div class="inline-notice">Los días ya justificados no se sobrescribirán. Se registra quién realizó la operación y podrás ver cada día en Historial.</div>
+<button type="submit" class="btn primary block">Guardar justificaciones</button></form></section>
+<section class="panel"><div class="section-head"><h2>Últimos registros</h2><a href="{% url 'historial_asistencias' %}">Historial diario</a></div><div class="table-wrap"><table><thead><tr><th>Profesor</th><th>Fecha</th><th>Motivo</th></tr></thead><tbody>{% for item in recientes %}<tr><td>{{ item.profesor.nombre_completo }}</td><td>{{ item.fecha|date:'d/m/Y' }}</td><td>{{ item.get_tipo_display }}</td></tr>{% empty %}<tr><td colspan="3">Todavía no hay justificaciones</td></tr>{% endfor %}</tbody></table></div></section></div>
+<script>
+(function(){const options=document.querySelectorAll('input[name="modo"]');const hasta=document.getElementById('grupo-hasta');const cantidad=document.getElementById('grupo-cantidad');function sync(){const v=document.querySelector('input[name="modo"]:checked');const c=v&&v.value==='cantidad';hasta.hidden=!!c;cantidad.hidden=!c;}options.forEach(el=>el.addEventListener('change',sync));sync();})();
+</script>
+{% endblock %}
