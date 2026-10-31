@@ -134,3 +134,11 @@ https://proyecto-manhattan.onrender.com/cron/reporte-asistencia/?token=TU_TOKEN&
 No olvides que estas URL solo estarán disponibles tras desplegar la nueva versión en Render.
 El envío general (sin `modo`) sigue siendo real y no tiene protección contra duplicados.
 No lo ejecutes hasta validar los reportes y destinatarios.
+
+
+## Versión V4: resumen con dos indicadores
+
+El correo ahora presenta solo dos indicadores visuales compactos (Asistencias y Cumplimiento).
+Días evaluables, faltas, justificaciones y días especiales aparecen en texto discreto debajo.
+Los cálculos, la tabla diaria, las rutas de simulación y prueba individual, los destinatarios y los envíos no cambiaron.
+No ejecuta automáticamente correos al instalarse.

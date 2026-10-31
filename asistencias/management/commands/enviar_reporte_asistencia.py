@@ -664,46 +664,43 @@ class Command(BaseCommand):
             el resultado general y el detalle de cada día hábil.
           </div>
 
-          <div style="font-size:13px;font-weight:800;color:#38333a;margin:19px 0 8px;">Resumen de la semana</div>
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;table-layout:fixed;border-collapse:separate;">
+          <div style="font-size:13px;font-weight:800;color:#38333a;margin:18px 0 8px;">Resumen de la semana</div>
+          <!-- Solo dos indicadores discretos: información secundaria en texto para ahorrar espacio. -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;table-layout:fixed;border-collapse:collapse;">
             <tr>
-              <td width="33.33%" style="padding:3px;" valign="top">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f7f6;border:1px solid #e9e5e1;border-radius:8px;"><tr><td style="padding:10px 7px;">
-                  <div style="font-size:10px;line-height:1.3;color:#65717d;">Días evaluables</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#333b45;">{dias_evaluables}</div>
-                </td></tr></table>
+              <td width="50%" valign="top" style="padding:0 5px 0 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e4e7e6;border-collapse:separate;border-radius:7px;background:#fafbfa;">
+                  <tr><td style="padding:9px 12px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="font-size:11px;line-height:1.45;color:#50635b;">Asistencias</td>
+                      <td align="right" style="font-size:19px;line-height:1.35;font-weight:800;color:#286747;">{asistio}</td>
+                    </tr></table>
+                  </td></tr>
+                </table>
               </td>
-              <td width="33.33%" style="padding:3px;" valign="top">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6faf8;border:1px solid #deebe5;border-radius:8px;"><tr><td style="padding:10px 7px;">
-                  <div style="font-size:10px;line-height:1.3;color:#57716a;">Asistencias</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#2c7857;">{asistio}</div>
-                </td></tr></table>
-              </td>
-              <td width="33.33%" style="padding:3px;" valign="top">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f9f7fb;border:1px solid #e8e3ed;border-radius:8px;"><tr><td style="padding:10px 7px;">
-                  <div style="font-size:10px;line-height:1.3;color:#72657b;">Justificaciones</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#76508d;">{justificaciones}</div>
-                </td></tr></table>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:3px;" valign="top">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fcf8f7;border:1px solid #f0e2df;border-radius:8px;"><tr><td style="padding:10px 7px;">
-                  <div style="font-size:10px;line-height:1.3;color:#8b6862;">Faltas</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#a63e3a;">{faltas}</div>
-                </td></tr></table>
-              </td>
-              <td style="padding:3px;" valign="top">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#faf9f6;border:1px solid #eae6db;border-radius:8px;"><tr><td style="padding:10px 7px;">
-                  <div style="font-size:10px;line-height:1.3;color:#786d51;">Días especiales</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#997a42;">{dias_especiales}</div>
-                </td></tr></table>
-              </td>
-              <td style="padding:3px;" valign="top">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8f7f6;border:1px solid #e9e5e1;border-radius:8px;"><tr><td style="padding:10px 7px;">
-                  <div style="font-size:10px;line-height:1.3;color:#65717d;">Cumplimiento</div><div style="font-size:21px;font-weight:800;line-height:1.3;color:#702f3c;">{cumplimiento_text}</div>
-                </td></tr></table>
+              <td width="50%" valign="top" style="padding:0 0 0 5px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e6e1e2;border-collapse:separate;border-radius:7px;background:#faf9f9;">
+                  <tr><td style="padding:9px 12px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="font-size:11px;line-height:1.45;color:#6b4c54;">Cumplimiento</td>
+                      <td align="right" style="font-size:19px;line-height:1.35;font-weight:800;color:#702f3c;">{cumplimiento_text}</td>
+                    </tr></table>
+                  </td></tr>
+                </table>
               </td>
             </tr>
           </table>
-          <div style="font-size:10px;line-height:1.5;color:#697480;padding:6px 3px 0;">
-            El cumplimiento considera asistencias y justificaciones sobre los días evaluables.
-            Los días especiales no se cuentan como falta.
+          <div style="font-size:10.5px;line-height:1.7;color:#5e6974;padding:8px 1px 0;">
+            <strong>Días evaluables:</strong> {dias_evaluables}
+            <span style="color:#b6b6b6;"> &nbsp;&middot;&nbsp; </span>
+            <strong>Faltas:</strong> {faltas}
+            <span style="color:#b6b6b6;"> &nbsp;&middot;&nbsp; </span>
+            <strong>Justificaciones:</strong> {justificaciones}
+            <span style="color:#b6b6b6;"> &nbsp;&middot;&nbsp; </span>
+            <strong>Días especiales:</strong> {dias_especiales}
+          </div>
+          <div style="font-size:10px;line-height:1.55;color:#7a838c;padding:4px 1px 0;">
+            El porcentaje considera asistencias y justificaciones; los días especiales no se cuentan como falta.
           </div>
 
           <div style="font-size:13px;font-weight:800;color:#38333a;margin:21px 0 9px;">Detalle diario</div>
