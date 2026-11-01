@@ -1,18 +1,16 @@
 {% load static %}
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{% block titulo %}Gestión Manhattan{% endblock %}</title><link rel="stylesheet" href="{% static 'asistencias/css/gestion.css' %}"></head>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block titulo %}Gestión | Manhattan{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'asistencias/css/gestion.css' %}"></head>
 <body><aside class="sidebar"><a href="{% url 'gestion_inicio' %}" class="brand"><span class="brand-mark">UNI</span><span><b>PROYECTO MANHATTAN</b><small>Administración de Asistencias</small></span></a>
-<div class="menu-title">GESTIÓN ACADÉMICA</div><nav>
-<a href="{% url 'gestion_inicio' %}" class="{% if request.resolver_match.url_name == 'gestion_inicio' %}activo{% endif %}">▦ &nbsp; Resumen general</a>
-<a href="{% url 'gestion_profesores' %}" class="{% if request.resolver_match.url_name == 'gestion_profesores' %}activo{% endif %}">♙ &nbsp; Profesores</a>
-<a href="{% url 'gestion_profesor_nuevo' %}" class="{% if request.resolver_match.url_name == 'gestion_profesor_nuevo' %}activo{% endif %}">＋ &nbsp; Agregar profesor</a>
-<a href="{% url 'gestion_historial' %}" class="{% if request.resolver_match.url_name == 'gestion_historial' %}activo{% endif %}">◷ &nbsp; Historial de asistencias</a>
-<a href="{% url 'gestion_justificar' %}" class="{% if request.resolver_match.url_name == 'gestion_justificar' %}activo{% endif %}">✓ &nbsp; Justificar varios días</a>
-<a href="{% url 'gestion_justificaciones' %}" class="{% if request.resolver_match.url_name == 'gestion_justificaciones' %}activo{% endif %}">☷ &nbsp; Justificaciones</a>
-<a href="{% url 'gestion_dias_especiales' %}" class="{% if request.resolver_match.url_name == 'gestion_dias_especiales' %}activo{% endif %}">✶ &nbsp; Días especiales</a>
-<a href="{% url 'gestion_reportes' %}" class="{% if request.resolver_match.url_name == 'gestion_reportes' %}activo{% endif %}">✉ &nbsp; Envío de reportes</a></nav>
-<div class="sidebar-footer"><form action="{% url 'admin_logout' %}" method="post">{% csrf_token %}<button type="submit">Cerrar sesión</button></form></div></aside>
+<div class="menu-title">GESTIÓN ACADÉMICA</div><nav aria-label="Secciones del administrador">
+<a href="{% url 'gestion_profesores' %}" class="{% if request.resolver_match.url_name == 'gestion_profesores' or request.resolver_match.url_name == 'gestion_profesor_nuevo' or request.resolver_match.url_name == 'gestion_profesor_editar' %}activo{% endif %}">♙ &nbsp; Profesores</a>
+<a href="{% url 'gestion_historial' %}" class="{% if request.resolver_match.url_name == 'gestion_historial' %}activo{% endif %}">◷ &nbsp; Asistencias</a>
+<a href="{% url 'gestion_justificaciones' %}" class="{% if request.resolver_match.url_name == 'gestion_justificaciones' or request.resolver_match.url_name == 'gestion_justificar' %}activo{% endif %}">✓ &nbsp; Justificaciones</a>
+<a href="{% url 'gestion_dias_especiales' %}" class="{% if request.resolver_match.url_name == 'gestion_dias_especiales' or request.resolver_match.url_name == 'gestion_dia_nuevo' or request.resolver_match.url_name == 'gestion_dia_editar' %}activo{% endif %}">✶ &nbsp; Días especiales</a>
+<a href="{% url 'gestion_reportes' %}" class="{% if request.resolver_match.url_name == 'gestion_reportes' or request.resolver_match.url_name == 'gestion_simular' or request.resolver_match.url_name == 'gestion_envios_historial' %}activo{% endif %}">✉ &nbsp; Correos</a></nav>
+<div class="sidebar-footer"><a class="inicio-link" href="{% url 'gestion_inicio' %}">⌂ &nbsp; Resumen general</a><form action="{% url 'admin_logout' %}" method="post">{% csrf_token %}<button type="submit">Cerrar sesión</button></form></div></aside>
 <main class="main"><div class="topbar"><span>Departamento Académico de Ciencias Básicas</span><div class="user">● &nbsp; {{ request.user.username }}</div></div><div class="page">
 {% if messages %}<div class="alerts">{% for message in messages %}<div class="alert {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
 {% block contenido %}{% endblock %}
-</div><footer>Universidad Nacional de Ingeniería · Proyecto Manhattan · Sistema de Control de Asistencia</footer></main></body></html>
+</div><footer>Universidad Nacional de Ingeniería · Proyecto Manhattan · Control de Asistencia Docente</footer></main></body></html>

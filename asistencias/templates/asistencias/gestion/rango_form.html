@@ -1,13 +1,17 @@
-<form method="post" enctype="multipart/form-data" action="{% url 'gestion_justificar' %}" id="form-justificar-rango">
-{% csrf_token %}<input type="hidden" name="origen" value="{{ origen|default:'' }}">
+<form method="post" enctype="multipart/form-data" action="{% url 'gestion_justificar' %}" id="form-justificar-rango" class="justificacion-form">
+{% csrf_token %}<input type="hidden" name="origen" value="{{ origen|default:'justificaciones' }}">
 {% if form.non_field_errors %}<div class="alert error">{{ form.non_field_errors }}</div>{% endif %}
-<div class="field"><label for="{{ form.profesor.id_for_label }}">Docente</label>{{ form.profesor }}{{ form.profesor.errors }}</div>
-<div class="field"><label>Cómo seleccionar los días</label><div class="radio-inline">{{ form.modo }}</div></div>
-<div class="fields-two"><div class="field"><label for="{{ form.desde.id_for_label }}">Desde</label>{{ form.desde }}{{ form.desde.errors }}</div>
-<div class="field" id="grupo-hasta"><label for="{{ form.hasta.id_for_label }}">Hasta</label>{{ form.hasta }}{{ form.hasta.errors }}</div>
-<div class="field" id="grupo-cantidad" hidden><label for="{{ form.cantidad.id_for_label }}">Número de días hábiles</label>{{ form.cantidad }}{{ form.cantidad.errors }}</div></div>
-<div class="fields-two"><div class="field"><label for="{{ form.tipo.id_for_label }}">Motivo</label>{{ form.tipo }}{{ form.tipo.errors }}</div><div class="field"><label for="{{ form.archivo.id_for_label }}">Sustento PDF (opcional)</label>{{ form.archivo }}{{ form.archivo.errors }}</div></div>
-<div class="field"><label for="{{ form.detalle.id_for_label }}">Observación</label>{{ form.detalle }}{{ form.detalle.errors }}</div>
-<div class="inline-notice">Se justifican los días hábiles seleccionados; se excluyen días especiales, asistencias ya marcadas y fechas previamente justificadas. No se altera ningún registro anterior.</div>
-<button type="submit" class="btn primary block">Guardar rango de justificaciones</button></form>
-<script>(function(){const f=document.getElementById('form-justificar-rango');if(!f)return;const h=f.querySelector('#grupo-hasta'),c=f.querySelector('#grupo-cantidad');function sync(){const x=f.querySelector('input[name="modo"]:checked');const b=x&&x.value==='cantidad';h.hidden=!!b;c.hidden=!b;}f.querySelectorAll('input[name="modo"]').forEach(x=>x.addEventListener('change',sync));sync();})();</script>
+<div class="field"><label for="{{ form.profesor.id_for_label }}">1. Seleccionar docente</label>{{ form.profesor }}{% for error in form.profesor.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div>
+<div class="field"><label>2. ¿Qué días se justificarán?</label><div class="selector-modos">{{ form.modo }}</div>{% for error in form.modo.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div>
+<div class="fields-two"><div class="field"><label for="{{ form.desde.id_for_label }}">Fecha de inicio o día seleccionado</label><div class="fecha-con-atajo">{{ form.desde }}<button type="button" class="btn subtle" id="btn-ayer">Ayer</button></div>{% for error in form.desde.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div>
+<div class="field" id="grupo-hasta" hidden><label for="{{ form.hasta.id_for_label }}">Hasta qué día</label>{{ form.hasta }}{% for error in form.hasta.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div>
+<div class="field" id="grupo-cantidad" hidden><label for="{{ form.cantidad.id_for_label }}">Cantidad de días hábiles</label>{{ form.cantidad }}{% for error in form.cantidad.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div></div>
+<div class="fields-two"><div class="field"><label for="{{ form.detalle.id_for_label }}">3. Observación (opcional)</label>{{ form.detalle }}{% for error in form.detalle.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div>
+<div class="field"><label for="{{ form.archivo.id_for_label }}">Sustento PDF (opcional)</label>{{ form.archivo }}{% for error in form.archivo.errors %}<small class="form-error">{{ error }}</small>{% endfor %}</div></div>
+<div class="inline-notice">Se registran únicamente días hábiles. No se reemplazan asistencias, justificaciones existentes ni días especiales. Cada día queda registrado en el historial.</div>
+<button type="submit" class="btn primary block" onclick="return confirm('¿Confirmas la justificación de las fechas elegidas para este docente?')">Guardar justificación</button></form>
+<script>(function(){const form=document.getElementById('form-justificar-rango');if(!form)return;
+const h=form.querySelector('#grupo-hasta'),c=form.querySelector('#grupo-cantidad');
+function sync(){const activo=form.querySelector('input[name="modo"]:checked');const modo=activo?activo.value:'un_dia';h.hidden=modo!=='rango';c.hidden=modo!=='cantidad';}
+form.querySelectorAll('input[name="modo"]').forEach(x=>x.addEventListener('change',sync));
+const boton=form.querySelector('#btn-ayer');boton.addEventListener('click',()=>{const d=new Date();d.setDate(d.getDate()-1);const yr=d.getFullYear(),mo=String(d.getMonth()+1).padStart(2,'0'),da=String(d.getDate()).padStart(2,'0');form.querySelector('input[name="desde"]').value=`${yr}-${mo}-${da}`;const uno=form.querySelector('input[name="modo"][value="un_dia"]');if(uno){uno.checked=true;sync();}});sync();})();</script>

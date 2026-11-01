@@ -1,8 +1,6 @@
 {% extends 'asistencias/gestion/base.html' %}
-{% block titulo %}Justificaciones rápidas | Manhattan{% endblock %}{% block contenido %}
-<div class="page-head"><div><div class="eyebrow">ASISTENCIAS · GESTIÓN RÁPIDA</div><h1>Justificar varios días</h1><p>Selecciona un docente y cubre un rango de fechas o una cantidad de días hábiles, sin repetir el formulario.</p></div><a class="btn subtle" href="{% url 'gestion_justificaciones' %}">Ver todas las justificaciones</a></div>
-<div class="dual justify-layout"><section class="panel"><h2>Nueva justificación</h2><p class="hint">Solo se crean registros para lunes a viernes. Se omiten días especiales y justificaciones ya existentes.</p>
-{% include 'asistencias/gestion/rango_form.html' %}</section>
-<section class="panel"><div class="section-head"><h2>Últimos registros</h2><a href="{% url 'gestion_historial' %}">Historial diario</a></div><div class="table-wrap"><table><thead><tr><th>Profesor</th><th>Fecha</th><th>Motivo</th></tr></thead><tbody>{% for item in recientes %}<tr><td>{{ item.profesor.nombre_completo }}</td><td>{{ item.fecha|date:'d/m/Y' }}</td><td>{{ item.get_tipo_display }}</td></tr>{% empty %}<tr><td colspan="3">Todavía no hay justificaciones</td></tr>{% endfor %}</tbody></table></div></section></div>
-
+{% block titulo %}Nueva justificación | Manhattan{% endblock %}
+{% block contenido %}
+<div class="page-head"><div><div class="eyebrow">GESTIÓN DE AUSENCIAS</div><h1>Justificar asistencia</h1><p>Registra una fecha, varias fechas o una cantidad de días hábiles.</p></div><a class="btn subtle" href="{% url 'gestion_justificaciones' %}">Todas las justificaciones</a></div>
+<section class="panel panel-form"><h2>Nueva justificación</h2>{% include 'asistencias/gestion/rango_form.html' %}</section>
 {% endblock %}

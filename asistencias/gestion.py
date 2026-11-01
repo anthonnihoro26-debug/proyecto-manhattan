@@ -24,20 +24,41 @@ from .servicio_reportes import preparar_envio, EnvioNoPermitido, semana_actual
 
 
 class JustificacionRangoForm(forms.Form):
-    MODOS = [("rango", "Entre dos fechas"), ("cantidad", "Por cantidad de días hábiles")]
-    profesor = forms.ModelChoiceField(label="Docente", queryset=Profesor.objects.none(), empty_label="Selecciona un docente")
-    modo = forms.ChoiceField(label="Modalidad", choices=MODOS, widget=forms.RadioSelect, initial="rango")
-    desde = forms.DateField(label="Desde", widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"))
-    hasta = forms.DateField(label="Hasta (si eliges rango)", required=False, widget=forms.DateInput(attrs={"type":"date"}, format="%Y-%m-%d"))
-    cantidad = forms.IntegerField(label="Cantidad de días hábiles", required=False, min_value=1, max_value=90)
-    tipo = forms.ChoiceField(label="Motivo", choices=JustificacionAsistencia.TIPO_CHOICES)
-    detalle = forms.CharField(label="Detalle", max_length=255, widget=forms.Textarea(attrs={"rows":3}), required=False)
-    archivo = forms.FileField(label="Sustento (PDF opcional, máximo 10 MB)", required=False)
+    """Un formulario único, sin seleccionar tipos internos del modelo histórico."""
+    MODOS = [
+        ("un_dia", "Una falta (por ejemplo, ayer)"),
+        ("rango", "Entre dos fechas"),
+        ("cantidad", "Por número de días hábiles"),
+    ]
+    profesor = forms.ModelChoiceField(
+        label="Docente", queryset=Profesor.objects.none(),
+        empty_label="Selecciona un docente",
+    )
+    modo = forms.ChoiceField(
+        label="Qué días deseas justificar", choices=MODOS,
+        widget=forms.RadioSelect, initial="un_dia",
+    )
+    desde = forms.DateField(
+        label="Fecha inicial o día a justificar",
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+    )
+    hasta = forms.DateField(
+        label="Fecha final", required=False,
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+    )
+    cantidad = forms.IntegerField(
+        label="Cuántos días hábiles", required=False, min_value=1, max_value=90,
+    )
+    detalle = forms.CharField(
+        label="Observación (opcional)", required=False, max_length=255,
+        widget=forms.Textarea(attrs={"rows": 2, "placeholder": "Explica brevemente la justificación, si corresponde"}),
+    )
+    archivo = forms.FileField(label="Sustento PDF (opcional, hasta 10 MB)", required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["profesor"].queryset = Profesor.objects.all().order_by("apellidos", "nombres")
-        self.fields["desde"].initial = timezone.localdate()
+        self.fields["desde"].initial = timezone.localdate() - timedelta(days=1)
         for campo in self.fields.values():
             if not isinstance(campo.widget, forms.RadioSelect):
                 campo.widget.attrs.setdefault("class", "campo")
@@ -45,11 +66,11 @@ class JustificacionRangoForm(forms.Form):
     def clean_archivo(self):
         f = self.cleaned_data.get("archivo")
         if f and (not f.name.lower().endswith(".pdf") or f.size > 10 * 1024 * 1024):
-            raise forms.ValidationError("Adjunta únicamente un PDF de hasta 10 MB.")
+            raise forms.ValidationError("Adjunta solamente un PDF de hasta 10 MB.")
         if f:
-            head = f.read(5)
+            encabezado = f.read(5)
             f.seek(0)
-            if head != b"%PDF-":
+            if encabezado != b"%PDF-":
                 raise forms.ValidationError("El archivo no parece un PDF válido.")
         return f
 
@@ -59,55 +80,54 @@ class JustificacionRangoForm(forms.Form):
         if not inicio:
             return datos
         modo = datos.get("modo")
-        if modo == "cantidad":
+        if modo == "un_dia":
+            fechas = [inicio]
+        elif modo == "cantidad":
             cantidad = datos.get("cantidad")
             if not cantidad:
-                self.add_error("cantidad", "Indica una cantidad de días.")
+                self.add_error("cantidad", "Indica cuántos días deseas justificar.")
                 return datos
-            # "Cantidad" significa días realmente justificables; omite sábados,
-            # domingos y días especiales, completando la cantidad solicitada.
-            cursor = inicio
-            posibles = [inicio + timedelta(days=i) for i in range(183)]
+            candidatos = [inicio + timedelta(days=i) for i in range(183)]
             especiales = set(DiaEspecial.objects.filter(
-                activo=True, fecha__in=posibles
+                activo=True, fecha__in=candidatos
             ).values_list("fecha", flat=True))
-            prof = datos.get("profesor")
-            ya_justificados = set()
-            con_asistencia = set()
-            if prof:
-                ya_justificados = set(JustificacionAsistencia.objects.filter(
-                    profesor=prof, fecha__in=posibles).values_list("fecha", flat=True))
-                con_asistencia = set(Asistencia.objects.filter(
-                    profesor=prof, fecha__in=posibles, tipo="E").values_list("fecha", flat=True))
+            profesor = datos.get("profesor")
+            justificados = set()
+            entradas = set()
+            if profesor:
+                justificados = set(JustificacionAsistencia.objects.filter(
+                    profesor=profesor, fecha__in=candidatos
+                ).values_list("fecha", flat=True))
+                entradas = set(Asistencia.objects.filter(
+                    profesor=profesor, fecha__in=candidatos, tipo="E"
+                ).values_list("fecha", flat=True))
             fechas = []
-            for cursor in posibles:
-                if (cursor.weekday() < 5 and cursor not in especiales
-                        and cursor not in ya_justificados and cursor not in con_asistencia):
-                    fechas.append(cursor)
+            for dia in candidatos:
+                if dia.weekday() < 5 and dia not in especiales and dia not in justificados and dia not in entradas:
+                    fechas.append(dia)
                     if len(fechas) == cantidad:
                         break
             if len(fechas) != cantidad:
-                raise forms.ValidationError(
-                    "No se encontraron suficientes días hábiles justificables "
-                    "dentro del plazo permitido."
-                )
+                raise forms.ValidationError("No se encontraron suficientes días justificables en los próximos 183 días.")
         else:
             final = datos.get("hasta")
-            if not final:
+            if final is None:
                 self.add_error("hasta", "Indica la fecha final.")
                 return datos
             if final < inicio:
-                self.add_error("hasta", "La fecha final debe ser posterior o igual a la inicial.")
+                self.add_error("hasta", "La fecha final debe ser igual o posterior a la inicial.")
                 return datos
             if (final - inicio).days > 125:
                 self.add_error("hasta", "El rango no puede superar 126 días.")
                 return datos
             fechas = [inicio + timedelta(days=i) for i in range((final - inicio).days + 1)
                       if (inicio + timedelta(days=i)).weekday() < 5]
+        if modo == "un_dia" and inicio.weekday() >= 5:
+            raise forms.ValidationError("Elige un día hábil de lunes a viernes.")
         if not fechas:
-            raise forms.ValidationError("No hay días hábiles dentro de las fechas indicadas.")
+            raise forms.ValidationError("No hay días hábiles en las fechas seleccionadas.")
         if len(fechas) > 90:
-            raise forms.ValidationError("Máximo 90 días hábiles por operación.")
+            raise forms.ValidationError("Puedes justificar como máximo 90 días por operación.")
         datos["fechas_habiles"] = fechas
         return datos
 
@@ -140,6 +160,7 @@ def justificar_rango(request):
         if request.GET.get("desde"):
             inicial["desde"] = request.GET["desde"]
             inicial["hasta"] = request.GET.get("hasta", request.GET["desde"])
+            inicial["modo"] = "rango" if inicial["hasta"] != inicial["desde"] else "un_dia"
     form = JustificacionRangoForm(request.POST or None, request.FILES or None, initial=inicial)
     if request.method == "POST" and form.is_valid():
         datos = form.cleaned_data
@@ -153,7 +174,7 @@ def justificar_rango(request):
         pendientes = [d for d in validas if d not in existentes and d not in con_asistencia]
         if not pendientes:
             messages.warning(request, "No se crearon registros: los días ya estaban justificados, tenían asistencia o son días especiales.")
-            return redirect("gestion_justificar")
+            return redirect("gestion_justificaciones")
         # Guardar una sola copia del documento. No se modifican asistencias existentes.
         archivo = datos.get("archivo")
         nombre_guardado = ""
@@ -169,7 +190,7 @@ def justificar_rango(request):
                 _, nuevo = JustificacionAsistencia.objects.get_or_create(
                     profesor=prof, fecha=dia,
                     defaults={
-                        "tipo": datos["tipo"], "detalle": datos["detalle"],
+                        "tipo": "O", "detalle": datos["detalle"],
                         "archivo": nombre_guardado,
                         "creado_por": request.user, "actualizado_por": request.user,
                     },
@@ -181,7 +202,7 @@ def justificar_rango(request):
                         profesor=prof, fecha=dia, tipo="J",
                         defaults={
                             "fecha_hora": timezone.now(),
-                            "motivo": datos["tipo"], "detalle": datos["detalle"],
+                            "motivo": "O", "detalle": datos["detalle"],
                             "registrado_por": request.user,
                         },
                     )
@@ -194,7 +215,7 @@ def justificar_rango(request):
             return redirect("gestion_historial")
         if pagina_origen == "justificaciones":
             return redirect("gestion_justificaciones")
-        return redirect("gestion_justificar")
+        return redirect("gestion_justificaciones")
     recientes = JustificacionAsistencia.objects.select_related("profesor", "creado_por").order_by("-creado_en")[:15]
     return render(request, "asistencias/gestion/justificar.html", {"form":form, "recientes": recientes})
 
@@ -305,43 +326,71 @@ def profesor_formulario(request, pk=None):
 
 @staff_member_required(login_url="/login/")
 def historial(request):
+    """Dos consultas claras: estado por fecha o historial completo de un docente."""
     from django.utils.dateparse import parse_date
-    try:
-        dia = parse_date(request.GET.get("fecha", "")) or timezone.localdate()
-    except ValueError:
-        dia = timezone.localdate()
+    filtro = request.GET.get("modo", "").strip()
     q = request.GET.get("q", "").strip()[:100]
-    profesores_qs = Profesor.objects.all().order_by("apellidos", "nombres")
+    modo = filtro if filtro in {"fecha", "docente"} else ("docente" if q else "fecha")
+    fecha_str = request.GET.get("fecha", "")
+    try:
+        dia = parse_date(fecha_str) if fecha_str else timezone.localdate()
+    except ValueError:
+        dia = None
+    if dia is None:
+        dia = timezone.localdate()
+    base = Profesor.objects.all()
     if q:
-        profesores_qs = profesores_qs.filter(Q(dni__icontains=q) | Q(nombres__icontains=q) | Q(apellidos__icontains=q) | Q(codigo__icontains=q))
-    pagina = Paginator(profesores_qs, 30).get_page(request.GET.get("pagina"))
-    ids = [p.pk for p in pagina.object_list]
-    entradas = set(Asistencia.objects.filter(fecha=dia, tipo="E", profesor_id__in=ids).values_list("profesor_id", flat=True))
-    justificados = {j.profesor_id:j for j in JustificacionAsistencia.objects.filter(fecha=dia, profesor_id__in=ids)}
+        base = base.filter(
+            Q(dni__icontains=q) | Q(codigo__icontains=q) |
+            Q(nombres__icontains=q) | Q(apellidos__icontains=q) |
+            Q(email__icontains=q)
+        )
+    if modo == "docente":
+        # Solo marcas existentes (entradas/justificaciones). No se inventan faltas
+        # de fechas que no se consultaron.
+        registros = (Asistencia.objects.filter(profesor__in=base)
+                     .select_related("profesor").order_by("-fecha", "profesor__apellidos", "-fecha_hora"))
+        pagina = Paginator(registros, 35).get_page(request.GET.get("pagina"))
+        return render(request, "asistencias/gestion/historial.html", {
+            "modo": modo, "busqueda": q, "dia_iso": dia.isoformat(),
+            "pagina": pagina, "registros": pagina.object_list,
+        })
+
+    pagina = Paginator(base.order_by("apellidos", "nombres"), 30).get_page(request.GET.get("pagina"))
+    ids = [prof.pk for prof in pagina.object_list]
+    entradas = {
+        a.profesor_id: a for a in Asistencia.objects.filter(
+            fecha=dia, tipo="E", profesor_id__in=ids
+        ).order_by("profesor_id", "-fecha_hora")
+    }
+    justificadas = {
+        j.profesor_id: j for j in JustificacionAsistencia.objects.filter(
+            fecha=dia, profesor_id__in=ids
+        )
+    }
+    justificaciones_legacy = set(Asistencia.objects.filter(
+        fecha=dia, tipo="J", profesor_id__in=ids
+    ).values_list("profesor_id", flat=True))
     especial = DiaEspecial.objects.filter(fecha=dia, activo=True).first()
-    rows = []
+    filas = []
     for prof in pagina.object_list:
-        if prof.pk in entradas:
-            estado = "Asistió"
-            estilo = "bien"
-        elif prof.pk in justificados:
-            estado = "Justificado"
-            estilo = "justo"
+        marca = entradas.get(prof.pk)
+        if marca:
+            estado, estilo = "Asistió", "bien"
+        elif prof.pk in justificadas or prof.pk in justificaciones_legacy:
+            estado, estilo = "Justificado", "justo"
         elif especial:
-            estado = "Día especial"
-            estilo = "justo"
+            estado, estilo = "Día especial", "justo"
+        elif dia.weekday() >= 5:
+            estado, estilo = "No laborable", "pendiente"
         elif dia > timezone.localdate():
-            estado = "Pendiente"
-            estilo = "pendiente"
+            estado, estilo = "Pendiente", "pendiente"
         else:
-            estado = "Sin registro"
-            estilo = "falta"
-        rows.append({"profesor":prof,"estado":estado,"estilo":estilo})
+            estado, estilo = "Sin registro", "falta"
+        filas.append({"profesor": prof, "estado": estado, "estilo": estilo, "marca": marca})
     return render(request, "asistencias/gestion/historial.html", {
-        "dia":dia, "dia_iso":dia.isoformat(), "busqueda":q, "filas":rows,
-        "pagina":pagina, "especial":especial,
-        "form":JustificacionRangoForm(initial={"desde":dia.isoformat(), "hasta":dia.isoformat()}),
-        "origen":"historial",
+        "modo": modo, "busqueda": q, "dia": dia, "dia_iso": dia.isoformat(),
+        "filas": filas, "pagina": pagina, "especial": especial,
     })
 
 
@@ -353,7 +402,7 @@ def justificaciones(request):
         qs = qs.filter(Q(profesor__nombres__icontains=q) | Q(profesor__apellidos__icontains=q) | Q(profesor__dni__icontains=q))
     return render(request, "asistencias/gestion/justificaciones_lista.html", {
         "busqueda":q,"pagina":Paginator(qs, 30).get_page(request.GET.get("pagina")),
-        "form":JustificacionRangoForm(), "origen":"justificaciones",
+        "form":JustificacionRangoForm(initial={"modo": "un_dia"}), "origen":"justificaciones",
     })
 
 

@@ -7,3 +7,23 @@
 .filtros{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:19px}.filtros>.campo{flex:1;min-width:230px;max-width:520px}.filtros .field.compact{margin:0;min-width:150px}.filtros .field.expand{flex:1;min-width:200px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}.panel-form{max-width:850px}.form-error{color:#a52c35;font-size:11px}.estado{font-size:11px;padding:5px 9px;border:1px solid #ddd;border-radius:8px;white-space:nowrap;font-weight:700}.estado.bien{background:#eff9f3;border-color:#ceead8;color:#1e6a41}.estado.justo{background:#f6f1fb;border-color:#e5d5f6;color:#70408b}.estado.falta{background:#fff0ef;border-color:#ffcecb;color:#ad3a39}.estado.pendiente{background:#f4f4f6;border-color:#ddd;color:#666}.link-accion{color:var(--vino);font-weight:750;text-decoration:underline;text-underline-offset:3px}.paginacion{display:flex;align-items:center;justify-content:flex-end;gap:15px;margin-top:15px;color:var(--muted);font-size:12px}button:disabled{opacity:.5;cursor:not-allowed}@media(max-width:720px){.form-grid{grid-template-columns:1fr}.filtros>.campo{min-width:100%}}
 
 .panel-rango{margin-bottom:22px}.panel-rango summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--vino);font-size:14px}.panel-rango summary span{color:var(--muted);font-size:12px;font-weight:400}.panel-rango[open] summary{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:12px}@media(max-width:720px){.panel-rango summary{flex-direction:column;align-items:flex-start}}
+
+/* V10 - administración sencilla, cinco apartados y formularios compactos */
+.sidebar-footer .inicio-link{color:#ddd;text-align:center;padding:9px;border-radius:8px}
+.sidebar-footer .inicio-link:hover{background:#46323d;color:#fff}
+.sidebar nav a{font-weight:600}
+.selector-modos ul,.selector-modos #id_modo{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:9px}
+.selector-modos li,.selector-modos #id_modo>div{margin:0}
+.selector-modos label{display:flex;align-items:center;gap:8px;padding:10px 13px;border:1px solid #e2dadd;border-radius:9px;background:#fbf9fa;cursor:pointer;font-size:12px;font-weight:600}
+.selector-modos input{accent-color:var(--vino)}
+.justifica-pagina{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+.fecha-con-atajo{display:flex;gap:8px;min-width:0}
+.fecha-con-atajo .campo{flex:1;min-width:0}
+.fecha-con-atajo .btn{white-space:nowrap}
+.justificacion-form .field{margin-top:13px}
+.justificacion-form .fields-two{gap:6px 16px}
+.justificacion-form textarea{min-height:75px}
+.filtros-asistencia select{min-width:220px}
+.filtros-asistencia .field{margin-top:0}
+@media(max-width:1050px){.justifica-pagina{grid-template-columns:1fr}}
+@media(max-width:730px){.selector-modos ul{flex-direction:column}.filtros-asistencia .field{width:100%}}

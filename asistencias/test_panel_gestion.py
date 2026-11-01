@@ -34,7 +34,7 @@ class TestGestion(TestCase):
             "tipo":"DM", "detalle":"Cambiar motivo",
         })
         self.assertEqual(JustificacionAsistencia.objects.filter(profesor=self.prof).count(),4)
-        self.assertEqual(JustificacionAsistencia.objects.get(profesor=self.prof, fecha=date(2026,11,2)).tipo,"P")
+        self.assertEqual(JustificacionAsistencia.objects.get(profesor=self.prof, fecha=date(2026,11,2)).tipo,"O")
 
     def test_justificacion_cantidad_habiles(self):
         self.client.force_login(self.admin)
@@ -145,3 +145,48 @@ class TestPantallasUnificadas(TestCase):
         })
         self.assertEqual(res.status_code, 302)
         mock_envio.assert_not_called()
+
+
+class TestGestionSimplificada(TestCase):
+    def setUp(self):
+        from .models import Asistencia
+        self.user = get_user_model().objects.create_superuser(
+            username="pruebas-panel-simple", email="admin@ejemplo.test", password="ClaveDePruebaFuerte!2026"
+        )
+        self.prof = Profesor.objects.create(dni="90000001", nombres="Lucía", apellidos="Paredes", condicion="N")
+        self.client.force_login(self.user)
+
+    def test_un_dia_sin_tipo_se_registra_generico(self):
+        r = self.client.post(reverse("gestion_justificar"), {
+            "profesor": self.prof.pk, "modo": "un_dia", "desde": "2026-10-30",
+            "detalle": "Justificación autorizada",
+        })
+        self.assertEqual(r.status_code, 302)
+        j = JustificacionAsistencia.objects.get(profesor=self.prof)
+        self.assertEqual(j.fecha, date(2026, 10, 30))
+        self.assertEqual(j.tipo, "O")
+
+    def test_no_sobrescribe_entrada_en_un_dia(self):
+        from .models import Asistencia
+        Asistencia.objects.create(profesor=self.prof, fecha=date(2026,10,30), tipo="E")
+        self.client.post(reverse("gestion_justificar"), {
+            "profesor": self.prof.pk, "modo": "un_dia", "desde": "2026-10-30",
+        })
+        self.assertFalse(JustificacionAsistencia.objects.filter(profesor=self.prof).exists())
+
+    def test_filtro_por_docente_muestra_historial_de_distintos_dias(self):
+        from .models import Asistencia
+        Asistencia.objects.create(profesor=self.prof, fecha=date(2026,10,27), tipo="E")
+        Asistencia.objects.create(profesor=self.prof, fecha=date(2026,10,29), tipo="E")
+        r = self.client.get(reverse("gestion_historial"), {"modo": "docente", "q": "Paredes"})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "27/10/2026")
+        self.assertContains(r, "29/10/2026")
+
+    def test_tipo_oculto_y_navegacion_cinco_opciones(self):
+        r = self.client.get(reverse("gestion_justificaciones"))
+        self.assertEqual(r.status_code, 200)
+        self.assertNotContains(r, 'name="tipo"')
+        self.assertContains(r, "Cuántos días hábiles")
+        self.assertContains(r, "Ayer")
+        self.assertNotContains(r, "Agregar profesor</a>")

@@ -1,21 +1,13 @@
 {% extends 'asistencias/gestion/base.html' %}
 {% block titulo %}Resumen | Manhattan{% endblock %}{% block contenido %}
-{% if clave_temporal %}
-<div class="alert" role="alert" style="background:#fff9e9;border:1px solid #e9c780;color:#614614;border-radius:10px;padding:13px 16px;margin-bottom:16px">
-<strong>Clave temporal en uso.</strong> Has ingresado con la clave inicial del administrador. Por seguridad, cámbiala antes de utilizar el panel con datos reales.
-<a href="{% url 'admin:password_change' %}" style="color:#6d2334;font-weight:700;white-space:nowrap">Cambiar contraseña</a>
+{% if clave_temporal %}<div class="alert" role="alert"><strong>Contraseña temporal:</strong> cámbiala antes de seguir. <a href="{% url 'admin:password_change' %}">Cambiar contraseña</a></div>{% endif %}
+<div class="page-head"><div><div class="eyebrow">ADMINISTRACIÓN DE ASISTENCIAS</div><h1>Bienvenido a Manhattan</h1><p>Gestiona profesores, asistencias, justificaciones, días especiales y correos desde un mismo lugar.</p></div></div>
+<div class="stats"><div class="stat"><span>Profesores</span><b>{{ profesores }}</b><small>{{ activos }} activos</small></div><div class="stat"><span>Entradas hoy</span><b>{{ asistencias_hoy }}</b></div><div class="stat"><span>Justificaciones</span><b>{{ justificaciones }}</b></div><div class="stat"><span>Días especiales próximos</span><b>{{ especiales }}</b></div></div>
+<div class="section-head"><h2>Tus cinco apartados</h2></div><div class="quick-grid">
+<a class="quick" href="{% url 'gestion_profesores' %}"><span class="quick-ico">♙</span><strong>Profesores</strong><small>Ver, buscar, agregar y editar</small></a>
+<a class="quick" href="{% url 'gestion_historial' %}"><span class="quick-ico">◷</span><strong>Asistencias</strong><small>Consultar por fecha o docente</small></a>
+<a class="quick" href="{% url 'gestion_justificaciones' %}"><span class="quick-ico">✓</span><strong>Justificaciones</strong><small>Un día, rango o cantidad</small></a>
+<a class="quick" href="{% url 'gestion_dias_especiales' %}"><span class="quick-ico">✶</span><strong>Días especiales</strong><small>Feriados y suspensiones</small></a>
+<a class="quick" href="{% url 'gestion_reportes' %}"><span class="quick-ico">✉</span><strong>Correos</strong><small>Simular y enviar reportes</small></a>
 </div>
-{% endif %}
-<div class="page-head"><div><div class="eyebrow">PANEL ADMINISTRATIVO</div><h1>Bienvenido a Manhattan</h1><p>Gestiona el control docente desde un mismo lugar, de forma rápida y ordenada.</p></div><a class="btn primary" href="{% url 'gestion_profesor_nuevo' %}">+ Nuevo profesor</a></div>
-<div class="stats"><div class="stat"><span>Profesores registrados</span><b>{{ profesores }}</b><small>{{ activos }} activos</small></div><div class="stat"><span>Entradas de hoy</span><b>{{ asistencias_hoy }}</b><small>Marcas registradas</small></div><div class="stat"><span>Justificaciones</span><b>{{ justificaciones }}</b><small>Histórico total</small></div><div class="stat"><span>Días especiales próximos</span><b>{{ especiales }}</b><small>Activos</small></div></div>
-<section><div class="section-head"><h2>Accesos rápidos</h2><p>Las tareas más frecuentes, a un clic.</p></div><div class="quick-grid">
-<a class="quick" href="{% url 'gestion_profesores' %}"><span class="quick-ico">♙</span><strong>Profesores</strong><small>Agregar, editar, activar o desactivar</small></a>
-<a class="quick" href="{% url 'gestion_historial' %}"><span class="quick-ico">◷</span><strong>Historial</strong><small>Revisar marcas y registros por fecha</small></a>
-<a class="quick" href="{% url 'gestion_justificar' %}"><span class="quick-ico">✓</span><strong>Justificar días</strong><small>Un docente y varias fechas a la vez</small></a>
-<a class="quick" href="{% url 'gestion_dia_nuevo' %}"><span class="quick-ico">✶</span><strong>Día especial</strong><small>Agregar feriado o suspensión</small></a>
-<a class="quick" href="{% url 'gestion_reportes' %}"><span class="quick-ico">✉</span><strong>Correos docentes</strong><small>Revisar y autorizar reporte semanal</small></a>
-<a class="quick" href="{% url 'gestion_historial' %}"><span class="quick-ico">≡</span><strong>Historial diario</strong><small>Vista habitual del sistema</small></a>
-</div></section>
-<div class="dual"><section class="panel"><div class="section-head"><h2>Últimas asistencias</h2><a href="{% url 'gestion_historial' %}">Ver todas</a></div><div class="table-wrap"><table><thead><tr><th>Profesor</th><th>Fecha</th><th>Tipo</th></tr></thead><tbody>{% for a in ultimas_asistencias %}<tr><td>{{ a.profesor.nombre_completo }}</td><td>{{ a.fecha|date:'d/m/Y' }}</td><td>{{ a.get_tipo_display }}</td></tr>{% empty %}<tr><td colspan="3">Sin registros recientes</td></tr>{% endfor %}</tbody></table></div></section>
-<section class="panel"><div class="section-head"><h2>Justificaciones recientes</h2><a href="{% url 'gestion_justificar' %}">Nueva</a></div><div class="table-wrap"><table><thead><tr><th>Profesor</th><th>Fecha</th><th>Motivo</th></tr></thead><tbody>{% for j in ultimas_justificaciones %}<tr><td>{{ j.profesor.nombre_completo }}</td><td>{{ j.fecha|date:'d/m/Y' }}</td><td>{{ j.get_tipo_display }}</td></tr>{% empty %}<tr><td colspan="3">Sin justificaciones recientes</td></tr>{% endfor %}</tbody></table></div></section></div>
 {% endblock %}
