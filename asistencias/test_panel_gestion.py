@@ -95,3 +95,53 @@ class TestSimulacionYEnlaceSeguro(TestCase):
             respuesta = self.client.get(reverse("cron_reporte_asistencia"), {"token": "TOKEN_EXCLUSIVO_PRUEBAS"})
         self.assertEqual(respuesta.status_code, 405)
         self.assertContains(respuesta, "panel administrativo", status_code=405)
+
+class TestPantallasUnificadas(TestCase):
+    def setUp(self):
+        from .models import Asistencia
+        self.admin = get_user_model().objects.create_superuser(
+            username="admin-v9", email="admin@example.org", password="SeguraDePrueba!2026"
+        )
+        self.prof = Profesor.objects.create(
+            dni="43218765", apellidos="DOCENTE", nombres="PRUEBA", condicion="N", activo=True
+        )
+
+    def test_todas_las_secciones_utilizan_plantillas_de_gestion(self):
+        self.client.force_login(self.admin)
+        for nombre in ["gestion_inicio", "gestion_profesores", "gestion_historial",
+                       "gestion_justificaciones", "gestion_dias_especiales", "gestion_reportes"]:
+            with self.subTest(nombre=nombre):
+                res = self.client.get(reverse(nombre))
+                self.assertEqual(res.status_code, 200)
+                self.assertContains(res, "Administración de Asistencias")
+
+    def test_rango_no_justifica_dia_con_asistencia_y_aparece_en_historial(self):
+        from .models import Asistencia
+        self.client.force_login(self.admin)
+        Asistencia.objects.create(profesor=self.prof, fecha=date(2026, 11, 2), tipo="E")
+        res = self.client.post(reverse("gestion_justificar"), {
+            "profesor":self.prof.id, "modo":"rango", "desde":"2026-11-02",
+            "hasta":"2026-11-04", "tipo":"DM", "detalle":"Prueba por rango"
+        })
+        self.assertEqual(res.status_code, 302)
+        self.assertFalse(JustificacionAsistencia.objects.filter(profesor=self.prof, fecha=date(2026,11,2)).exists())
+        self.assertEqual(JustificacionAsistencia.objects.filter(profesor=self.prof).count(), 2)
+        self.assertEqual(Asistencia.objects.filter(profesor=self.prof, tipo="J").count(), 2)
+        res = self.client.get(reverse("gestion_historial"), {"fecha":"2026-11-03"})
+        self.assertContains(res, "Justificado")
+
+    def test_pantalla_de_justificaciones_tiene_acceso_a_rango(self):
+        self.client.force_login(self.admin)
+        res = self.client.get(reverse("gestion_justificaciones"))
+        self.assertContains(res, reverse("gestion_justificar"))
+
+    @override_settings(REPORT_TRIGGER_TOKEN="secreto-de-pruebas-para-enlace")
+    @patch("asistencias.gestion.enviar_todos")
+    def test_enlace_de_prueba_no_dispara_envio_general(self, mock_envio):
+        self.client.force_login(self.admin)
+        url = "https://testserver/cron/reporte-asistencia/?token=secreto-de-pruebas-para-enlace&modo=prueba"
+        res = self.client.post(reverse("gestion_envio_enlace"), {
+            "confirmar": "CONFIRMAR_ENVIO", "enlace":url,
+        })
+        self.assertEqual(res.status_code, 302)
+        mock_envio.assert_not_called()

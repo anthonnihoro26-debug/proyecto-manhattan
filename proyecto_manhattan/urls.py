@@ -25,6 +25,16 @@ from asistencias import gestion as gestion_views
 
 urlpatterns = [
     path("gestion/", gestion_views.inicio, name="gestion_inicio"),
+    path("gestion/profesores/", gestion_views.profesores, name="gestion_profesores"),
+    path("gestion/profesores/nuevo/", gestion_views.profesor_formulario, name="gestion_profesor_nuevo"),
+    path("gestion/profesores/<int:pk>/editar/", gestion_views.profesor_formulario, name="gestion_profesor_editar"),
+    path("gestion/historial/", gestion_views.historial, name="gestion_historial"),
+    path("gestion/justificaciones/", gestion_views.justificaciones, name="gestion_justificaciones"),
+    path("gestion/dias-especiales/", gestion_views.dias_especiales, name="gestion_dias_especiales"),
+    path("gestion/dias-especiales/nuevo/", gestion_views.dia_especial_formulario, name="gestion_dia_nuevo"),
+    path("gestion/dias-especiales/<int:pk>/editar/", gestion_views.dia_especial_formulario, name="gestion_dia_editar"),
+    path("gestion/reportes/historial/", gestion_views.historial_reportes, name="gestion_envios_historial"),
+    path("gestion/reportes/desde-enlace/", gestion_views.enviar_desde_enlace, name="gestion_envio_enlace"),
     path("gestion/justificar/", gestion_views.justificar_rango, name="gestion_justificar"),
     path("gestion/reportes/", gestion_views.reportes, name="gestion_reportes"),
     path("gestion/reportes/simular/", gestion_views.simular_reportes, name="gestion_simular"),

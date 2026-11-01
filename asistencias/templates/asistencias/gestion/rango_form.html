@@ -1,0 +1,13 @@
+<form method="post" enctype="multipart/form-data" action="{% url 'gestion_justificar' %}" id="form-justificar-rango">
+{% csrf_token %}<input type="hidden" name="origen" value="{{ origen|default:'' }}">
+{% if form.non_field_errors %}<div class="alert error">{{ form.non_field_errors }}</div>{% endif %}
+<div class="field"><label for="{{ form.profesor.id_for_label }}">Docente</label>{{ form.profesor }}{{ form.profesor.errors }}</div>
+<div class="field"><label>Cómo seleccionar los días</label><div class="radio-inline">{{ form.modo }}</div></div>
+<div class="fields-two"><div class="field"><label for="{{ form.desde.id_for_label }}">Desde</label>{{ form.desde }}{{ form.desde.errors }}</div>
+<div class="field" id="grupo-hasta"><label for="{{ form.hasta.id_for_label }}">Hasta</label>{{ form.hasta }}{{ form.hasta.errors }}</div>
+<div class="field" id="grupo-cantidad" hidden><label for="{{ form.cantidad.id_for_label }}">Número de días hábiles</label>{{ form.cantidad }}{{ form.cantidad.errors }}</div></div>
+<div class="fields-two"><div class="field"><label for="{{ form.tipo.id_for_label }}">Motivo</label>{{ form.tipo }}{{ form.tipo.errors }}</div><div class="field"><label for="{{ form.archivo.id_for_label }}">Sustento PDF (opcional)</label>{{ form.archivo }}{{ form.archivo.errors }}</div></div>
+<div class="field"><label for="{{ form.detalle.id_for_label }}">Observación</label>{{ form.detalle }}{{ form.detalle.errors }}</div>
+<div class="inline-notice">Se justifican los días hábiles seleccionados; se excluyen días especiales, asistencias ya marcadas y fechas previamente justificadas. No se altera ningún registro anterior.</div>
+<button type="submit" class="btn primary block">Guardar rango de justificaciones</button></form>
+<script>(function(){const f=document.getElementById('form-justificar-rango');if(!f)return;const h=f.querySelector('#grupo-hasta'),c=f.querySelector('#grupo-cantidad');function sync(){const x=f.querySelector('input[name="modo"]:checked');const b=x&&x.value==='cantidad';h.hidden=!!b;c.hidden=!b;}f.querySelectorAll('input[name="modo"]').forEach(x=>x.addEventListener('change',sync));sync();})();</script>
